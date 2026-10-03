@@ -58,6 +58,28 @@ describe("parseQuality on hand-built items", () => {
     expect(issue(result, "glyphs").status).not.toBe("pass");
   });
 
+  it("reads right-aligned dates as part of a single column", () => {
+    // Four roles whose dates end on the right margin and happen to start at nearly the same x.
+    const dates = ["May 2025 - Jul 2025", "Aug 2023 - Apr 2025", "Jan 2025 - Apr 2025", "Jun 2024 - Sep 2024"];
+    const items = dates.flatMap((date, i) => {
+      const y = 150 + i * 70;
+      return [
+        item(`Role ${i + 1}`, 40, y, { bold: true }),
+        item(date, 555 - date.length * 5 + (i % 2), y, { width: date.length * 5 - (i % 2) }),
+        item("Company", 40, y + 13),
+        item("• Built and shipped a service used by thousands of students every day", 50, y + 26),
+        item("• Cut response times in half with caching and better queries", 50, y + 39),
+      ];
+    });
+    expect(issue(report([...body.slice(0, 2), ...items]), "columns").status).toBe("pass");
+  });
+
+  it("still flags a real two-column layout", () => {
+    const left = Array.from({ length: 12 }, (_, i) => item(`Skill line ${i} with a few words`, 40, 150 + i * 14));
+    const right = Array.from({ length: 12 }, (_, i) => item(`Experience text ${"x".repeat(i % 5)}`, 330, 150 + i * 14));
+    expect(issue(report([...body.slice(0, 2), ...left, ...right]), "columns").status).not.toBe("pass");
+  });
+
   it("treats an empty PDF as scanned", () => {
     const result = report([]);
     expect(issue(result, "density").status).toBe("fail");

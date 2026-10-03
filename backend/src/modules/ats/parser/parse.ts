@@ -80,24 +80,30 @@ function toLines(items: TextItem[]) {
 }
 
 // A second column shows up as many segments starting at the same x, far right of the first column, over a
-// shared stretch of the page that no line crosses.
+// shared stretch of the page that no line crosses. Right-aligned dates and places can share a start x too, but
+// they also share their right edge, while a real column's lines end ragged.
 function findColumns(lines: Line[], page: Page) {
   const starts = lines
-    .flatMap((line) => line.segments.map((segment) => ({ x: segment.x, y: line.y })))
+    .flatMap((line) => line.segments.map((segment) => ({ x: segment.x, end: segment.end, y: line.y })))
     .sort((a, b) => a.x - b.x);
-  const clusters: { x: number; top: number; bottom: number; count: number }[] = [];
+  const clusters: { x: number; top: number; bottom: number; count: number; ends: number[] }[] = [];
   for (const start of starts) {
     const cluster = clusters.at(-1);
     if (cluster && start.x - cluster.x <= 4) {
       cluster.count++;
       cluster.top = Math.min(cluster.top, start.y);
       cluster.bottom = Math.max(cluster.bottom, start.y);
-    } else clusters.push({ x: start.x, top: start.y, bottom: start.y, count: 1 });
+      cluster.ends.push(start.end);
+    } else clusters.push({ x: start.x, top: start.y, bottom: start.y, count: 1, ends: [start.end] });
   }
+  const flushRight = (cluster: (typeof clusters)[number]) => {
+    const edge = Math.max(...cluster.ends);
+    return cluster.ends.filter((end) => edge - end <= 3).length >= cluster.ends.length * 0.8;
+  };
   const tall = clusters.filter((cluster) => cluster.count >= 4 && cluster.bottom - cluster.top >= page.height * 0.1);
   for (const left of tall)
     for (const right of tall) {
-      if (right.x - left.x < page.width * 0.2) continue;
+      if (right.x - left.x < page.width * 0.2 || flushRight(right)) continue;
       const top = Math.max(left.top, right.top);
       const bottom = Math.min(left.bottom, right.bottom);
       if (bottom - top < page.height * 0.1) continue;

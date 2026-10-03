@@ -31,3 +31,5 @@ export const aiKeyResponse = z
     verifiedAt: z.date(),
   })
   .nullable();
+
+export const aiModelListResponse = z.array(z.object({ id: z.string(), name: z.string() }));

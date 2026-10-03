@@ -5,7 +5,7 @@ import { db } from "../../db/index.js";
 import { userAiKeys } from "../../db/schema/index.js";
 import { userKeyError } from "../../lib/ai/key-errors.js";
 import { AppError, ConflictError, NotFoundError } from "../../lib/errors.js";
-import { type AiProvider, createModel, defaultModels } from "../../lib/ai/models.js";
+import { type AiProvider, createModel, defaultModels, listProviderModels } from "../../lib/ai/models.js";
 import { open, seal } from "../../lib/secret-box.js";
 import type { putAiKeyBody, updateAiKeyBody } from "./ai-keys.schemas.js";
 import { track } from "../../lib/analytics.js";
@@ -28,14 +28,24 @@ export async function getAiKey(userId: string) {
 export async function loadUserAiKey(userId: string) {
   const [row] = await db.select().from(userAiKeys).where(eq(userAiKeys.userId, userId)).limit(1);
   if (!row?.enabled) return undefined;
-  let apiKey: string;
+  return { provider: row.provider, apiKey: openKey(row.encryptedKey), ...(row.modelId && { modelId: row.modelId }) };
+}
+
+function openKey(encryptedKey: string) {
   try {
-    apiKey = open(row.encryptedKey);
+    return open(encryptedKey);
   } catch {
     // The encryption secret changed since the key was saved.
     throw new AppError(422, "AI_KEY_UNREADABLE", "Your saved API key can't be read anymore. Add it again in Settings.");
   }
-  return { provider: row.provider, apiKey, ...(row.modelId && { modelId: row.modelId }) };
+}
+
+// OpenRouter's catalog is public, so the browser fetches it directly.
+export async function listAiKeyModels(userId: string) {
+  const [saved] = await db.select().from(userAiKeys).where(eq(userAiKeys.userId, userId)).limit(1);
+  if (!saved) throw new NotFoundError("AI key");
+  if (saved.provider === "openrouter") return [];
+  return listProviderModels(saved.provider, openKey(saved.encryptedKey));
 }
 
 export async function hasUserAiKey(userId: string) {
@@ -96,17 +106,7 @@ export async function updateAiKey(userId: string, input: z.infer<typeof updateAi
   const values: Partial<typeof userAiKeys.$inferInsert> = { updatedAt: new Date() };
   if (input.enabled !== undefined) values.enabled = input.enabled;
   if (input.modelId !== undefined && input.modelId !== saved.modelId) {
-    let apiKey: string;
-    try {
-      apiKey = open(saved.encryptedKey);
-    } catch {
-      throw new AppError(
-        422,
-        "AI_KEY_UNREADABLE",
-        "Your saved API key can't be read anymore. Add it again in Settings.",
-      );
-    }
-    await verify(saved.provider, apiKey, input.modelId ?? undefined);
+    await verify(saved.provider, openKey(saved.encryptedKey), input.modelId ?? undefined);
     values.modelId = input.modelId;
     values.verifiedAt = new Date();
   }

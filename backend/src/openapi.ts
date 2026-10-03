@@ -22,7 +22,7 @@ import { coverageQuery, coverageResponse } from "./modules/coverage/coverage.rou
 import { checkoutResponse, createCheckoutBody, subscriptionResponse } from "./modules/billing/billing.schemas.js";
 import { createDraftBody, createImportBody, importResponse } from "./modules/imports/imports.schemas.js";
 import { usageResponse } from "./modules/usage/usage.routes.js";
-import { aiKeyResponse, putAiKeyBody, updateAiKeyBody } from "./modules/ai-keys/ai-keys.schemas.js";
+import { aiKeyResponse, aiModelListResponse, putAiKeyBody, updateAiKeyBody } from "./modules/ai-keys/ai-keys.schemas.js";
 import { aiRunListResponse } from "./modules/ai-runs/ai-runs.routes.js";
 import {
   analyticsQuery,
@@ -178,6 +178,13 @@ const paths: ZodOpenApiPathsObject = {
       response: aiKeyResponse,
     }),
     delete: op({ summary: "Remove your own AI key", tag: "Account", noContent: true }),
+  },
+  "/v1/me/ai-key/models": {
+    get: op({
+      summary: "Models your saved OpenAI or Anthropic key can use",
+      tag: "Account",
+      response: aiModelListResponse,
+    }),
   },
   "/v1/me/ai-runs": {
     get: op({ summary: "Your recent AI runs and this month's cost", tag: "Account", response: aiRunListResponse }),

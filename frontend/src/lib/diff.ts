@@ -1,4 +1,4 @@
-import { structuredPatch } from 'diff'
+import { diffWords, structuredPatch } from 'diff'
 import type { ResumeContent } from './api/types'
 
 export type Change =
@@ -169,4 +169,41 @@ export function lineHunks(before: string, after: string, context = 2) {
         .map((line) => ({ sign: line[0], text: line.slice(1) }) as HunkLine),
     }),
   )
+}
+
+export type Run = { text: string; bold: boolean }
+
+// Splits **bold** markers out of text, the same way the LaTeX and public pages read them.
+export function richRuns(text: string): Run[] {
+  return text
+    .split(/\*\*(.+?)\*\*/g)
+    .map((part, index) => ({ text: part, bold: index % 2 === 1 }))
+    .filter((run) => run.text)
+}
+
+// Word diff on the visible text, so bold markers never show up as changed words.
+// Each part keeps the bold runs of the side it came from: before for removed, after otherwise.
+export function richWordDiff(before: string, after: string) {
+  const sides = [before, after].map((text) => {
+    const runs = richRuns(text)
+    return {
+      plain: runs.map((run) => run.text).join(''),
+      bold: runs.flatMap((run) => Array.from(run.text, () => run.bold)),
+    }
+  })
+  const at = [0, 0]
+  return diffWords(sides[0].plain, sides[1].plain).map((part) => {
+    const side = part.removed ? 0 : 1
+    const start = at[side]
+    if (!part.added) at[0] += part.value.length
+    if (!part.removed) at[1] += part.value.length
+    const runs: Run[] = []
+    Array.from(part.value).forEach((char, i) => {
+      const bold = sides[side].bold[start + i] ?? false
+      const last = runs.at(-1)
+      if (last?.bold === bold) last.text += char
+      else runs.push({ text: char, bold })
+    })
+    return { added: part.added, removed: part.removed, runs }
+  })
 }

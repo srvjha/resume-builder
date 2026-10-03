@@ -1,8 +1,9 @@
-import { diffArrays, diffWords } from 'diff'
+import { diffArrays } from 'diff'
 import { useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import type { ResumeContent } from '@/lib/api/types'
-import { diffContent, lineHunks } from '@/lib/diff'
+import { diffContent, lineHunks, richRuns, richWordDiff } from '@/lib/diff'
+import type { Run } from '@/lib/diff'
 
 const removedClass =
   'rounded-[2px] bg-destructive/10 px-0.5 text-destructive line-through decoration-destructive/70'
@@ -27,17 +28,27 @@ function Added({ children }: { children: React.ReactNode }) {
   )
 }
 
+function Rich({ runs }: { runs: Run[] }) {
+  return runs.map((run, index) =>
+    run.bold ? <strong key={index}>{run.text}</strong> : run.text,
+  )
+}
+
 export function WordDiff({ before, after }: { before: string; after: string }) {
-  const parts = useMemo(() => diffWords(before, after), [before, after])
+  const parts = useMemo(() => richWordDiff(before, after), [before, after])
   return (
     <p className="text-sm break-words">
       {parts.map((part, index) =>
         part.removed ? (
-          <Removed key={index}>{part.value}</Removed>
+          <Removed key={index}>
+            <Rich runs={part.runs} />
+          </Removed>
         ) : part.added ? (
-          <Added key={index}>{part.value}</Added>
+          <Added key={index}>
+            <Rich runs={part.runs} />
+          </Added>
         ) : (
-          part.value
+          <Rich key={index} runs={part.runs} />
         ),
       )}
     </p>
@@ -171,9 +182,13 @@ export function ContentDiff({
           ) : (
             <p className="text-sm break-words">
               {change.type === 'added' ? (
-                <Added>{change.text}</Added>
+                <Added>
+                  <Rich runs={richRuns(change.text)} />
+                </Added>
               ) : (
-                <Removed>{change.text}</Removed>
+                <Removed>
+                  <Rich runs={richRuns(change.text)} />
+                </Removed>
               )}
             </p>
           )}

@@ -18,11 +18,20 @@ import {
 } from '@/components/ui/input-group'
 import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover'
 import { Separator } from '@/components/ui/separator'
+import { api, unwrap } from '@/lib/api/client'
+import { queryKeys } from '@/lib/api/queries'
 import { fetchOpenRouterModels, filterAiModels } from '@/lib/openrouter-models'
+
+const catalogNames: Record<string, string> = {
+  openai: 'OpenAI',
+  anthropic: 'Anthropic',
+  openrouter: 'OpenRouter',
+}
 
 export function AiModelInput({
   provider,
   modelIds,
+  keySaved,
   value,
   onValueChange,
   disabled,
@@ -33,6 +42,8 @@ export function AiModelInput({
 > & {
   provider: string
   modelIds: string[]
+  // OpenAI and Anthropic list models only for a key we already hold.
+  keySaved: boolean
   value: string
   onValueChange: (value: string) => void
 }) {
@@ -43,17 +54,24 @@ export function AiModelInput({
   const [open, setOpen] = useState(false)
   const [searching, setSearching] = useState(false)
   const [activeId, setActiveId] = useState<string | null>(null)
+  const hasCatalog = provider === 'openrouter' || keySaved
   const { data, isPending, isError } = useQuery({
-    queryKey: ['openrouter', 'models'],
-    queryFn: ({ signal }) => fetchOpenRouterModels(signal),
-    enabled: provider === 'openrouter',
+    queryKey:
+      provider === 'openrouter'
+        ? ['openrouter', 'models']
+        : [...queryKeys.aiKey, 'models'],
+    queryFn: ({ signal }) =>
+      provider === 'openrouter'
+        ? fetchOpenRouterModels(signal)
+        : unwrap(api.GET('/v1/me/ai-key/models', { signal })),
+    enabled: hasCatalog,
     staleTime: 15 * 60 * 1000,
     retry: false,
   })
-  const canSuggest = provider === 'openrouter' || modelIds.length > 1
+  const canSuggest = hasCatalog || modelIds.length > 1
   const models = filterAiModels(
     modelIds,
-    provider === 'openrouter' ? (data ?? []) : [],
+    hasCatalog ? (data ?? []) : [],
     searching ? value : '',
   )
   const activeIndex = models.findIndex((model) => model.id === activeId)
@@ -175,7 +193,7 @@ export function AiModelInput({
         >
           <div className="flex items-center justify-between gap-3 px-3 py-2 text-xs text-muted-foreground">
             <span>
-              {provider === 'openrouter' ? 'OpenRouter models' : 'Saved models'}
+              {hasCatalog ? `${catalogNames[provider]} models` : 'Saved models'}
             </span>
             <span role="status">
               {models.length} {models.length === 1 ? 'model' : 'models'}
@@ -218,12 +236,12 @@ export function AiModelInput({
             <Empty>
               <EmptyHeader>
                 <EmptyTitle>
-                  {provider === 'openrouter' && isPending
+                  {hasCatalog && isPending
                     ? 'Loading models…'
                     : 'No matching models'}
                 </EmptyTitle>
                 <EmptyDescription>
-                  {provider === 'openrouter' && isPending
+                  {hasCatalog && isPending
                     ? 'You can enter a model ID while the catalog loads.'
                     : 'Try another search or enter a model ID directly.'}
                 </EmptyDescription>
@@ -234,7 +252,7 @@ export function AiModelInput({
       </Popover>
       {canSuggest && (
         <FieldDescription role="status">
-          {provider === 'openrouter' && isError
+          {hasCatalog && isError
             ? 'Catalog unavailable. Enter a model ID or choose a saved model.'
             : 'Search by name or ID, or enter a custom model ID.'}
         </FieldDescription>

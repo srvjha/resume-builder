@@ -222,6 +222,7 @@ export function AiKeyTab() {
                       <AiModelInput
                         provider={saved.provider}
                         modelIds={saved.modelIds}
+                        keySaved
                         id="saved-ai-model"
                         autoFocus
                         placeholder={providers[saved.provider].modelExample}
@@ -339,6 +340,7 @@ export function AiKeyTab() {
                       modelIds={
                         saved?.provider === provider ? saved.modelIds : []
                       }
+                      keySaved={saved?.provider === provider}
                       id="ai-model"
                       placeholder={info.modelExample}
                       value={modelId}

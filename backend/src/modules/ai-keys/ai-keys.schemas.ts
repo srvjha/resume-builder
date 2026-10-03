@@ -9,8 +9,9 @@ const modelIdSchema = z
   .regex(/^~?[\w.:/-]+$/, "Letters, numbers and . : / - _ only, with an optional leading ~")
   .nullish();
 
+export const aiKeyParams = z.object({ provider: aiProviderSchema });
+
 export const putAiKeyBody = z.object({
-  provider: aiProviderSchema,
   apiKey: z.string().trim().min(10).max(300),
   // e.g. "gpt-5.4-mini" or, on OpenRouter, "anthropic/claude-sonnet-5". Empty uses the provider's defaults.
   modelId: modelIdSchema,
@@ -21,15 +22,15 @@ export const updateAiKeyBody = z
   .strict()
   .refine((body) => body.enabled !== undefined || body.modelId !== undefined, "Provide enabled or modelId");
 
-export const aiKeyResponse = z
-  .object({
-    provider: aiProviderSchema,
-    enabled: z.boolean(),
-    modelId: z.string().nullable(),
-    modelIds: z.array(z.string()),
-    keyHint: z.string(),
-    verifiedAt: z.date(),
-  })
-  .nullable();
+export const aiKeyResponse = z.object({
+  provider: aiProviderSchema,
+  enabled: z.boolean(),
+  modelId: z.string().nullable(),
+  modelIds: z.array(z.string()),
+  keyHint: z.string(),
+  verifiedAt: z.date(),
+});
+
+export const aiKeyListResponse = z.array(aiKeyResponse);
 
 export const aiModelListResponse = z.array(z.object({ id: z.string(), name: z.string() }));

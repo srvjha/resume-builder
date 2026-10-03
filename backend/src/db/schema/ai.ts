@@ -1,4 +1,17 @@
-import { boolean, index, integer, jsonb, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import {
+  boolean,
+  index,
+  integer,
+  jsonb,
+  pgEnum,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
 import { users } from "./auth.js";
 import { createdAt, timestamps } from "./columns.js";
 import { jobs, resumes, resumeVersions } from "./resumes.js";
@@ -54,17 +67,27 @@ export const aiProvider = pgEnum("ai_provider", ["openai", "anthropic", "openrou
 
 // A user's own AI provider key (bring your own key). Encrypted at rest; only the last
 // four characters are ever shown back.
-export const userAiKeys = pgTable("user_ai_keys", {
-  userId: uuid()
-    .primaryKey()
-    .references(() => users.id, { onDelete: "cascade" }),
-  provider: aiProvider().notNull(),
-  enabled: boolean().notNull().default(true),
-  // Used for every AI step when set; otherwise the provider's default models.
-  modelId: text(),
-  modelIds: text().array().notNull().default([]),
-  encryptedKey: text().notNull(),
-  keyHint: text().notNull(),
-  verifiedAt: timestamp({ withTimezone: true }).notNull(),
-  ...timestamps,
-});
+// One key per provider; at most one of a user's keys is enabled.
+export const userAiKeys = pgTable(
+  "user_ai_keys",
+  {
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    provider: aiProvider().notNull(),
+    enabled: boolean().notNull().default(true),
+    // Used for every AI step when set; otherwise the provider's default models.
+    modelId: text(),
+    modelIds: text().array().notNull().default([]),
+    encryptedKey: text().notNull(),
+    keyHint: text().notNull(),
+    verifiedAt: timestamp({ withTimezone: true }).notNull(),
+    ...timestamps,
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.provider] }),
+    uniqueIndex("user_ai_keys_one_enabled")
+      .on(t.userId)
+      .where(sql`${t.enabled}`),
+  ],
+);

@@ -1,5 +1,5 @@
 import { generateText } from "ai";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, ne, sql } from "drizzle-orm";
 import type { z } from "zod";
 import { db } from "../../db/index.js";
 import { userAiKeys } from "../../db/schema/index.js";
@@ -19,15 +19,34 @@ const publicColumns = {
   verifiedAt: userAiKeys.verifiedAt,
 };
 
-export async function getAiKey(userId: string) {
-  const [row] = await db.select(publicColumns).from(userAiKeys).where(eq(userAiKeys.userId, userId)).limit(1);
-  return row ?? null;
+type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+const ownKey = (userId: string, provider: AiProvider) =>
+  and(eq(userAiKeys.userId, userId), eq(userAiKeys.provider, provider));
+
+export function listAiKeys(userId: string) {
+  return db.select(publicColumns).from(userAiKeys).where(eq(userAiKeys.userId, userId)).orderBy(userAiKeys.createdAt);
 }
 
-// The decrypted key for AI calls. Only the AI layer should call this.
+async function findAiKey(userId: string, provider: AiProvider) {
+  const [row] = await db.select().from(userAiKeys).where(ownKey(userId, provider)).limit(1);
+  if (!row) throw new NotFoundError("AI key");
+  return row;
+}
+
+// Only one key runs AI requests, so enabling one turns the user's others off.
+function disableOthers(tx: Tx, userId: string, provider: AiProvider) {
+  return tx
+    .update(userAiKeys)
+    .set({ enabled: false, updatedAt: new Date() })
+    .where(and(eq(userAiKeys.userId, userId), ne(userAiKeys.provider, provider)));
+}
+
+// The decrypted enabled key for AI calls. Only the AI layer should call this.
 export async function loadUserAiKey(userId: string) {
-  const [row] = await db.select().from(userAiKeys).where(eq(userAiKeys.userId, userId)).limit(1);
-  if (!row?.enabled) return undefined;
+  const rows = await db.select().from(userAiKeys).where(eq(userAiKeys.userId, userId));
+  const row = rows.find((key) => key.enabled);
+  if (!row) return undefined;
   return { provider: row.provider, apiKey: openKey(row.encryptedKey), ...(row.modelId && { modelId: row.modelId }) };
 }
 
@@ -41,15 +60,14 @@ function openKey(encryptedKey: string) {
 }
 
 // OpenRouter's catalog is public, so the browser fetches it directly.
-export async function listAiKeyModels(userId: string) {
-  const [saved] = await db.select().from(userAiKeys).where(eq(userAiKeys.userId, userId)).limit(1);
-  if (!saved) throw new NotFoundError("AI key");
+export async function listAiKeyModels(userId: string, provider: AiProvider) {
+  const saved = await findAiKey(userId, provider);
   if (saved.provider === "openrouter") return [];
   return listProviderModels(saved.provider, openKey(saved.encryptedKey));
 }
 
 export async function hasUserAiKey(userId: string) {
-  return (await getAiKey(userId))?.enabled === true;
+  return (await listAiKeys(userId)).some((key) => key.enabled);
 }
 
 // One tiny request per model the key will be used with, so a bad key or model fails here, not mid-tailor.
@@ -69,11 +87,10 @@ async function verify(provider: AiProvider, apiKey: string, modelId: string | un
   }
 }
 
-export async function putAiKey(userId: string, input: z.infer<typeof putAiKeyBody>) {
+export async function putAiKey(userId: string, provider: AiProvider, input: z.infer<typeof putAiKeyBody>) {
   const modelId = input.modelId || null;
-  await verify(input.provider, input.apiKey, modelId ?? undefined);
+  await verify(provider, input.apiKey, modelId ?? undefined);
   const values = {
-    provider: input.provider,
     enabled: true,
     modelId,
     modelIds: modelId ? [modelId] : [],
@@ -82,26 +99,24 @@ export async function putAiKey(userId: string, input: z.infer<typeof putAiKeyBod
     verifiedAt: new Date(),
     updatedAt: new Date(),
   };
-  const [row] = await db
-    .insert(userAiKeys)
-    .values({ userId, ...values })
-    .onConflictDoUpdate({
-      target: userAiKeys.userId,
-      set: {
-        ...values,
-        modelIds: sql`CASE WHEN ${userAiKeys.provider} = excluded.provider
-          THEN ARRAY(SELECT DISTINCT unnest(${userAiKeys.modelIds} || excluded.model_ids))
-          ELSE excluded.model_ids END`,
-      },
-    })
-    .returning(publicColumns);
-  track(userId, "ai_key_added", { provider: input.provider, custom_model: Boolean(modelId) });
-  return row!;
+  const row = await db.transaction(async (tx) => {
+    await disableOthers(tx, userId, provider);
+    const [saved] = await tx
+      .insert(userAiKeys)
+      .values({ userId, provider, ...values })
+      .onConflictDoUpdate({
+        target: [userAiKeys.userId, userAiKeys.provider],
+        set: { ...values, modelIds: sql`ARRAY(SELECT DISTINCT unnest(${userAiKeys.modelIds} || excluded.model_ids))` },
+      })
+      .returning(publicColumns);
+    return saved!;
+  });
+  track(userId, "ai_key_added", { provider, custom_model: Boolean(modelId) });
+  return row;
 }
 
-export async function updateAiKey(userId: string, input: z.infer<typeof updateAiKeyBody>) {
-  const [saved] = await db.select().from(userAiKeys).where(eq(userAiKeys.userId, userId)).limit(1);
-  if (!saved) throw new NotFoundError("AI key");
+export async function updateAiKey(userId: string, provider: AiProvider, input: z.infer<typeof updateAiKeyBody>) {
+  const saved = await findAiKey(userId, provider);
 
   const values: Partial<typeof userAiKeys.$inferInsert> = { updatedAt: new Date() };
   if (input.enabled !== undefined) values.enabled = input.enabled;
@@ -111,20 +126,23 @@ export async function updateAiKey(userId: string, input: z.infer<typeof updateAi
     values.verifiedAt = new Date();
   }
 
-  const [row] = await db
-    .update(userAiKeys)
-    .set({
-      ...values,
-      ...(values.modelId && {
-        modelIds: sql`ARRAY(SELECT DISTINCT unnest(array_append(${userAiKeys.modelIds}, ${values.modelId}::text)))`,
-      }),
-    })
-    .where(and(eq(userAiKeys.userId, userId), eq(userAiKeys.encryptedKey, saved.encryptedKey)))
-    .returning(publicColumns);
-  if (!row) throw new ConflictError("Your AI key changed. Refresh Settings and try again.");
-  return row;
+  return db.transaction(async (tx) => {
+    if (values.enabled) await disableOthers(tx, userId, provider);
+    const [row] = await tx
+      .update(userAiKeys)
+      .set({
+        ...values,
+        ...(values.modelId && {
+          modelIds: sql`ARRAY(SELECT DISTINCT unnest(array_append(${userAiKeys.modelIds}, ${values.modelId}::text)))`,
+        }),
+      })
+      .where(and(ownKey(userId, provider), eq(userAiKeys.encryptedKey, saved.encryptedKey)))
+      .returning(publicColumns);
+    if (!row) throw new ConflictError("Your AI key changed. Refresh Settings and try again.");
+    return row;
+  });
 }
 
-export async function deleteAiKey(userId: string) {
-  await db.delete(userAiKeys).where(eq(userAiKeys.userId, userId));
+export async function deleteAiKey(userId: string, provider: AiProvider) {
+  await db.delete(userAiKeys).where(ownKey(userId, provider));
 }

@@ -22,7 +22,14 @@ import { coverageQuery, coverageResponse } from "./modules/coverage/coverage.rou
 import { checkoutResponse, createCheckoutBody, subscriptionResponse } from "./modules/billing/billing.schemas.js";
 import { createDraftBody, createImportBody, importResponse } from "./modules/imports/imports.schemas.js";
 import { usageResponse } from "./modules/usage/usage.routes.js";
-import { aiKeyResponse, aiModelListResponse, putAiKeyBody, updateAiKeyBody } from "./modules/ai-keys/ai-keys.schemas.js";
+import {
+  aiKeyListResponse,
+  aiKeyParams,
+  aiKeyResponse,
+  aiModelListResponse,
+  putAiKeyBody,
+  updateAiKeyBody,
+} from "./modules/ai-keys/ai-keys.schemas.js";
 import { aiRunListResponse } from "./modules/ai-runs/ai-runs.routes.js";
 import {
   analyticsQuery,
@@ -168,21 +175,31 @@ const paths: ZodOpenApiPathsObject = {
     get: op({ summary: "List templates", tag: "Templates", auth: false, response: templateListResponse }),
   },
 
-  "/v1/me/ai-key": {
-    get: op({ summary: "Your own AI key, without the secret", tag: "Account", response: aiKeyResponse }),
-    put: op({ summary: "Test and save your own AI key", tag: "Account", body: putAiKeyBody, response: aiKeyResponse }),
-    patch: op({
-      summary: "Enable or disable your own AI key, or test and change its model",
+  "/v1/me/ai-keys": {
+    get: op({ summary: "Your own AI keys, without the secrets", tag: "Account", response: aiKeyListResponse }),
+  },
+  "/v1/me/ai-keys/{provider}": {
+    put: op({
+      summary: "Test and save your key for a provider, and enable it",
       tag: "Account",
+      params: aiKeyParams,
+      body: putAiKeyBody,
+      response: aiKeyResponse,
+    }),
+    patch: op({
+      summary: "Enable or disable a key, or test and change its model. Enabling one disables the others.",
+      tag: "Account",
+      params: aiKeyParams,
       body: updateAiKeyBody,
       response: aiKeyResponse,
     }),
-    delete: op({ summary: "Remove your own AI key", tag: "Account", noContent: true }),
+    delete: op({ summary: "Remove your key for a provider", tag: "Account", params: aiKeyParams, noContent: true }),
   },
-  "/v1/me/ai-key/models": {
+  "/v1/me/ai-keys/{provider}/models": {
     get: op({
       summary: "Models your saved OpenAI or Anthropic key can use",
       tag: "Account",
+      params: aiKeyParams,
       response: aiModelListResponse,
     }),
   },

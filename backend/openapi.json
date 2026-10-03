@@ -2866,9 +2866,9 @@
         }
       }
     },
-    "/v1/me/ai-key": {
+    "/v1/me/ai-keys": {
       "get": {
-        "summary": "Your own AI key, without the secret",
+        "summary": "Your own AI keys, without the secrets",
         "tags": [
           "Account"
         ],
@@ -2886,54 +2886,50 @@
                   "type": "object",
                   "properties": {
                     "data": {
-                      "anyOf": [
-                        {
-                          "type": "object",
-                          "properties": {
-                            "provider": {
-                              "type": "string",
-                              "enum": [
-                                "openai",
-                                "anthropic",
-                                "openrouter"
-                              ]
-                            },
-                            "enabled": {
-                              "type": "boolean"
-                            },
-                            "modelId": {
-                              "type": [
-                                "string",
-                                "null"
-                              ]
-                            },
-                            "modelIds": {
-                              "type": "array",
-                              "items": {
-                                "type": "string"
-                              }
-                            },
-                            "keyHint": {
-                              "type": "string"
-                            },
-                            "verifiedAt": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "provider": {
+                            "type": "string",
+                            "enum": [
+                              "openai",
+                              "anthropic",
+                              "openrouter"
+                            ]
+                          },
+                          "enabled": {
+                            "type": "boolean"
+                          },
+                          "modelId": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "modelIds": {
+                            "type": "array",
+                            "items": {
                               "type": "string"
                             }
                           },
-                          "required": [
-                            "provider",
-                            "enabled",
-                            "modelId",
-                            "modelIds",
-                            "keyHint",
-                            "verifiedAt"
-                          ],
-                          "additionalProperties": false
+                          "keyHint": {
+                            "type": "string"
+                          },
+                          "verifiedAt": {
+                            "type": "string"
+                          }
                         },
-                        {
-                          "type": "null"
-                        }
-                      ]
+                        "required": [
+                          "provider",
+                          "enabled",
+                          "modelId",
+                          "modelIds",
+                          "keyHint",
+                          "verifiedAt"
+                        ],
+                        "additionalProperties": false
+                      }
                     }
                   },
                   "required": [
@@ -2955,9 +2951,11 @@
             }
           }
         }
-      },
+      }
+    },
+    "/v1/me/ai-keys/{provider}": {
       "put": {
-        "summary": "Test and save your own AI key",
+        "summary": "Test and save your key for a provider, and enable it",
         "tags": [
           "Account"
         ],
@@ -2966,20 +2964,27 @@
             "session": []
           }
         ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "openai",
+                "anthropic",
+                "openrouter"
+              ]
+            },
+            "required": true
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
                 "properties": {
-                  "provider": {
-                    "type": "string",
-                    "enum": [
-                      "openai",
-                      "anthropic",
-                      "openrouter"
-                    ]
-                  },
                   "apiKey": {
                     "type": "string",
                     "minLength": 10,
@@ -2999,7 +3004,6 @@
                   }
                 },
                 "required": [
-                  "provider",
                   "apiKey"
                 ]
               }
@@ -3015,54 +3019,47 @@
                   "type": "object",
                   "properties": {
                     "data": {
-                      "anyOf": [
-                        {
-                          "type": "object",
-                          "properties": {
-                            "provider": {
-                              "type": "string",
-                              "enum": [
-                                "openai",
-                                "anthropic",
-                                "openrouter"
-                              ]
-                            },
-                            "enabled": {
-                              "type": "boolean"
-                            },
-                            "modelId": {
-                              "type": [
-                                "string",
-                                "null"
-                              ]
-                            },
-                            "modelIds": {
-                              "type": "array",
-                              "items": {
-                                "type": "string"
-                              }
-                            },
-                            "keyHint": {
-                              "type": "string"
-                            },
-                            "verifiedAt": {
-                              "type": "string"
-                            }
-                          },
-                          "required": [
-                            "provider",
-                            "enabled",
-                            "modelId",
-                            "modelIds",
-                            "keyHint",
-                            "verifiedAt"
-                          ],
-                          "additionalProperties": false
+                      "type": "object",
+                      "properties": {
+                        "provider": {
+                          "type": "string",
+                          "enum": [
+                            "openai",
+                            "anthropic",
+                            "openrouter"
+                          ]
                         },
-                        {
-                          "type": "null"
+                        "enabled": {
+                          "type": "boolean"
+                        },
+                        "modelId": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "modelIds": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "keyHint": {
+                          "type": "string"
+                        },
+                        "verifiedAt": {
+                          "type": "string"
                         }
-                      ]
+                      },
+                      "required": [
+                        "provider",
+                        "enabled",
+                        "modelId",
+                        "modelIds",
+                        "keyHint",
+                        "verifiedAt"
+                      ],
+                      "additionalProperties": false
                     }
                   },
                   "required": [
@@ -3086,13 +3083,28 @@
         }
       },
       "patch": {
-        "summary": "Enable or disable your own AI key, or test and change its model",
+        "summary": "Enable or disable a key, or test and change its model. Enabling one disables the others.",
         "tags": [
           "Account"
         ],
         "security": [
           {
             "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "openai",
+                "anthropic",
+                "openrouter"
+              ]
+            },
+            "required": true
           }
         ],
         "requestBody": {
@@ -3131,54 +3143,47 @@
                   "type": "object",
                   "properties": {
                     "data": {
-                      "anyOf": [
-                        {
-                          "type": "object",
-                          "properties": {
-                            "provider": {
-                              "type": "string",
-                              "enum": [
-                                "openai",
-                                "anthropic",
-                                "openrouter"
-                              ]
-                            },
-                            "enabled": {
-                              "type": "boolean"
-                            },
-                            "modelId": {
-                              "type": [
-                                "string",
-                                "null"
-                              ]
-                            },
-                            "modelIds": {
-                              "type": "array",
-                              "items": {
-                                "type": "string"
-                              }
-                            },
-                            "keyHint": {
-                              "type": "string"
-                            },
-                            "verifiedAt": {
-                              "type": "string"
-                            }
-                          },
-                          "required": [
-                            "provider",
-                            "enabled",
-                            "modelId",
-                            "modelIds",
-                            "keyHint",
-                            "verifiedAt"
-                          ],
-                          "additionalProperties": false
+                      "type": "object",
+                      "properties": {
+                        "provider": {
+                          "type": "string",
+                          "enum": [
+                            "openai",
+                            "anthropic",
+                            "openrouter"
+                          ]
                         },
-                        {
-                          "type": "null"
+                        "enabled": {
+                          "type": "boolean"
+                        },
+                        "modelId": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "modelIds": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "keyHint": {
+                          "type": "string"
+                        },
+                        "verifiedAt": {
+                          "type": "string"
                         }
-                      ]
+                      },
+                      "required": [
+                        "provider",
+                        "enabled",
+                        "modelId",
+                        "modelIds",
+                        "keyHint",
+                        "verifiedAt"
+                      ],
+                      "additionalProperties": false
                     }
                   },
                   "required": [
@@ -3202,13 +3207,28 @@
         }
       },
       "delete": {
-        "summary": "Remove your own AI key",
+        "summary": "Remove your key for a provider",
         "tags": [
           "Account"
         ],
         "security": [
           {
             "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "openai",
+                "anthropic",
+                "openrouter"
+              ]
+            },
+            "required": true
           }
         ],
         "responses": {
@@ -3228,7 +3248,7 @@
         }
       }
     },
-    "/v1/me/ai-key/models": {
+    "/v1/me/ai-keys/{provider}/models": {
       "get": {
         "summary": "Models your saved OpenAI or Anthropic key can use",
         "tags": [
@@ -3237,6 +3257,21 @@
         "security": [
           {
             "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "openai",
+                "anthropic",
+                "openrouter"
+              ]
+            },
+            "required": true
           }
         ],
         "responses": {

@@ -16,6 +16,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Spinner } from '@/components/ui/spinner'
+import { useCheckout } from '@/hooks/use-checkout'
+import { useSession } from '@/lib/auth-client'
 import { site } from '@/lib/site'
 import { cn } from '@/lib/utils'
 
@@ -229,22 +232,49 @@ function PlanCta({
   className?: string
 }) {
   const featured = 'featured' in plan && plan.featured
-  return (
-    <Button
-      size="lg"
-      variant={featured ? 'default' : 'outline'}
-      className={cn('w-full', className)}
-      asChild
-    >
-      {plan.id === 'free' ? (
+  const { data: session } = useSession()
+  const { checkout, me } = useCheckout({ enabled: !!session })
+  const style = {
+    size: 'lg',
+    variant: featured ? 'default' : 'outline',
+    className: cn('w-full', className),
+  } as const
+
+  if (plan.id === 'free')
+    return (
+      <Button {...style} asChild>
         <Link to="/login" search={{ mode: 'signup' }}>
           {plan.cta}
         </Link>
-      ) : (
-        <Link to="/settings" search={{ tab: 'billing', plan: plan.id }}>
+      </Button>
+    )
+  // Signed out: sign up, then land on billing with this plan picked.
+  if (!session)
+    return (
+      <Button {...style} asChild>
+        <Link
+          to="/login"
+          search={{ mode: 'signup', redirect: `/billing?plan=${plan.id}` }}
+        >
           {plan.cta}
         </Link>
-      )}
+      </Button>
+    )
+  // Already on a paid plan: billing shows what they have and when it renews.
+  if (me && me.plan !== 'free')
+    return (
+      <Button {...style} asChild>
+        <Link to="/billing">Manage your plan</Link>
+      </Button>
+    )
+  return (
+    <Button
+      {...style}
+      onClick={() => checkout.mutate(plan.id)}
+      disabled={checkout.isPending}
+    >
+      {checkout.isPending && <Spinner data-icon="inline-start" />}
+      {plan.cta}
     </Button>
   )
 }

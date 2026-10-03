@@ -522,9 +522,11 @@ export const docs: DocPage[] = [
         title: 'Add a key',
         body: (
           <p>
-            Go to <b>Settings</b>, then <b>AI provider</b>, pick the provider
-            and paste your key. We test it before saving. You can also choose a
-            model; otherwise the provider's default models are used.
+            Go to <b>Settings</b>, then <b>AI provider</b>, and choose{' '}
+            <b>Add key</b> on the provider's card. We test it before saving. You
+            can also choose a model; otherwise the provider's default models are
+            used. You can save a key for all three providers; only one is used
+            at a time.
           </p>
         ),
       },
@@ -553,11 +555,10 @@ export const docs: DocPage[] = [
           <p>
             Use <b>Edit model</b> to test and save a different model with your
             existing key. Leave the model empty to return to the provider's
-            defaults. Successfully saved models are remembered for that
-            provider, and OpenRouter also offers its full searchable model
-            catalog. Turn off <b>Use my own AI key</b> to use your account plan
-            and its limits again. Your key stays saved so you can enable it
-            later.
+            defaults. The model picker lists every model your key can use. Turn
+            on <b>Use this key</b> on another provider's card to switch to it;
+            your other keys turn off but stay saved. Turn the active key off to
+            use your account plan and its limits again.
           </p>
         ),
       },

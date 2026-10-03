@@ -939,14 +939,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/me/ai-key": {
+    "/v1/me/ai-keys": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Your own AI key, without the secret */
+        /** Your own AI keys, without the secrets */
         get: {
             parameters: {
                 query?: never;
@@ -971,7 +971,7 @@ export interface paths {
                                 modelIds: string[];
                                 keyHint: string;
                                 verifiedAt: string;
-                            } | null;
+                            }[];
                         };
                     };
                 };
@@ -986,19 +986,35 @@ export interface paths {
                 };
             };
         };
-        /** Test and save your own AI key */
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/ai-keys/{provider}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Test and save your key for a provider, and enable it */
         put: {
             parameters: {
                 query?: never;
                 header?: never;
-                path?: never;
+                path: {
+                    provider: "openai" | "anthropic" | "openrouter";
+                };
                 cookie?: never;
             };
             requestBody?: {
                 content: {
                     "application/json": {
-                        /** @enum {string} */
-                        provider: "openai" | "anthropic" | "openrouter";
                         apiKey: string;
                         modelId?: string | null;
                     };
@@ -1020,7 +1036,7 @@ export interface paths {
                                 modelIds: string[];
                                 keyHint: string;
                                 verifiedAt: string;
-                            } | null;
+                            };
                         };
                     };
                 };
@@ -1036,12 +1052,14 @@ export interface paths {
             };
         };
         post?: never;
-        /** Remove your own AI key */
+        /** Remove your key for a provider */
         delete: {
             parameters: {
                 query?: never;
                 header?: never;
-                path?: never;
+                path: {
+                    provider: "openai" | "anthropic" | "openrouter";
+                };
                 cookie?: never;
             };
             requestBody?: never;
@@ -1066,12 +1084,14 @@ export interface paths {
         };
         options?: never;
         head?: never;
-        /** Enable or disable your own AI key, or test and change its model */
+        /** Enable or disable a key, or test and change its model. Enabling one disables the others. */
         patch: {
             parameters: {
                 query?: never;
                 header?: never;
-                path?: never;
+                path: {
+                    provider: "openai" | "anthropic" | "openrouter";
+                };
                 cookie?: never;
             };
             requestBody?: {
@@ -1098,7 +1118,7 @@ export interface paths {
                                 modelIds: string[];
                                 keyHint: string;
                                 verifiedAt: string;
-                            } | null;
+                            };
                         };
                     };
                 };
@@ -1115,7 +1135,7 @@ export interface paths {
         };
         trace?: never;
     };
-    "/v1/me/ai-key/models": {
+    "/v1/me/ai-keys/{provider}/models": {
         parameters: {
             query?: never;
             header?: never;
@@ -1127,7 +1147,9 @@ export interface paths {
             parameters: {
                 query?: never;
                 header?: never;
-                path?: never;
+                path: {
+                    provider: "openai" | "anthropic" | "openrouter";
+                };
                 cookie?: never;
             };
             requestBody?: never;

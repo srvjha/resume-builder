@@ -3,7 +3,7 @@ import { api, unwrap } from './client'
 
 export const queryKeys = {
   me: ['me'] as const,
-  aiKey: ['me', 'ai-key'] as const,
+  aiKeys: ['me', 'ai-keys'] as const,
   usage: ['usage'] as const,
   profile: ['profile'] as const,
   templates: ['templates'] as const,
@@ -31,9 +31,9 @@ export const meQuery = queryOptions({
   queryFn: () => unwrap(api.GET('/v1/me')),
 })
 
-export const aiKeyQuery = queryOptions({
-  queryKey: queryKeys.aiKey,
-  queryFn: () => unwrap(api.GET('/v1/me/ai-key')),
+export const aiKeysQuery = queryOptions({
+  queryKey: queryKeys.aiKeys,
+  queryFn: () => unwrap(api.GET('/v1/me/ai-keys')),
 })
 
 export const usageQuery = queryOptions({

@@ -22,7 +22,9 @@ import { api, unwrap } from '@/lib/api/client'
 import { queryKeys } from '@/lib/api/queries'
 import { fetchOpenRouterModels, filterAiModels } from '@/lib/openrouter-models'
 
-const catalogNames: Record<string, string> = {
+export type AiProvider = 'openai' | 'anthropic' | 'openrouter'
+
+const catalogNames: Record<AiProvider, string> = {
   openai: 'OpenAI',
   anthropic: 'Anthropic',
   openrouter: 'OpenRouter',
@@ -40,7 +42,7 @@ export function AiModelInput({
   ComponentProps<typeof InputGroupInput>,
   'onChange' | 'value' | 'ref'
 > & {
-  provider: string
+  provider: AiProvider
   modelIds: string[]
   // OpenAI and Anthropic list models only for a key we already hold.
   keySaved: boolean
@@ -59,11 +61,16 @@ export function AiModelInput({
     queryKey:
       provider === 'openrouter'
         ? ['openrouter', 'models']
-        : [...queryKeys.aiKey, 'models'],
+        : [...queryKeys.aiKeys, provider, 'models'],
     queryFn: ({ signal }) =>
       provider === 'openrouter'
         ? fetchOpenRouterModels(signal)
-        : unwrap(api.GET('/v1/me/ai-key/models', { signal })),
+        : unwrap(
+            api.GET('/v1/me/ai-keys/{provider}/models', {
+              params: { path: { provider } },
+              signal,
+            }),
+          ),
     enabled: hasCatalog,
     staleTime: 15 * 60 * 1000,
     retry: false,

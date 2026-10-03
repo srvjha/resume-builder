@@ -4,6 +4,7 @@ import {
   BriefcaseBusinessIcon,
   ChartColumnIcon,
   ChevronsUpDownIcon,
+  CreditCardIcon,
   FileTextIcon,
   GaugeIcon,
   LayoutDashboardIcon,
@@ -90,6 +91,12 @@ const nav = [
     match: ['/analytics'],
   },
   {
+    to: '/billing',
+    label: 'Plans and billing',
+    icon: CreditCardIcon,
+    match: ['/billing'],
+  },
+  {
     to: '/settings',
     label: 'Settings',
     icon: SettingsIcon,
@@ -114,9 +121,7 @@ function UsageCard() {
         Resumes you write yourself are always free and unlimited.
       </p>
       <Button size="sm" variant="outline" asChild>
-        <Link to="/settings" search={{ tab: 'billing' }}>
-          Get 40 a month with Season Pass
-        </Link>
+        <Link to="/billing">Get 40 a month with Season Pass</Link>
       </Button>
     </div>
   )

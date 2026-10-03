@@ -531,7 +531,7 @@ function NewResumePage() {
                         Season Pass and Pro include more, or add your own AI key
                         in Settings for unlimited.{' '}
                         <Link
-                          to="/pricing"
+                          to="/billing"
                           className="underline underline-offset-4"
                         >
                           See plans

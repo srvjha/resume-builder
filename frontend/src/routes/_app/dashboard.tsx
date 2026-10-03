@@ -206,7 +206,7 @@ function DashboardPage() {
                   <dd className="text-sm text-muted-foreground">
                     {usage.plan === 'free' ? (
                       <Link
-                        to="/pricing"
+                        to="/billing"
                         className="underline-offset-4 hover:underline"
                       >
                         Get 40 a month with the Season Pass

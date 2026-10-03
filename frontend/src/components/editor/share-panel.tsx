@@ -174,7 +174,7 @@ function ContactField({
           <Badge variant="secondary">Season Pass / Pro</Badge>
           Let visitors unlock them with a password.
           <Link
-            to="/pricing"
+            to="/billing"
             className="font-medium text-foreground underline underline-offset-4"
           >
             See plans

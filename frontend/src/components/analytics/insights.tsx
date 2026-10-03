@@ -419,7 +419,7 @@ function LockedInsights() {
               <li>Download every view as a CSV</li>
             </ul>
             <Button asChild>
-              <Link to="/pricing">See Season Pass and Pro</Link>
+              <Link to="/billing">See Season Pass and Pro</Link>
             </Button>
           </div>
         </div>

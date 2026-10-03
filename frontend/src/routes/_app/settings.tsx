@@ -1,9 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { CheckIcon, CopyIcon, DownloadIcon, XIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { ConfirmDialog } from '@/components/app/confirm-dialog'
 import { z } from 'zod'
 import { PageHeader } from '@/components/app/page-header'
 import { AiKeyTab } from '@/components/settings/ai-key-tab'
@@ -18,7 +17,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -41,40 +39,32 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from '@/components/ui/input-group'
-import { Progress } from '@/components/ui/progress'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useDebouncedEffect } from '@/hooks/use-debounced-effect'
 import { api, errorMessage, expectOk, unwrap } from '@/lib/api/client'
-import {
-  meQuery,
-  queryKeys,
-  subscriptionQuery,
-  usageQuery,
-} from '@/lib/api/queries'
+import { meQuery, queryKeys } from '@/lib/api/queries'
 import type { Me } from '@/lib/api/types'
 import { signOut } from '@/lib/auth-client'
 import { downloadFile } from '@/lib/download'
-import { formatDate, planLabels } from '@/lib/format'
-import { openRazorpayCheckout } from '@/lib/razorpay'
 import { site } from '@/lib/site'
-import { cn } from '@/lib/utils'
 
 const searchSchema = z.object({
+  // 'billing' and 'plan' only exist so old links still land on the right page.
   tab: z.enum(['account', 'billing', 'ai', 'data']).optional(),
   plan: z.enum(['season_pass', 'pro']).optional(),
 })
 
 export const Route = createFileRoute('/_app/settings')({
   validateSearch: searchSchema,
+  beforeLoad: ({ search }) => {
+    if (search.tab === 'billing')
+      throw redirect({ to: '/billing', search: { plan: search.plan } })
+  },
   head: () => ({ meta: [{ title: `Settings | ${site.name}` }] }),
   loader: ({ context }) =>
-    Promise.all([
-      context.queryClient.prefetchQuery(meQuery),
-      context.queryClient.prefetchQuery(usageQuery),
-      context.queryClient.prefetchQuery(subscriptionQuery),
-    ]),
+    Promise.all([context.queryClient.prefetchQuery(meQuery)]),
   component: SettingsPage,
 })
 
@@ -243,231 +233,6 @@ function AccountTab({ me }: { me: Me }) {
   )
 }
 
-const paidPlans = [
-  {
-    id: 'season_pass',
-    name: 'Season Pass',
-    price: '₹499 for 6 months',
-    body: 'One payment for 6 months. 40 AI-tailored resumes a month and unlimited AI edits.',
-  },
-  {
-    id: 'pro',
-    name: 'Pro',
-    price: '₹129 a month',
-    body: 'The same AI limits as the Season Pass, billed monthly. Cancel anytime.',
-  },
-] as const
-
-function UsageRow({
-  label,
-  used,
-  limit,
-}: {
-  label: string
-  used: number
-  limit: number
-}) {
-  const unlimited = limit >= 1000
-  return (
-    <div className="flex flex-col gap-1.5">
-      <div className="flex justify-between text-sm">
-        <span>{label}</span>
-        <span className="text-muted-foreground tabular-nums">
-          {used} of {unlimited ? 'unlimited' : limit}
-        </span>
-      </div>
-      {!unlimited && (
-        <Progress
-          value={Math.min(100, (used / limit) * 100)}
-          aria-label={label}
-        />
-      )}
-    </div>
-  )
-}
-
-function BillingTab({
-  me,
-  highlight,
-}: {
-  me: Me
-  highlight?: 'season_pass' | 'pro'
-}) {
-  const queryClient = useQueryClient()
-  const { data: usage } = useQuery(usageQuery)
-  const { data: subscription } = useQuery(subscriptionQuery)
-  const [waiting, setWaiting] = useState(false)
-  const [confirmCancel, setConfirmCancel] = useState(false)
-
-  const refresh = () => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.subscription })
-    queryClient.invalidateQueries({ queryKey: queryKeys.usage })
-    queryClient.invalidateQueries({ queryKey: queryKeys.me })
-  }
-
-  const checkout = useMutation({
-    mutationFn: async (plan: 'season_pass' | 'pro') => {
-      const session = await unwrap(
-        api.POST('/v1/checkouts', { body: { plan } }),
-      )
-      await openRazorpayCheckout({
-        key: session.keyId,
-        name: site.name,
-        description: plan === 'pro' ? 'Pro, monthly' : 'Season Pass, 6 months',
-        ...(session.orderId && { order_id: session.orderId }),
-        ...(session.razorpaySubscriptionId && {
-          subscription_id: session.razorpaySubscriptionId,
-        }),
-        prefill: { name: me.name, email: me.email },
-        theme: { color: '#0b6e65' },
-        handler: () => {
-          // The plan switches when Razorpay's webhook reaches us, usually within seconds.
-          setWaiting(true)
-          toast.success('Payment received. Activating your plan…')
-          let tries = 0
-          const timer = setInterval(() => {
-            refresh()
-            if (++tries >= 10) {
-              clearInterval(timer)
-              setWaiting(false)
-            }
-          }, 2000)
-        },
-      })
-    },
-    onError: (error) => toast.error(errorMessage(error)),
-  })
-
-  const cancel = useMutation({
-    mutationFn: () => unwrap(api.DELETE('/v1/subscription')),
-    onSuccess: () => {
-      refresh()
-      toast.success(
-        'Pro cancelled. You keep it until the end of this billing period.',
-      )
-    },
-    onError: (error) => toast.error(errorMessage(error)),
-  })
-
-  const activeSub = subscription?.subscription
-  return (
-    <div className="flex flex-col gap-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            {planLabels[me.plan]} plan
-            {waiting && <Spinner />}
-          </CardTitle>
-          <CardDescription>
-            {activeSub?.currentPeriodEnd
-              ? activeSub.status === 'cancelled'
-                ? `Cancelled. Active until ${formatDate(activeSub.currentPeriodEnd)}.`
-                : activeSub.plan === 'pro'
-                  ? `Renews on ${formatDate(activeSub.currentPeriodEnd)}.`
-                  : `Active until ${formatDate(activeSub.currentPeriodEnd)}.`
-              : 'Usage resets on the 1st of every month.'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {usage ? (
-            <div className="flex flex-col gap-4">
-              <UsageRow
-                label="Resumes"
-                used={usage.resumes.used}
-                limit={usage.resumes.limit}
-              />
-              {usage.ownAiKey ? (
-                <p className="text-sm text-muted-foreground">
-                  AI requests run on your own key, so tailoring, edits and
-                  imports aren't limited.
-                </p>
-              ) : (
-                <>
-                  <UsageRow
-                    label="AI-tailored resumes this month"
-                    used={usage.tailor.used}
-                    limit={usage.tailor.limit}
-                  />
-                  <UsageRow
-                    label="AI edits this month"
-                    used={usage.edit.used}
-                    limit={usage.edit.limit}
-                  />
-                  <UsageRow
-                    label="AI imports this month"
-                    used={usage.import.used}
-                    limit={usage.import.limit}
-                  />
-                </>
-              )}
-            </div>
-          ) : (
-            <Skeleton className="h-32" />
-          )}
-        </CardContent>
-        {activeSub?.plan === 'pro' && activeSub.status === 'active' && (
-          <CardFooter>
-            <Button
-              variant="outline"
-              onClick={() => setConfirmCancel(true)}
-              disabled={cancel.isPending}
-            >
-              {cancel.isPending && <Spinner data-icon="inline-start" />}
-              Cancel Pro
-            </Button>
-          </CardFooter>
-        )}
-        <ConfirmDialog
-          open={confirmCancel}
-          onOpenChange={setConfirmCancel}
-          title="Cancel Pro?"
-          description="You keep Pro until the end of the period you've paid for, then move to the Free plan. Nothing is deleted."
-          confirmLabel="Cancel Pro"
-          cancelLabel="Keep Pro"
-          destructive
-          onConfirm={() => cancel.mutate()}
-        />
-      </Card>
-
-      {me.plan === 'free' && (
-        <div className="grid gap-4 sm:grid-cols-2">
-          {paidPlans.map((plan) => (
-            <Card
-              key={plan.id}
-              className={cn(
-                highlight === plan.id && 'border-primary ring-1 ring-primary',
-              )}
-            >
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  {plan.name}
-                  {plan.id === 'season_pass' && <Badge>Most popular</Badge>}
-                </CardTitle>
-                <CardDescription>{plan.price}</CardDescription>
-              </CardHeader>
-              <CardContent className="text-sm text-muted-foreground">
-                {plan.body}
-              </CardContent>
-              <CardFooter>
-                <Button
-                  variant={plan.id === 'season_pass' ? 'default' : 'outline'}
-                  onClick={() => checkout.mutate(plan.id)}
-                  disabled={checkout.isPending}
-                >
-                  {checkout.isPending && checkout.variables === plan.id && (
-                    <Spinner data-icon="inline-start" />
-                  )}
-                  {plan.id === 'season_pass' ? 'Get the Season Pass' : 'Go Pro'}
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
-
 function DataTab({ me }: { me: Me }) {
   const navigate = useNavigate()
   const [confirm, setConfirm] = useState('')
@@ -570,7 +335,7 @@ function DataTab({ me }: { me: Me }) {
 }
 
 function SettingsPage() {
-  const { tab = 'account', plan } = Route.useSearch()
+  const { tab = 'account' } = Route.useSearch()
   const navigate = useNavigate({ from: Route.fullPath })
   const { data: me } = useQuery(meQuery)
 
@@ -586,7 +351,6 @@ function SettingsPage() {
       >
         <TabsList className="max-w-full justify-start overflow-x-auto">
           <TabsTrigger value="account">Account</TabsTrigger>
-          <TabsTrigger value="billing">Plan and billing</TabsTrigger>
           <TabsTrigger value="ai">AI provider</TabsTrigger>
           <TabsTrigger value="data">Your data</TabsTrigger>
         </TabsList>
@@ -596,9 +360,6 @@ function SettingsPage() {
           <>
             <TabsContent value="account">
               <AccountTab key={me.username} me={me} />
-            </TabsContent>
-            <TabsContent value="billing">
-              <BillingTab me={me} highlight={plan} />
             </TabsContent>
             <TabsContent value="ai">
               <AiKeyTab />

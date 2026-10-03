@@ -1,7 +1,9 @@
 import { Link } from '@tanstack/react-router'
+import { ArrowDownIcon } from 'lucide-react'
 import { Kbd } from '@/components/ui/kbd'
 import { site } from '@/lib/site'
 import { templateCatalog } from '@/lib/templates'
+import { cn } from '@/lib/utils'
 
 export type DocSection = { id: string; title: string; body: React.ReactNode }
 export type DocPage = {
@@ -19,6 +21,82 @@ export const docGroups = [
   'Check and share',
   'Account',
 ] as const
+
+// Flowcharts read top to bottom as plain text, so screen readers get the same steps in order.
+function Flow({
+  caption,
+  children,
+}: {
+  caption: string
+  children: React.ReactNode
+}) {
+  return (
+    <figure className="flex flex-col items-center rounded-lg border bg-card p-4 sm:p-6">
+      {children}
+      <figcaption className="mt-4 text-center text-sm text-muted-foreground">
+        {caption}
+      </figcaption>
+    </figure>
+  )
+}
+
+const flowNodeStyles = {
+  start: 'rounded-full bg-muted font-medium',
+  step: 'rounded-lg border bg-background',
+  question: 'rounded-lg border-2 border-primary/50 bg-primary/5 font-medium',
+  end: 'rounded-lg border border-primary/25 bg-background',
+}
+
+function FlowNode({
+  kind = 'step',
+  children,
+}: {
+  kind?: keyof typeof flowNodeStyles
+  children: React.ReactNode
+}) {
+  return (
+    <div
+      className={cn(
+        'w-full max-w-sm px-4 py-2.5 text-center text-sm leading-snug text-balance',
+        flowNodeStyles[kind],
+      )}
+    >
+      {children}
+    </div>
+  )
+}
+
+const FlowArrow = () => (
+  <ArrowDownIcon
+    aria-hidden
+    className="my-1.5 size-4 shrink-0 text-muted-foreground"
+  />
+)
+
+const FlowBranches = ({ children }: { children: React.ReactNode }) => (
+  <div className="mt-1.5 grid w-full gap-6 sm:grid-cols-2 sm:gap-4">
+    {children}
+  </div>
+)
+
+function FlowBranch({
+  label,
+  children,
+}: {
+  label: string
+  children: React.ReactNode
+}) {
+  return (
+    <div className="flex flex-col items-center">
+      <FlowArrow />
+      <span className="rounded-full border bg-background px-2.5 py-0.5 text-xs font-semibold">
+        {label}
+      </span>
+      <FlowArrow />
+      {children}
+    </div>
+  )
+}
 
 const K = ({ children }: { children: React.ReactNode }) => (
   <Kbd className="align-[0.1em]">{children}</Kbd>
@@ -518,30 +596,254 @@ export const docs: DocPage[] = [
       'Bring an OpenAI, Anthropic or OpenRouter key and AI limits no longer apply.',
     sections: [
       {
+        id: 'before',
+        title: 'Before you start',
+        body: (
+          <>
+            <p>
+              You need an account with at least one of these providers, with
+              billing or credit set up, and an API key from its dashboard:
+            </p>
+            <ul>
+              <li>
+                <a
+                  href="https://platform.openai.com/api-keys"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  OpenAI
+                </a>
+                : GPT models, billed by OpenAI.
+              </li>
+              <li>
+                <a
+                  href="https://console.anthropic.com/settings/keys"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Anthropic
+                </a>
+                : Claude models, billed by Anthropic.
+              </li>
+              <li>
+                <a
+                  href="https://openrouter.ai/settings/keys"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  OpenRouter
+                </a>
+                : one key for models from many companies, billed by OpenRouter.
+              </li>
+            </ul>
+            <p>
+              You can save a key for all three. Only one is used at a time, and
+              you can switch whenever you like.
+            </p>
+          </>
+        ),
+      },
+      {
         id: 'add',
         title: 'Add a key',
         body: (
-          <p>
-            Go to <b>Settings</b>, then <b>AI provider</b>, and choose{' '}
-            <b>Add key</b> on the provider's card. We test it before saving. You
-            can also choose a model; otherwise the provider's default models are
-            used. You can save a key for all three providers; only one is used
-            at a time.
-          </p>
+          <>
+            <ol>
+              <li>
+                Go to <b>Settings</b>, then <b>AI provider</b>.
+              </li>
+              <li>
+                On the provider's card, choose <b>Add key</b> and paste your API
+                key.
+              </li>
+              <li>
+                Optionally pick a model. Leave it empty to use our recommended
+                models for that provider.
+              </li>
+              <li>
+                Choose <b>Test and save</b>. We send the provider one tiny
+                request to check the key works before anything is stored.
+              </li>
+            </ol>
+            <Flow caption="What happens when you add a key">
+              <FlowNode kind="start">
+                Settings, AI provider, then <b>Add key</b> on a provider's card
+              </FlowNode>
+              <FlowArrow />
+              <FlowNode>
+                Paste your API key, and a model if you want one
+              </FlowNode>
+              <FlowArrow />
+              <FlowNode kind="question">
+                We send the provider a tiny test request. Does it pass?
+              </FlowNode>
+              <FlowBranches>
+                <FlowBranch label="Yes">
+                  <FlowNode kind="end">
+                    The key is encrypted, saved and turned on
+                  </FlowNode>
+                  <FlowArrow />
+                  <FlowNode kind="end">
+                    Any other saved key turns off, but stays saved
+                  </FlowNode>
+                </FlowBranch>
+                <FlowBranch label="No">
+                  <FlowNode kind="end">
+                    Nothing is saved, and you see what went wrong
+                  </FlowNode>
+                  <FlowArrow />
+                  <FlowNode>
+                    Fix the key or model and choose <b>Test and save</b> again
+                  </FlowNode>
+                </FlowBranch>
+              </FlowBranches>
+            </Flow>
+          </>
+        ),
+      },
+      {
+        id: 'which-key',
+        title: 'Which key runs a request',
+        body: (
+          <>
+            <p>
+              Every AI request, whether tailoring, an import, a draft or an
+              inline edit, checks your keys first:
+            </p>
+            <Flow caption="How each AI request is routed">
+              <FlowNode kind="start">
+                You tailor, import, draft or ask AI to edit
+              </FlowNode>
+              <FlowArrow />
+              <FlowNode kind="question">
+                Is one of your keys turned on?
+              </FlowNode>
+              <FlowBranches>
+                <FlowBranch label="Yes">
+                  <FlowNode>
+                    Runs on that key, with your chosen model or the provider's
+                    defaults
+                  </FlowNode>
+                  <FlowArrow />
+                  <FlowNode kind="end">
+                    Billed by your provider. Plan AI limits don't apply.
+                  </FlowNode>
+                </FlowBranch>
+                <FlowBranch label="No">
+                  <FlowNode>Runs on {site.name}'s own AI</FlowNode>
+                  <FlowArrow />
+                  <FlowNode kind="end">
+                    Counts toward your plan's AI limits
+                  </FlowNode>
+                </FlowBranch>
+              </FlowBranches>
+            </Flow>
+            <p>
+              If the provider refuses a request, for example because the key ran
+              out of credit, the request stops and tells you why. It doesn't
+              quietly switch to your plan.
+            </p>
+          </>
+        ),
+      },
+      {
+        id: 'models',
+        title: 'Pick a model',
+        body: (
+          <>
+            <p>
+              The model box on each card is searchable and lists the models your
+              key can use. You can also type any model ID. A model you choose is
+              used for every AI step, and we test it with your key before saving
+              it. Use <b>Edit model</b> to change it later; models you have used
+              before stay in the list.
+            </p>
+            <p>With the model left empty, these defaults are used:</p>
+            <div className="docs-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">Provider</th>
+                    <th scope="col">Quick steps (imports, job posts, edits)</th>
+                    <th scope="col">Tailoring</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>OpenAI</td>
+                    <td>
+                      <code>gpt-5.4-mini</code>
+                    </td>
+                    <td>
+                      <code>gpt-5.5</code>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Anthropic</td>
+                    <td>
+                      <code>claude-haiku-4-5</code>
+                    </td>
+                    <td>
+                      <code>claude-sonnet-5</code>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>OpenRouter</td>
+                    <td>
+                      <code>openai/gpt-5.4-mini</code>
+                    </td>
+                    <td>
+                      <code>anthropic/claude-sonnet-5</code>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p>
+              Small models can return changes that don't fit your resume. If a
+              run comes back empty or off, try a stronger model.
+            </p>
+          </>
+        ),
+      },
+      {
+        id: 'switch',
+        title: 'Switch providers or go back to your plan',
+        body: (
+          <ul>
+            <li>
+              <b>Switch provider:</b> turn on <b>Use this key</b> on another
+              card. Your other keys turn off but stay saved.
+            </li>
+            <li>
+              <b>Use your plan again:</b> turn off the active key. Requests run
+              on your plan and its limits until you turn a key back on.
+            </li>
+            <li>
+              <b>Change a key:</b> choose <b>Replace key</b> on its card. The
+              new key is tested before the old one is replaced.
+            </li>
+            <li>
+              <b>Delete a key:</b> choose <b>Remove key</b>. If it was the
+              active one, requests go back to your plan.
+            </li>
+          </ul>
         ),
       },
       {
         id: 'what-changes',
-        title: 'What changes',
+        title: 'What changes on your own key',
         body: (
           <ul>
             <li>
               AI requests run on your key and are billed by your provider.
             </li>
             <li>
-              Plan limits on AI tailoring, edits and imports stop applying.
+              Plan limits on AI tailoring, edits, imports and drafts stop
+              applying.
             </li>
             <li>
+              <b>AI runs</b> in the same tab lists each request and its cost.
               Costs show as "Unknown" for models we don't have prices for; your
               provider's dashboard has the exact figure.
             </li>
@@ -549,28 +851,61 @@ export const docs: DocPage[] = [
         ),
       },
       {
-        id: 'switch',
-        title: 'Switch models or use your plan',
+        id: 'troubleshooting',
+        title: 'If something goes wrong',
         body: (
-          <p>
-            Use <b>Edit model</b> to test and save a different model with your
-            existing key. Leave the model empty to return to the provider's
-            defaults. The model picker lists every model your key can use. Turn
-            on <b>Use this key</b> on another provider's card to switch to it;
-            your other keys turn off but stay saved. Turn the active key off to
-            use your account plan and its limits again.
-          </p>
+          <div className="docs-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">You see</th>
+                  <th scope="col">What to do</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>The provider rejected this key</td>
+                  <td>
+                    Copy the whole key again, and check it hasn't been revoked
+                    in the provider's dashboard.
+                  </td>
+                </tr>
+                <tr>
+                  <td>This key can't use that model</td>
+                  <td>
+                    Check the model ID, pick one from the list, or leave the
+                    model empty to use the defaults.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Out of credit or rate limited</td>
+                  <td>
+                    Add credit with the provider, or wait a minute and try
+                    again.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Your saved key can't be read anymore</td>
+                  <td>Remove the key and add it again.</td>
+                </tr>
+                <tr>
+                  <td>The model list doesn't load</td>
+                  <td>Type the model ID directly; it is still tested.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         ),
       },
       {
         id: 'security',
-        title: 'How the key is kept',
+        title: 'How your keys are kept',
         body: (
           <p>
-            The key is encrypted before it is stored, and only its last four
-            characters are ever shown back. Remove it any time from the same
-            page. Small models can return changes that don't fit your resume; if
-            a run comes back empty, try a stronger model.
+            Keys are encrypted before they are stored, and only their last four
+            characters are ever shown back. They are never included in exports
+            or logs, and they are only sent to the provider they belong to.
+            Remove them any time from the same page.
           </p>
         ),
       },

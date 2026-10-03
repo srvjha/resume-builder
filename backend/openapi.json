@@ -2898,11 +2898,20 @@
                                 "openrouter"
                               ]
                             },
+                            "enabled": {
+                              "type": "boolean"
+                            },
                             "modelId": {
                               "type": [
                                 "string",
                                 "null"
                               ]
+                            },
+                            "modelIds": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
                             },
                             "keyHint": {
                               "type": "string"
@@ -2913,7 +2922,9 @@
                           },
                           "required": [
                             "provider",
+                            "enabled",
                             "modelId",
+                            "modelIds",
                             "keyHint",
                             "verifiedAt"
                           ],
@@ -2979,7 +2990,7 @@
                       {
                         "type": "string",
                         "maxLength": 100,
-                        "pattern": "^[\\w.:/-]+$"
+                        "pattern": "^~?[\\w.:/-]+$"
                       },
                       {
                         "type": "null"
@@ -3016,11 +3027,20 @@
                                 "openrouter"
                               ]
                             },
+                            "enabled": {
+                              "type": "boolean"
+                            },
                             "modelId": {
                               "type": [
                                 "string",
                                 "null"
                               ]
+                            },
+                            "modelIds": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
                             },
                             "keyHint": {
                               "type": "string"
@@ -3031,7 +3051,125 @@
                           },
                           "required": [
                             "provider",
+                            "enabled",
                             "modelId",
+                            "modelIds",
+                            "keyHint",
+                            "verifiedAt"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Enable or disable your own AI key, or test and change its model",
+        "tags": [
+          "Account"
+        ],
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "modelId": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 100,
+                        "pattern": "^~?[\\w.:/-]+$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "provider": {
+                              "type": "string",
+                              "enum": [
+                                "openai",
+                                "anthropic",
+                                "openrouter"
+                              ]
+                            },
+                            "enabled": {
+                              "type": "boolean"
+                            },
+                            "modelId": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "modelIds": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "keyHint": {
+                              "type": "string"
+                            },
+                            "verifiedAt": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "provider",
+                            "enabled",
+                            "modelId",
+                            "modelIds",
                             "keyHint",
                             "verifiedAt"
                           ],

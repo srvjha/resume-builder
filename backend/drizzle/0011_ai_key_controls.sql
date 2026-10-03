@@ -1,0 +1,1 @@
+ALTER TABLE "user_ai_keys" ADD COLUMN "enabled" boolean DEFAULT true NOT NULL;

@@ -547,6 +547,21 @@ export const docs: DocPage[] = [
         ),
       },
       {
+        id: 'switch',
+        title: 'Switch models or use your plan',
+        body: (
+          <p>
+            Use <b>Edit model</b> to test and save a different model with your
+            existing key. Leave the model empty to return to the provider's
+            defaults. Successfully saved models are remembered for that
+            provider, and OpenRouter also offers its full searchable model
+            catalog. Turn off <b>Use my own AI key</b> to use your account plan
+            and its limits again. Your key stays saved so you can enable it
+            later.
+          </p>
+        ),
+      },
+      {
         id: 'security',
         title: 'How the key is kept',
         body: (

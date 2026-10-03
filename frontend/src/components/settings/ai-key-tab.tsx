@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/card'
 import {
   Field,
+  FieldContent,
   FieldDescription,
   FieldGroup,
   FieldLabel,
@@ -29,7 +30,9 @@ import {
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
+import { Switch } from '@/components/ui/switch'
 import { AiRunsCard } from '@/components/settings/ai-runs-card'
+import { AiModelInput } from '@/components/settings/ai-model-input'
 import { api, errorMessage, expectOk, unwrap } from '@/lib/api/client'
 import { aiKeyQuery, queryKeys } from '@/lib/api/queries'
 import { formatDate } from '@/lib/format'
@@ -72,12 +75,33 @@ export function AiKeyTab() {
   const [provider, setProvider] = useState<Provider>('openai')
   const [apiKey, setApiKey] = useState('')
   const [modelId, setModelId] = useState('')
+  const [editingModel, setEditingModel] = useState(false)
   const [confirmRemove, setConfirmRemove] = useState(false)
 
-  const refresh = () => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.aiKey })
-    queryClient.invalidateQueries({ queryKey: queryKeys.usage })
-  }
+  const refresh = () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: queryKeys.aiKey }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.usage }),
+    ])
+
+  const update = useMutation({
+    mutationFn: (body: { enabled?: boolean; modelId?: string | null }) =>
+      unwrap(api.PATCH('/v1/me/ai-key', { body })),
+    onSuccess: async (_, body) => {
+      await refresh()
+      if (body.modelId !== undefined) {
+        setEditingModel(false)
+        toast.success('Model saved. Your API key stays the same.')
+      } else {
+        toast.success(
+          body.enabled
+            ? 'AI requests now run on your saved key.'
+            : 'AI requests now use your account plan and its limits.',
+        )
+      }
+    },
+    onError: (error) => toast.error(errorMessage(error)),
+  })
 
   const save = useMutation({
     mutationFn: () =>
@@ -103,6 +127,7 @@ export function AiKeyTab() {
     mutationFn: () => expectOk(api.DELETE('/v1/me/ai-key')),
     onSuccess: () => {
       refresh()
+      setEditingModel(false)
       toast.success('Key removed. AI requests use your plan again.')
     },
     onError: (error) => toast.error(errorMessage(error)),
@@ -119,15 +144,38 @@ export function AiKeyTab() {
         <CardHeader>
           <CardTitle>Use your own AI key</CardTitle>
           <CardDescription>
-            Tailoring, imports and edits run on your OpenAI, Anthropic or
-            OpenRouter account. You pay the provider directly, and your plan's
-            AI limits no longer apply.
+            {saved && !saved.enabled
+              ? 'AI requests use your account plan and its limits. Your key is saved so you can enable it again anytime.'
+              : "Tailoring, imports and edits run on your OpenAI, Anthropic or OpenRouter account. You pay the provider directly, and your plan's AI limits no longer apply."}
           </CardDescription>
         </CardHeader>
 
         {saved && !editing ? (
           <>
-            <CardContent>
+            <CardContent className="flex flex-col gap-6">
+              <FieldGroup>
+                <Field
+                  orientation="horizontal"
+                  data-disabled={update.isPending || remove.isPending}
+                >
+                  <FieldContent>
+                    <FieldLabel htmlFor="ai-key-enabled">
+                      Use my own AI key
+                    </FieldLabel>
+                    <FieldDescription id="ai-key-enabled-description">
+                      Turn off to use your account plan without removing your
+                      key.
+                    </FieldDescription>
+                  </FieldContent>
+                  <Switch
+                    id="ai-key-enabled"
+                    aria-describedby="ai-key-enabled-description"
+                    checked={saved.enabled}
+                    disabled={update.isPending || remove.isPending}
+                    onCheckedChange={(enabled) => update.mutate({ enabled })}
+                  />
+                </Field>
+              </FieldGroup>
               <dl className="grid gap-3 text-sm sm:grid-cols-[auto_1fr] sm:gap-x-8">
                 <dt className="text-muted-foreground">Provider</dt>
                 <dd className="font-medium">
@@ -139,15 +187,80 @@ export function AiKeyTab() {
                   ••••{saved.keyHint}
                 </dd>
                 <dt className="text-muted-foreground">Model</dt>
-                <dd>{saved.modelId ?? 'Default models'}</dd>
+                <dd className="flex flex-wrap items-center gap-2">
+                  {saved.modelId ?? 'Default models'}
+                  {!editingModel && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={update.isPending}
+                      onClick={() => {
+                        setModelId(saved.modelId ?? '')
+                        setEditingModel(true)
+                      }}
+                    >
+                      Edit model
+                    </Button>
+                  )}
+                </dd>
                 <dt className="text-muted-foreground">Checked</dt>
                 <dd>{formatDate(saved.verifiedAt)}</dd>
               </dl>
+              {editingModel && (
+                <form
+                  className="flex flex-col gap-4"
+                  onSubmit={(event) => {
+                    event.preventDefault()
+                    update.mutate({ modelId: modelId.trim() || null })
+                  }}
+                >
+                  <FieldGroup>
+                    <Field data-disabled={update.isPending}>
+                      <FieldLabel htmlFor="saved-ai-model">
+                        Model (optional)
+                      </FieldLabel>
+                      <AiModelInput
+                        provider={saved.provider}
+                        modelIds={saved.modelIds}
+                        id="saved-ai-model"
+                        autoFocus
+                        placeholder={providers[saved.provider].modelExample}
+                        value={modelId}
+                        disabled={update.isPending}
+                        aria-describedby="saved-ai-model-description"
+                        onValueChange={setModelId}
+                      />
+                      <FieldDescription id="saved-ai-model-description">
+                        We test the model with your saved key. Leave empty to
+                        use the provider's default models.
+                      </FieldDescription>
+                    </Field>
+                  </FieldGroup>
+                  <div className="flex flex-wrap gap-2">
+                    <Button type="submit" disabled={update.isPending}>
+                      {update.isPending && <Spinner data-icon="inline-start" />}
+                      {update.isPending
+                        ? 'Testing model…'
+                        : 'Test and save model'}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      disabled={update.isPending}
+                      onClick={() => setEditingModel(false)}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </form>
+              )}
             </CardContent>
             <CardFooter className="flex flex-wrap gap-2">
               <Button
                 variant="outline"
+                disabled={update.isPending || remove.isPending}
                 onClick={() => {
+                  setEditingModel(false)
                   setProvider(saved.provider)
                   setModelId(saved.modelId ?? '')
                   setEditing(true)
@@ -158,6 +271,7 @@ export function AiKeyTab() {
               <Button
                 variant="ghost"
                 className="text-destructive hover:text-destructive"
+                disabled={update.isPending || remove.isPending}
                 onClick={() => setConfirmRemove(true)}
               >
                 Remove key
@@ -220,13 +334,15 @@ export function AiKeyTab() {
                   </Field>
                   <Field>
                     <FieldLabel htmlFor="ai-model">Model (optional)</FieldLabel>
-                    <Input
+                    <AiModelInput
+                      provider={provider}
+                      modelIds={
+                        saved?.provider === provider ? saved.modelIds : []
+                      }
                       id="ai-model"
-                      autoComplete="off"
-                      spellCheck={false}
                       placeholder={info.modelExample}
                       value={modelId}
-                      onChange={(event) => setModelId(event.target.value)}
+                      onValueChange={setModelId}
                       className="font-mono"
                     />
                     <FieldDescription>

@@ -966,7 +966,9 @@ export interface paths {
                             data: {
                                 /** @enum {string} */
                                 provider: "openai" | "anthropic" | "openrouter";
+                                enabled: boolean;
                                 modelId: string | null;
+                                modelIds: string[];
                                 keyHint: string;
                                 verifiedAt: string;
                             } | null;
@@ -1013,7 +1015,9 @@ export interface paths {
                             data: {
                                 /** @enum {string} */
                                 provider: "openai" | "anthropic" | "openrouter";
+                                enabled: boolean;
                                 modelId: string | null;
+                                modelIds: string[];
                                 keyHint: string;
                                 verifiedAt: string;
                             } | null;
@@ -1062,7 +1066,53 @@ export interface paths {
         };
         options?: never;
         head?: never;
-        patch?: never;
+        /** Enable or disable your own AI key, or test and change its model */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        enabled?: boolean;
+                        modelId?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data: {
+                                /** @enum {string} */
+                                provider: "openai" | "anthropic" | "openrouter";
+                                enabled: boolean;
+                                modelId: string | null;
+                                modelIds: string[];
+                                keyHint: string;
+                                verifiedAt: string;
+                            } | null;
+                        };
+                    };
+                };
+                /** @description Error */
+                default: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
         trace?: never;
     };
     "/v1/me/ai-runs": {

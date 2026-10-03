@@ -1,18 +1,20 @@
 import { generateText } from "ai";
-import { eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import type { z } from "zod";
 import { db } from "../../db/index.js";
 import { userAiKeys } from "../../db/schema/index.js";
 import { userKeyError } from "../../lib/ai/key-errors.js";
-import { AppError } from "../../lib/errors.js";
+import { AppError, ConflictError, NotFoundError } from "../../lib/errors.js";
 import { type AiProvider, createModel, defaultModels } from "../../lib/ai/models.js";
 import { open, seal } from "../../lib/secret-box.js";
-import type { putAiKeyBody } from "./ai-keys.schemas.js";
+import type { putAiKeyBody, updateAiKeyBody } from "./ai-keys.schemas.js";
 import { track } from "../../lib/analytics.js";
 
 const publicColumns = {
   provider: userAiKeys.provider,
+  enabled: userAiKeys.enabled,
   modelId: userAiKeys.modelId,
+  modelIds: userAiKeys.modelIds,
   keyHint: userAiKeys.keyHint,
   verifiedAt: userAiKeys.verifiedAt,
 };
@@ -25,7 +27,7 @@ export async function getAiKey(userId: string) {
 // The decrypted key for AI calls. Only the AI layer should call this.
 export async function loadUserAiKey(userId: string) {
   const [row] = await db.select().from(userAiKeys).where(eq(userAiKeys.userId, userId)).limit(1);
-  if (!row) return undefined;
+  if (!row?.enabled) return undefined;
   let apiKey: string;
   try {
     apiKey = open(row.encryptedKey);
@@ -37,7 +39,7 @@ export async function loadUserAiKey(userId: string) {
 }
 
 export async function hasUserAiKey(userId: string) {
-  return (await getAiKey(userId)) !== null;
+  return (await getAiKey(userId))?.enabled === true;
 }
 
 // One tiny request per model the key will be used with, so a bad key or model fails here, not mid-tailor.
@@ -62,7 +64,9 @@ export async function putAiKey(userId: string, input: z.infer<typeof putAiKeyBod
   await verify(input.provider, input.apiKey, modelId ?? undefined);
   const values = {
     provider: input.provider,
+    enabled: true,
     modelId,
+    modelIds: modelId ? [modelId] : [],
     encryptedKey: seal(input.apiKey),
     keyHint: input.apiKey.slice(-4),
     verifiedAt: new Date(),
@@ -71,10 +75,54 @@ export async function putAiKey(userId: string, input: z.infer<typeof putAiKeyBod
   const [row] = await db
     .insert(userAiKeys)
     .values({ userId, ...values })
-    .onConflictDoUpdate({ target: userAiKeys.userId, set: values })
+    .onConflictDoUpdate({
+      target: userAiKeys.userId,
+      set: {
+        ...values,
+        modelIds: sql`CASE WHEN ${userAiKeys.provider} = excluded.provider
+          THEN ARRAY(SELECT DISTINCT unnest(${userAiKeys.modelIds} || excluded.model_ids))
+          ELSE excluded.model_ids END`,
+      },
+    })
     .returning(publicColumns);
   track(userId, "ai_key_added", { provider: input.provider, custom_model: Boolean(modelId) });
   return row!;
+}
+
+export async function updateAiKey(userId: string, input: z.infer<typeof updateAiKeyBody>) {
+  const [saved] = await db.select().from(userAiKeys).where(eq(userAiKeys.userId, userId)).limit(1);
+  if (!saved) throw new NotFoundError("AI key");
+
+  const values: Partial<typeof userAiKeys.$inferInsert> = { updatedAt: new Date() };
+  if (input.enabled !== undefined) values.enabled = input.enabled;
+  if (input.modelId !== undefined && input.modelId !== saved.modelId) {
+    let apiKey: string;
+    try {
+      apiKey = open(saved.encryptedKey);
+    } catch {
+      throw new AppError(
+        422,
+        "AI_KEY_UNREADABLE",
+        "Your saved API key can't be read anymore. Add it again in Settings.",
+      );
+    }
+    await verify(saved.provider, apiKey, input.modelId ?? undefined);
+    values.modelId = input.modelId;
+    values.verifiedAt = new Date();
+  }
+
+  const [row] = await db
+    .update(userAiKeys)
+    .set({
+      ...values,
+      ...(values.modelId && {
+        modelIds: sql`ARRAY(SELECT DISTINCT unnest(array_append(${userAiKeys.modelIds}, ${values.modelId}::text)))`,
+      }),
+    })
+    .where(and(eq(userAiKeys.userId, userId), eq(userAiKeys.encryptedKey, saved.encryptedKey)))
+    .returning(publicColumns);
+  if (!row) throw new ConflictError("Your AI key changed. Refresh Settings and try again.");
+  return row;
 }
 
 export async function deleteAiKey(userId: string) {

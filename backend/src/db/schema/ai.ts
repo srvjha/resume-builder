@@ -59,8 +59,10 @@ export const userAiKeys = pgTable("user_ai_keys", {
     .primaryKey()
     .references(() => users.id, { onDelete: "cascade" }),
   provider: aiProvider().notNull(),
+  enabled: boolean().notNull().default(true),
   // Used for every AI step when set; otherwise the provider's default models.
   modelId: text(),
+  modelIds: text().array().notNull().default([]),
   encryptedKey: text().notNull(),
   keyHint: text().notNull(),
   verifiedAt: timestamp({ withTimezone: true }).notNull(),

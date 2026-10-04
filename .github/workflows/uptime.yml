@@ -4,7 +4,8 @@ name: Uptime
 # A failed run emails whoever last edited this schedule, through GitHub's notification settings.
 on:
   schedule:
-    - cron: "*/5 * * * *"
+    # Off the round minutes, which GitHub's busy schedulers are most likely to delay or skip.
+    - cron: "2-59/5 * * * *"
   workflow_dispatch:
 
 concurrency:

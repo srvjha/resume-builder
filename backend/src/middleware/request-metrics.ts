@@ -35,7 +35,7 @@ export async function timed<T>(name: string, run: () => Promise<T>): Promise<T> 
 }
 
 export function requestMetrics(req: Request, res: Response, next: NextFunction) {
-  if (req.path === "/health") return next();
+  if (req.path.startsWith("/health")) return next();
   const started = process.hrtime.bigint();
   const store: Record<string, number | boolean> = {};
   res.on("finish", () => {

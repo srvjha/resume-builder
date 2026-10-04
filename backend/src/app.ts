@@ -13,6 +13,9 @@ import { apiLimiter } from "./middleware/rate-limit.js";
 import { buildOpenApiDocument } from "./openapi.js";
 import { v1 } from "./routes.js";
 import { requestMetrics } from "./middleware/request-metrics.js";
+import { sql } from "drizzle-orm";
+import { db } from "./db/index.js";
+import { compilerHealth } from "./modules/admin/admin.service.js";
 
 export const app = express();
 
@@ -32,6 +35,20 @@ app.use(express.json({ limit: "1mb" }));
 
 app.get("/health", (_req, res) => {
   res.json({ status: "ok" });
+});
+
+// For uptime monitors: also checks Postgres and the compiler, and answers 503 if either is down.
+app.get("/health/deep", async (_req, res) => {
+  const [database, compiler] = await Promise.all([
+    db.execute(sql`select 1`).then(
+      () => true,
+      () => false,
+    ),
+    compilerHealth().then((result) => result.ok),
+  ]);
+  res
+    .status(database && compiler ? 200 : 503)
+    .json({ status: database && compiler ? "ok" : "degraded", database, compiler });
 });
 
 const openApiDocument = buildOpenApiDocument();

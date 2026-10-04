@@ -773,7 +773,7 @@ export async function getContent(days: number) {
   };
 }
 
-async function compilerHealth() {
+export async function compilerHealth() {
   if (!env.COMPILER_URL) return { mode: "in-process" as const, ok: true, latencyMs: null };
   const started = Date.now();
   try {

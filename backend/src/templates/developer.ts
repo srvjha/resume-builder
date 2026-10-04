@@ -1,5 +1,16 @@
 import type { ResumeContent, ResumeSection } from "../schemas/resume-content.js";
-import { compactList, contactParts, dateRange, fitsOneLine, tex, texRich, texUrl, visibleContent } from "./latex.js";
+import {
+  compactList,
+  contactParts,
+  dateRange,
+  fitsOneLine,
+  tex,
+  texRich,
+  texUrl,
+  visibleContent,
+  gap,
+  withGap,
+} from "./latex.js";
 import { applyLayout, nameGap, type ResumeLayout } from "./layout.js";
 
 // The Jake's Resume variant popular with Indian developers: small-caps name, icon header,
@@ -109,7 +120,7 @@ function renderSection(s: ResumeSection): string {
       const entries = s.entries.map((e) =>
         [
           `\\resumeSubheading\n  {${tex(e.organization)}}{${dateRange(e.start, e.end)}}\n  {\\textbf{${tex(e.role)}}}{${tex(e.location)}}`,
-          bullets(e.bullets),
+          bullets(e.bullets) + gap(e),
         ].join("\n"),
       );
       return section(
@@ -126,7 +137,7 @@ function renderSection(s: ResumeSection): string {
         const subtitle = [degree, e.score ? `(${tex(e.score)})` : ""].filter(Boolean).join(" ");
         return [
           `\\resumeSubheading\n  {${tex(e.institution)}}{${dateRange(e.start, e.end)}}\n  {${subtitle}}{${tex(e.location)}}`,
-          bullets(e.bullets),
+          bullets(e.bullets) + gap(e),
         ].join("\n");
       });
       return section(s.title, `\\resumeSubHeadingListStart\n${entries.join("\n")}\n\\resumeSubHeadingListEnd`);
@@ -142,7 +153,7 @@ function renderSection(s: ResumeSection): string {
         const links = e.links.map((l) => ` $|$ ${link(l.url, l.label)}`).join("");
         return [
           `\\resumeProjectHeading\n  {${title}${tech}${links}}{${dateRange(e.start, e.end)}}\n\\vspace{-10pt}`,
-          bullets(e.bullets, techs && !inline ? [techs] : []),
+          bullets(e.bullets, techs && !inline ? [techs] : []) + gap(e),
         ].join("\n");
       });
       return section(
@@ -156,7 +167,9 @@ function renderSection(s: ResumeSection): string {
       const entries = s.entries.map((e) => {
         const title = e.url ? link(e.url, e.title) : `\\textbf{${tex(e.title)}}`;
         const subtitle = e.subtitle ? ` $|$ \\emph{${tex(e.subtitle)}}` : "";
-        return [`\\resumeProjectHeading\n  {${title}${subtitle}}{${tex(e.date)}}`, bullets(e.bullets)].join("\n");
+        return [`\\resumeProjectHeading\n  {${title}${subtitle}}{${tex(e.date)}}`, bullets(e.bullets) + gap(e)].join(
+          "\n",
+        );
       });
       return section(s.title, `\\resumeSubHeadingListStart\n${entries.join("\n")}\n\\resumeSubHeadingListEnd`);
     }
@@ -178,7 +191,10 @@ export function renderDeveloper(input: ResumeContent, layout?: ResumeLayout) {
   \\vspace{-3pt}
 \\end{center}
 
-${sections.map(renderSection).filter(Boolean).join("\n\n")}
+${sections
+  .map((s) => withGap(renderSection(s), s))
+  .filter(Boolean)
+  .join("\n\n")}
 
 \\end{document}
 `,

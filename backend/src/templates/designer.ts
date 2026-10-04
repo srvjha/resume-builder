@@ -1,6 +1,6 @@
 import type { ResumeContent, ResumeSection } from "../schemas/resume-content.js";
 import { renderSections } from "./classic-body.js";
-import { contactParts, dateRange, joinNonEmpty, tex, texUrl, visibleContent } from "./latex.js";
+import { contactParts, dateRange, joinNonEmpty, tex, texUrl, visibleContent, gap, withGap } from "./latex.js";
 import { applyLayout, nameGap, type ResumeLayout } from "./layout.js";
 import { bullets, bundleFont, displayUrl } from "./shared-tech.js";
 
@@ -88,18 +88,19 @@ function sidebarSection(s: ResumeSection): string {
               tex(e.score),
               `\\textcolor{muted}{${joinNonEmpty([dateRange(e.start, e.end), tex(e.location)], ", ")}}`,
             ]),
-            bullets(e.bullets),
+            bullets(e.bullets) + gap(e),
           ]
             .filter(Boolean)
             .join("\n"),
         );
       case "list":
-        return s.entries.map((e) =>
-          lines([
-            e.url ? sideLink(e.url, `\\textbf{${tex(e.title)}}`) : `\\textbf{${tex(e.title)}}`,
-            tex(e.subtitle),
-            e.date ? `\\textcolor{muted}{${tex(e.date)}}` : undefined,
-          ]),
+        return s.entries.map(
+          (e) =>
+            lines([
+              e.url ? sideLink(e.url, `\\textbf{${tex(e.title)}}`) : `\\textbf{${tex(e.title)}}`,
+              tex(e.subtitle),
+              e.date ? `\\textcolor{muted}{${tex(e.date)}}` : undefined,
+            ]) + gap(e),
         );
       default:
         return [];
@@ -117,7 +118,9 @@ function contact(basics: ResumeContent["basics"]) {
 
 export function renderDesigner(input: ResumeContent, layout?: ResumeLayout) {
   const { basics, sections } = visibleContent(input);
-  const side = [contact(basics), ...sections.filter(inSidebar).map(sidebarSection)].filter(Boolean);
+  const side = [contact(basics), ...sections.filter(inSidebar).map((s) => withGap(sidebarSection(s), s))].filter(
+    Boolean,
+  );
   const main = renderSections(sections.filter((s) => !inSidebar(s)));
   return applyLayout(
     String.raw`${preamble}

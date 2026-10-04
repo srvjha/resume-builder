@@ -1,5 +1,5 @@
 import type { ResumeSection } from "../schemas/resume-content.js";
-import { compactList, dateRange, fitsOneLine, joinNonEmpty, tex, texRich, texUrl } from "./latex.js";
+import { compactList, dateRange, fitsOneLine, joinNonEmpty, tex, texRich, texUrl, gap, withGap } from "./latex.js";
 
 // Section bodies shared by the templates. Each template defines these macros in its preamble:
 // \resumeSubheading{title}{right}{subtitle}{right-sub}, \resumeProjectHeading{left}{right},
@@ -23,7 +23,7 @@ function renderSectionBody(section: ResumeSection): string {
         .map((e) => {
           return [
             `\\resumeSubheading{${tex(e.role)}}{${dateRange(e.start, e.end)}}{${tex(e.organization)}}{${tex(e.location)}}`,
-            bullets(e.bullets),
+            bullets(e.bullets) + gap(e),
           ].join("\n");
         })
         .join("\n");
@@ -34,7 +34,7 @@ function renderSectionBody(section: ResumeSection): string {
           const subtitle = joinNonEmpty([tex(degree), e.score ? `${tex(e.score)}` : undefined], " \\textbar{} ");
           return [
             `\\resumeSubheading{${tex(e.institution)}}{${tex(e.location)}}{${subtitle}}{${dateRange(e.start, e.end)}}`,
-            bullets(e.bullets),
+            bullets(e.bullets) + gap(e),
           ].join("\n");
         })
         .join("\n");
@@ -50,7 +50,7 @@ function renderSectionBody(section: ResumeSection): string {
             .join("");
           return [
             `\\resumeProjectHeading{${name}${tech}${links}}{${dateRange(e.start, e.end)}}`,
-            bullets(e.bullets, techs && !inline ? [techs] : []),
+            bullets(e.bullets, techs && !inline ? [techs] : []) + gap(e),
           ].join("\n");
         })
         .join("\n");
@@ -59,7 +59,9 @@ function renderSectionBody(section: ResumeSection): string {
         .map((e) => {
           const title = e.url ? `\\href{${texUrl(e.url)}}{\\textbf{${tex(e.title)}}}` : `\\textbf{${tex(e.title)}}`;
           const subtitle = e.subtitle ? ` -- ${tex(e.subtitle)}` : "";
-          return [`\\resumeProjectHeading{${title}${subtitle}}{${tex(e.date)}}`, bullets(e.bullets)].join("\n");
+          return [`\\resumeProjectHeading{${title}${subtitle}}{${tex(e.date)}}`, bullets(e.bullets) + gap(e)].join(
+            "\n",
+          );
         })
         .join("\n");
     case "skills":
@@ -95,6 +97,7 @@ export function renderSections(sections: ResumeSection[]) {
         return `\\section{${tex(section.title)}}\n${compactList(section.entries)}`;
       return `\\section{${tex(section.title)}}\n\\resumeSubHeadingListStart\n${renderSectionBody(section)}\n\\resumeSubHeadingListEnd`;
     })
+    .map((rendered, i) => withGap(rendered, sections[i]!))
     .filter(Boolean)
     .join("\n\n");
 }

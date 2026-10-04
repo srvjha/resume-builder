@@ -76,6 +76,12 @@ export const fitsOneLine = (parts: (string | undefined)[]) => parts.filter(Boole
 
 type ListEntry = Extract<ResumeContent["sections"][number], { type: "list" }>["entries"][number];
 
+// The extra space a user asked for after an entry; nothing when unset, so other resumes render unchanged.
+export const gap = (e: { spaceAfter?: number | undefined }) => (e.spaceAfter ? `\n\\vspace{${e.spaceAfter}pt}` : "");
+
+// A rendered section followed by the space the user asked for; empty sections stay empty.
+export const withGap = (rendered: string, s: { spaceAfter?: number | undefined }) => rendered && rendered + gap(s);
+
 // Achievements and certifications without bullets of their own read best as one tight bulleted list:
 // "Name, a dash, description" with the name bold (and linked), or the item as plain text when it is one sentence.
 export function compactList(entries: ListEntry[]) {
@@ -90,7 +96,7 @@ export function compactList(entries: ListEntry[]) {
         : `${texRich(e.title)}\\,\\href{${texUrl(e.url)}}{${icon("\\faLink")}}`;
     const subtitle = e.subtitle ? ` -- ${texRich(e.subtitle)}` : "";
     const date = e.date ? ` (${tex(e.date)})` : "";
-    return `  \\item \\small{${title}${subtitle}${date}}`;
+    return `  \\item \\small{${title}${subtitle}${date}}${gap(e)}`;
   });
   return `\\begin{itemize}[leftmargin=0.15in, itemsep=1pt, parsep=0pt, topsep=2pt]\n${items.join("\n")}\n\\end{itemize}`;
 }

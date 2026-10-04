@@ -1,6 +1,6 @@
 import type { ResumeSection } from "../schemas/resume-content.js";
 import { renderSections } from "./classic-body.js";
-import { tex, texRich, texUrl } from "./latex.js";
+import { tex, texRich, texUrl, withGap } from "./latex.js";
 
 // Helpers for the field-specific templates (research, analyst, product, designer, campus).
 
@@ -49,8 +49,8 @@ export const renderBody = (
   custom: (s: ResumeSection) => string | undefined = () => undefined,
 ) =>
   sections
-    .map(
-      (s) =>
+    .map((s) => {
+      const own =
         custom(s) ??
         (s.type === "skills"
           ? skillsBlock(s)
@@ -58,7 +58,9 @@ export const renderBody = (
             ? linksBlock(s)
             : s.type === "summary"
               ? summaryBlock(s)
-              : renderSections([s])),
-    )
+              : undefined);
+      // renderSections adds the section's space itself.
+      return own === undefined ? renderSections([s]) : withGap(own, s);
+    })
     .filter(Boolean)
     .join("\n\n");

@@ -8,6 +8,7 @@ import {
   PlusIcon,
   Trash2Icon,
   XIcon,
+  BetweenHorizontalEndIcon,
 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -18,7 +19,12 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
@@ -36,6 +42,47 @@ import type {
 } from './content-helpers'
 import { EndDateField, ListField, MonthField, TextField } from './fields'
 import { LinksEditor } from './links-field'
+
+// Extra space after an entry on the PDF, in points.
+const spaceOptions = [
+  { label: 'None', value: 0 },
+  { label: 'Small', value: 4 },
+  { label: 'Medium', value: 8 },
+  { label: 'Large', value: 14 },
+] as const
+
+// "Space below" for an entry or a whole section: None, Small, Medium or Large.
+function SpaceBelowMenu({
+  value,
+  onChange,
+}: {
+  value: number | undefined
+  onChange: (spaceAfter: number | undefined) => void
+}) {
+  return (
+    <DropdownMenuSub>
+      <DropdownMenuSubTrigger>
+        <BetweenHorizontalEndIcon />
+        Space below
+      </DropdownMenuSubTrigger>
+      <DropdownMenuSubContent>
+        <DropdownMenuRadioGroup
+          value={String(value ?? 0)}
+          onValueChange={(next) => onChange(Number(next) || undefined)}
+        >
+          {spaceOptions.map((option) => (
+            <DropdownMenuRadioItem
+              key={option.value}
+              value={String(option.value)}
+            >
+              {option.label}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+      </DropdownMenuSubContent>
+    </DropdownMenuSub>
+  )
+}
 
 function EntryFields({
   section,
@@ -247,7 +294,11 @@ function EntriesEditor({
   section: Extract<ResumeSection, { entries: unknown[] }>
   onChange: (section: ResumeSection) => void
 }) {
-  const entries = section.entries as { id: string; hidden: boolean }[]
+  const entries = section.entries as {
+    id: string
+    hidden: boolean
+    spaceAfter?: number
+  }[]
   const [openId, setOpenId] = useState<string | null>(
     entries.length === 1 ? entries[0].id : null,
   )
@@ -322,6 +373,16 @@ function EntriesEditor({
                       {entry.hidden ? <EyeIcon /> : <EyeOffIcon />}
                       {entry.hidden ? 'Show on resume' : 'Hide from resume'}
                     </DropdownMenuItem>
+                    <SpaceBelowMenu
+                      value={entry.spaceAfter}
+                      onChange={(spaceAfter) =>
+                        setEntries(
+                          entries.map((e, i) =>
+                            i === index ? { ...e, spaceAfter } : e,
+                          ),
+                        )
+                      }
+                    />
                   </DropdownMenuGroup>
                   <DropdownMenuSeparator />
                   <DropdownMenuGroup>
@@ -571,6 +632,10 @@ export function SectionEditor({
                 {section.hidden ? <EyeIcon /> : <EyeOffIcon />}
                 {section.hidden ? 'Show section' : 'Hide section'}
               </DropdownMenuItem>
+              <SpaceBelowMenu
+                value={section.spaceAfter}
+                onChange={(spaceAfter) => onChange({ ...section, spaceAfter })}
+              />
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>

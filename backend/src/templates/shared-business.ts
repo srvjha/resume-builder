@@ -1,5 +1,5 @@
 import type { ResumeSection } from "../schemas/resume-content.js";
-import { dateRange, joinNonEmpty, tex, texRich, texUrl } from "./latex.js";
+import { dateRange, joinNonEmpty, tex, texRich, texUrl, gap, withGap } from "./latex.js";
 
 // Section bodies shared by the business templates (banking, finance, consulting, marketing, executive).
 // Each template defines these macros in its preamble and lays them out its own way:
@@ -68,7 +68,7 @@ function renderBody(s: ResumeSection, options: BusinessOptions): string {
       .map((e) =>
         [
           e.title || e.subtitle ? `\\summarytext{${tex(joinNonEmpty([e.title, e.subtitle], " "))}}` : "",
-          bullets(e.bullets),
+          bullets(e.bullets) + gap(e),
         ]
           .filter(Boolean)
           .join("\n"),
@@ -82,7 +82,7 @@ function renderBody(s: ResumeSection, options: BusinessOptions): string {
           const repeat = options.groupRoles && i > 0 && s.entries[i - 1]!.organization === e.organization;
           return [
             `\\expentry{${repeat ? "" : tex(e.organization)}}{${tex(e.role)}}{${repeat ? "" : tex(e.location)}}{${dateRange(e.start, e.end)}}`,
-            bullets(e.bullets),
+            bullets(e.bullets) + gap(e),
           ].join("\n");
         })
         .join("\n");
@@ -91,7 +91,7 @@ function renderBody(s: ResumeSection, options: BusinessOptions): string {
         .map((e) =>
           [
             `\\eduentry{${tex(e.institution)}}{${tex(joinNonEmpty([e.degree, e.field], ", "))}}{${tex(e.score)}}{${tex(e.location)}}{${dateRange(e.start, e.end)}}`,
-            bullets(e.bullets),
+            bullets(e.bullets) + gap(e),
           ].join("\n"),
         )
         .join("\n");
@@ -100,14 +100,17 @@ function renderBody(s: ResumeSection, options: BusinessOptions): string {
         .map((e) =>
           [
             `\\projentry{${linked(e.url, e.name)}}{${tex(e.technologies.join(", "))}}{${e.links.map((l) => linked(l.url, l.label)).join(", ")}}{${dateRange(e.start, e.end)}}`,
-            bullets(e.bullets),
+            bullets(e.bullets) + gap(e),
           ].join("\n"),
         )
         .join("\n");
     case "list":
       return s.entries
         .map((e) =>
-          [`\\listentry{${linked(e.url, e.title)}}{${tex(e.subtitle)}}{${tex(e.date)}}`, bullets(e.bullets)].join("\n"),
+          [
+            `\\listentry{${linked(e.url, e.title)}}{${tex(e.subtitle)}}{${tex(e.date)}}`,
+            bullets(e.bullets) + gap(e),
+          ].join("\n"),
         )
         .join("\n");
     case "skills": {
@@ -134,7 +137,7 @@ export function renderBusinessSections(sections: ResumeSection[], options: Busin
   return sections
     .map((s) => {
       const body = renderBody(s, options);
-      return body ? `\\section{${tex(s.title)}}\n${body}` : "";
+      return body ? withGap(`\\section{${tex(s.title)}}\n${body}`, s) : "";
     })
     .filter(Boolean)
     .join("\n\n");

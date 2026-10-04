@@ -20,6 +20,7 @@ export function PdfPreview({
   failed,
   onErrorClick,
   onFix,
+  fixes,
 }: {
   url: string | null
   pageCount: number | null
@@ -29,6 +30,12 @@ export function PdfPreview({
   failed: string | null
   onErrorClick?: (line: number) => void
   onFix?: () => void
+  // Quick ways back under the page limit; each is offered only when it applies.
+  fixes?: {
+    removeSpace?: () => void
+    compact?: () => void
+    allowPages?: (pages: number) => void
+  }
 }) {
   const over = pageCount !== null && pageCount > pageLimit
   return (
@@ -57,6 +64,41 @@ export function PdfPreview({
           </span>
         )}
       </div>
+      {over && fixes && (
+        <Alert className="shrink-0 rounded-none border-x-0 border-t-0">
+          <AlertTriangleIcon />
+          <AlertTitle>
+            {pageCount} pages, over your {pageLimit}-page limit
+          </AlertTitle>
+          <AlertDescription>
+            <p>
+              Recruiters skim, so one page reads best. Hide or shorten something
+              you don't need, or:
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {fixes.removeSpace && (
+                <Button size="sm" variant="outline" onClick={fixes.removeSpace}>
+                  Remove the space you added
+                </Button>
+              )}
+              {fixes.compact && (
+                <Button size="sm" variant="outline" onClick={fixes.compact}>
+                  Use compact spacing
+                </Button>
+              )}
+              {fixes.allowPages && pageCount <= 3 && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => fixes.allowPages?.(pageCount)}
+                >
+                  Allow {pageCount} pages (not recommended)
+                </Button>
+              )}
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {errors && errors.length > 0 && (
         <div className="shrink-0 border-b p-3">

@@ -363,12 +363,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "experience";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -388,12 +390,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "education";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -414,12 +418,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "projects";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -447,6 +453,7 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "skills";
                                         groups: {
@@ -459,12 +466,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "list";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -483,6 +492,7 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "summary";
                                         /** @default  */
@@ -492,6 +502,7 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "links";
                                         links: {
@@ -551,12 +562,14 @@ export interface paths {
                                 title: string;
                                 /** @default false */
                                 hidden?: boolean;
+                                spaceAfter?: number;
                                 /** @constant */
                                 type: "experience";
                                 entries: {
                                     id: string;
                                     /** @default false */
                                     hidden?: boolean;
+                                    spaceAfter?: number;
                                     /** @default [] */
                                     bullets?: {
                                         id: string;
@@ -576,12 +589,14 @@ export interface paths {
                                 title: string;
                                 /** @default false */
                                 hidden?: boolean;
+                                spaceAfter?: number;
                                 /** @constant */
                                 type: "education";
                                 entries: {
                                     id: string;
                                     /** @default false */
                                     hidden?: boolean;
+                                    spaceAfter?: number;
                                     /** @default [] */
                                     bullets?: {
                                         id: string;
@@ -602,12 +617,14 @@ export interface paths {
                                 title: string;
                                 /** @default false */
                                 hidden?: boolean;
+                                spaceAfter?: number;
                                 /** @constant */
                                 type: "projects";
                                 entries: {
                                     id: string;
                                     /** @default false */
                                     hidden?: boolean;
+                                    spaceAfter?: number;
                                     /** @default [] */
                                     bullets?: {
                                         id: string;
@@ -635,6 +652,7 @@ export interface paths {
                                 title: string;
                                 /** @default false */
                                 hidden?: boolean;
+                                spaceAfter?: number;
                                 /** @constant */
                                 type: "skills";
                                 groups: {
@@ -647,12 +665,14 @@ export interface paths {
                                 title: string;
                                 /** @default false */
                                 hidden?: boolean;
+                                spaceAfter?: number;
                                 /** @constant */
                                 type: "list";
                                 entries: {
                                     id: string;
                                     /** @default false */
                                     hidden?: boolean;
+                                    spaceAfter?: number;
                                     /** @default [] */
                                     bullets?: {
                                         id: string;
@@ -671,6 +691,7 @@ export interface paths {
                                 title: string;
                                 /** @default false */
                                 hidden?: boolean;
+                                spaceAfter?: number;
                                 /** @constant */
                                 type: "summary";
                                 /** @default  */
@@ -680,6 +701,7 @@ export interface paths {
                                 title: string;
                                 /** @default false */
                                 hidden?: boolean;
+                                spaceAfter?: number;
                                 /** @constant */
                                 type: "links";
                                 links: {
@@ -724,12 +746,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "experience";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -749,12 +773,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "education";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -775,12 +801,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "projects";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -808,6 +836,7 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "skills";
                                         groups: {
@@ -820,12 +849,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "list";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -844,6 +875,7 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "summary";
                                         /** @default  */
@@ -853,6 +885,7 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "links";
                                         links: {
@@ -1586,12 +1619,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "experience";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -1611,12 +1646,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "education";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -1637,12 +1674,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "projects";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -1670,6 +1709,7 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "skills";
                                         groups: {
@@ -1682,12 +1722,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "list";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -1706,6 +1748,7 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "summary";
                                         /** @default  */
@@ -1715,6 +1758,7 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "links";
                                         links: {
@@ -1804,12 +1848,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "experience";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -1829,12 +1875,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "education";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -1855,12 +1903,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "projects";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -1888,6 +1938,7 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "skills";
                                         groups: {
@@ -1900,12 +1951,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "list";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -1924,6 +1977,7 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "summary";
                                         /** @default  */
@@ -1933,6 +1987,7 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "links";
                                         links: {
@@ -2050,12 +2105,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "experience";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -2075,12 +2132,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "education";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -2101,12 +2160,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "projects";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -2134,6 +2195,7 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "skills";
                                         groups: {
@@ -2146,12 +2208,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "list";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -2170,6 +2234,7 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "summary";
                                         /** @default  */
@@ -2179,6 +2244,7 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "links";
                                         links: {
@@ -2329,12 +2395,14 @@ export interface paths {
                                     title: string;
                                     /** @default false */
                                     hidden?: boolean;
+                                    spaceAfter?: number;
                                     /** @constant */
                                     type: "experience";
                                     entries: {
                                         id: string;
                                         /** @default false */
                                         hidden?: boolean;
+                                        spaceAfter?: number;
                                         /** @default [] */
                                         bullets?: {
                                             id: string;
@@ -2354,12 +2422,14 @@ export interface paths {
                                     title: string;
                                     /** @default false */
                                     hidden?: boolean;
+                                    spaceAfter?: number;
                                     /** @constant */
                                     type: "education";
                                     entries: {
                                         id: string;
                                         /** @default false */
                                         hidden?: boolean;
+                                        spaceAfter?: number;
                                         /** @default [] */
                                         bullets?: {
                                             id: string;
@@ -2380,12 +2450,14 @@ export interface paths {
                                     title: string;
                                     /** @default false */
                                     hidden?: boolean;
+                                    spaceAfter?: number;
                                     /** @constant */
                                     type: "projects";
                                     entries: {
                                         id: string;
                                         /** @default false */
                                         hidden?: boolean;
+                                        spaceAfter?: number;
                                         /** @default [] */
                                         bullets?: {
                                             id: string;
@@ -2413,6 +2485,7 @@ export interface paths {
                                     title: string;
                                     /** @default false */
                                     hidden?: boolean;
+                                    spaceAfter?: number;
                                     /** @constant */
                                     type: "skills";
                                     groups: {
@@ -2425,12 +2498,14 @@ export interface paths {
                                     title: string;
                                     /** @default false */
                                     hidden?: boolean;
+                                    spaceAfter?: number;
                                     /** @constant */
                                     type: "list";
                                     entries: {
                                         id: string;
                                         /** @default false */
                                         hidden?: boolean;
+                                        spaceAfter?: number;
                                         /** @default [] */
                                         bullets?: {
                                             id: string;
@@ -2449,6 +2524,7 @@ export interface paths {
                                     title: string;
                                     /** @default false */
                                     hidden?: boolean;
+                                    spaceAfter?: number;
                                     /** @constant */
                                     type: "summary";
                                     /** @default  */
@@ -2458,6 +2534,7 @@ export interface paths {
                                     title: string;
                                     /** @default false */
                                     hidden?: boolean;
+                                    spaceAfter?: number;
                                     /** @constant */
                                     type: "links";
                                     links: {
@@ -2549,12 +2626,14 @@ export interface paths {
                                             title: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @constant */
                                             type: "experience";
                                             entries: {
                                                 id: string;
                                                 /** @default false */
                                                 hidden: boolean;
+                                                spaceAfter?: number;
                                                 /** @default [] */
                                                 bullets: {
                                                     id: string;
@@ -2574,12 +2653,14 @@ export interface paths {
                                             title: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @constant */
                                             type: "education";
                                             entries: {
                                                 id: string;
                                                 /** @default false */
                                                 hidden: boolean;
+                                                spaceAfter?: number;
                                                 /** @default [] */
                                                 bullets: {
                                                     id: string;
@@ -2600,12 +2681,14 @@ export interface paths {
                                             title: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @constant */
                                             type: "projects";
                                             entries: {
                                                 id: string;
                                                 /** @default false */
                                                 hidden: boolean;
+                                                spaceAfter?: number;
                                                 /** @default [] */
                                                 bullets: {
                                                     id: string;
@@ -2633,6 +2716,7 @@ export interface paths {
                                             title: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @constant */
                                             type: "skills";
                                             groups: {
@@ -2645,12 +2729,14 @@ export interface paths {
                                             title: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @constant */
                                             type: "list";
                                             entries: {
                                                 id: string;
                                                 /** @default false */
                                                 hidden: boolean;
+                                                spaceAfter?: number;
                                                 /** @default [] */
                                                 bullets: {
                                                     id: string;
@@ -2669,6 +2755,7 @@ export interface paths {
                                             title: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @constant */
                                             type: "summary";
                                             /** @default  */
@@ -2678,6 +2765,7 @@ export interface paths {
                                             title: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @constant */
                                             type: "links";
                                             links: {
@@ -2790,12 +2878,14 @@ export interface paths {
                                             title: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @constant */
                                             type: "experience";
                                             entries: {
                                                 id: string;
                                                 /** @default false */
                                                 hidden: boolean;
+                                                spaceAfter?: number;
                                                 /** @default [] */
                                                 bullets: {
                                                     id: string;
@@ -2815,12 +2905,14 @@ export interface paths {
                                             title: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @constant */
                                             type: "education";
                                             entries: {
                                                 id: string;
                                                 /** @default false */
                                                 hidden: boolean;
+                                                spaceAfter?: number;
                                                 /** @default [] */
                                                 bullets: {
                                                     id: string;
@@ -2841,12 +2933,14 @@ export interface paths {
                                             title: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @constant */
                                             type: "projects";
                                             entries: {
                                                 id: string;
                                                 /** @default false */
                                                 hidden: boolean;
+                                                spaceAfter?: number;
                                                 /** @default [] */
                                                 bullets: {
                                                     id: string;
@@ -2874,6 +2968,7 @@ export interface paths {
                                             title: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @constant */
                                             type: "skills";
                                             groups: {
@@ -2886,12 +2981,14 @@ export interface paths {
                                             title: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @constant */
                                             type: "list";
                                             entries: {
                                                 id: string;
                                                 /** @default false */
                                                 hidden: boolean;
+                                                spaceAfter?: number;
                                                 /** @default [] */
                                                 bullets: {
                                                     id: string;
@@ -2910,6 +3007,7 @@ export interface paths {
                                             title: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @constant */
                                             type: "summary";
                                             /** @default  */
@@ -2919,6 +3017,7 @@ export interface paths {
                                             title: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @constant */
                                             type: "links";
                                             links: {
@@ -3149,12 +3248,14 @@ export interface paths {
                                 title: string;
                                 /** @default false */
                                 hidden?: boolean;
+                                spaceAfter?: number;
                                 /** @constant */
                                 type: "experience";
                                 entries: {
                                     id: string;
                                     /** @default false */
                                     hidden?: boolean;
+                                    spaceAfter?: number;
                                     /** @default [] */
                                     bullets?: {
                                         id: string;
@@ -3174,12 +3275,14 @@ export interface paths {
                                 title: string;
                                 /** @default false */
                                 hidden?: boolean;
+                                spaceAfter?: number;
                                 /** @constant */
                                 type: "education";
                                 entries: {
                                     id: string;
                                     /** @default false */
                                     hidden?: boolean;
+                                    spaceAfter?: number;
                                     /** @default [] */
                                     bullets?: {
                                         id: string;
@@ -3200,12 +3303,14 @@ export interface paths {
                                 title: string;
                                 /** @default false */
                                 hidden?: boolean;
+                                spaceAfter?: number;
                                 /** @constant */
                                 type: "projects";
                                 entries: {
                                     id: string;
                                     /** @default false */
                                     hidden?: boolean;
+                                    spaceAfter?: number;
                                     /** @default [] */
                                     bullets?: {
                                         id: string;
@@ -3233,6 +3338,7 @@ export interface paths {
                                 title: string;
                                 /** @default false */
                                 hidden?: boolean;
+                                spaceAfter?: number;
                                 /** @constant */
                                 type: "skills";
                                 groups: {
@@ -3245,12 +3351,14 @@ export interface paths {
                                 title: string;
                                 /** @default false */
                                 hidden?: boolean;
+                                spaceAfter?: number;
                                 /** @constant */
                                 type: "list";
                                 entries: {
                                     id: string;
                                     /** @default false */
                                     hidden?: boolean;
+                                    spaceAfter?: number;
                                     /** @default [] */
                                     bullets?: {
                                         id: string;
@@ -3269,6 +3377,7 @@ export interface paths {
                                 title: string;
                                 /** @default false */
                                 hidden?: boolean;
+                                spaceAfter?: number;
                                 /** @constant */
                                 type: "summary";
                                 /** @default  */
@@ -3278,6 +3387,7 @@ export interface paths {
                                 title: string;
                                 /** @default false */
                                 hidden?: boolean;
+                                spaceAfter?: number;
                                 /** @constant */
                                 type: "links";
                                 links: {
@@ -3344,12 +3454,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "experience";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -3369,12 +3481,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "education";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -3395,12 +3509,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "projects";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -3428,6 +3544,7 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "skills";
                                         groups: {
@@ -3440,12 +3557,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "list";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -3464,6 +3583,7 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "summary";
                                         /** @default  */
@@ -3473,6 +3593,7 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "links";
                                         links: {
@@ -3563,12 +3684,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "experience";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -3588,12 +3711,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "education";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -3614,12 +3739,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "projects";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -3647,6 +3774,7 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "skills";
                                         groups: {
@@ -3659,12 +3787,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "list";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -3683,6 +3813,7 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "summary";
                                         /** @default  */
@@ -3692,6 +3823,7 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "links";
                                         links: {
@@ -3781,12 +3913,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "experience";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -3806,12 +3940,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "education";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -3832,12 +3968,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "projects";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -3865,6 +4003,7 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "skills";
                                         groups: {
@@ -3877,12 +4016,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "list";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -3901,6 +4042,7 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "summary";
                                         /** @default  */
@@ -3910,6 +4052,7 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "links";
                                         links: {
@@ -4134,12 +4277,14 @@ export interface paths {
                                 title: string;
                                 /** @default false */
                                 hidden?: boolean;
+                                spaceAfter?: number;
                                 /** @constant */
                                 type: "experience";
                                 entries: {
                                     id: string;
                                     /** @default false */
                                     hidden?: boolean;
+                                    spaceAfter?: number;
                                     /** @default [] */
                                     bullets?: {
                                         id: string;
@@ -4159,12 +4304,14 @@ export interface paths {
                                 title: string;
                                 /** @default false */
                                 hidden?: boolean;
+                                spaceAfter?: number;
                                 /** @constant */
                                 type: "education";
                                 entries: {
                                     id: string;
                                     /** @default false */
                                     hidden?: boolean;
+                                    spaceAfter?: number;
                                     /** @default [] */
                                     bullets?: {
                                         id: string;
@@ -4185,12 +4332,14 @@ export interface paths {
                                 title: string;
                                 /** @default false */
                                 hidden?: boolean;
+                                spaceAfter?: number;
                                 /** @constant */
                                 type: "projects";
                                 entries: {
                                     id: string;
                                     /** @default false */
                                     hidden?: boolean;
+                                    spaceAfter?: number;
                                     /** @default [] */
                                     bullets?: {
                                         id: string;
@@ -4218,6 +4367,7 @@ export interface paths {
                                 title: string;
                                 /** @default false */
                                 hidden?: boolean;
+                                spaceAfter?: number;
                                 /** @constant */
                                 type: "skills";
                                 groups: {
@@ -4230,12 +4380,14 @@ export interface paths {
                                 title: string;
                                 /** @default false */
                                 hidden?: boolean;
+                                spaceAfter?: number;
                                 /** @constant */
                                 type: "list";
                                 entries: {
                                     id: string;
                                     /** @default false */
                                     hidden?: boolean;
+                                    spaceAfter?: number;
                                     /** @default [] */
                                     bullets?: {
                                         id: string;
@@ -4254,6 +4406,7 @@ export interface paths {
                                 title: string;
                                 /** @default false */
                                 hidden?: boolean;
+                                spaceAfter?: number;
                                 /** @constant */
                                 type: "summary";
                                 /** @default  */
@@ -4263,6 +4416,7 @@ export interface paths {
                                 title: string;
                                 /** @default false */
                                 hidden?: boolean;
+                                spaceAfter?: number;
                                 /** @constant */
                                 type: "links";
                                 links: {
@@ -4519,12 +4673,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "experience";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -4544,12 +4700,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "education";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -4570,12 +4728,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "projects";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -4603,6 +4763,7 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "skills";
                                         groups: {
@@ -4615,12 +4776,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "list";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -4639,6 +4802,7 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "summary";
                                         /** @default  */
@@ -4648,6 +4812,7 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "links";
                                         links: {
@@ -4744,12 +4909,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "experience";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -4769,12 +4936,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "education";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -4795,12 +4964,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "projects";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -4828,6 +4999,7 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "skills";
                                         groups: {
@@ -4840,12 +5012,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "list";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -4864,6 +5038,7 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "summary";
                                         /** @default  */
@@ -4873,6 +5048,7 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "links";
                                         links: {
@@ -6032,12 +6208,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "experience";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -6057,12 +6235,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "education";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -6083,12 +6263,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "projects";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -6116,6 +6298,7 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "skills";
                                         groups: {
@@ -6128,12 +6311,14 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "list";
                                         entries: {
                                             id: string;
                                             /** @default false */
                                             hidden: boolean;
+                                            spaceAfter?: number;
                                             /** @default [] */
                                             bullets: {
                                                 id: string;
@@ -6152,6 +6337,7 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "summary";
                                         /** @default  */
@@ -6161,6 +6347,7 @@ export interface paths {
                                         title: string;
                                         /** @default false */
                                         hidden: boolean;
+                                        spaceAfter?: number;
                                         /** @constant */
                                         type: "links";
                                         links: {

@@ -193,6 +193,7 @@ function ResumeEditor({
   const [title, setTitle] = useState(resume.title)
   const [templateId, setTemplateId] = useState(resume.templateId ?? 'developer')
   const [layoutSettings, setLayoutSettings] = useState(resume.layout)
+  const [pageLimit, setPageLimit] = useState(resume.pageLimit)
   const [saveState, setSaveState] = useState<SaveState>('saved')
   const [pane, setPane] = useState<'edit' | 'preview'>('edit')
   const { tailor, created, ats } = Route.useSearch()
@@ -268,6 +269,7 @@ function ResumeEditor({
       title?: string
       templateId?: string
       layout?: ResumeDetail['layout']
+      pageLimit?: number
     }) =>
       unwrap(
         api.PATCH('/v1/resumes/{resumeId}', {
@@ -322,7 +324,25 @@ function ResumeEditor({
   const previewPane = (
     <PdfPreview
       {...preview}
-      pageLimit={resume.pageLimit}
+      pageLimit={pageLimit}
+      fixes={{
+        removeSpace:
+          structured && content && hasAddedSpace(content)
+            ? () => setContent(withoutAddedSpace(content))
+            : undefined,
+        compact:
+          structured && layoutSettings.spacing !== 'compact'
+            ? () => {
+                const next = { ...layoutSettings, spacing: 'compact' as const }
+                setLayoutSettings(next)
+                update.mutate({ layout: next })
+              }
+            : undefined,
+        allowPages: (pages) => {
+          setPageLimit(pages)
+          update.mutate({ pageLimit: pages })
+        },
+      }}
       onErrorClick={
         structured ? undefined : (line) => latexEditor.current?.goToLine(line)
       }
@@ -614,3 +634,23 @@ function ResumeEditor({
     </div>
   )
 }
+
+// Space the user added after sections or entries, which the page-limit warning can undo in one click.
+const hasAddedSpace = (content: ResumeContent) =>
+  content.sections.some(
+    (s) =>
+      (s.spaceAfter ?? 0) > 0 ||
+      ('entries' in s && s.entries.some((e) => (e.spaceAfter ?? 0) > 0)),
+  )
+
+const withoutAddedSpace = (content: ResumeContent): ResumeContent => ({
+  ...content,
+  sections: content.sections.map(({ spaceAfter: _, ...s }) =>
+    'entries' in s
+      ? ({
+          ...s,
+          entries: s.entries.map(({ spaceAfter: __, ...e }) => e),
+        } as ResumeContent['sections'][number])
+      : (s as ResumeContent['sections'][number]),
+  ),
+})

@@ -58,7 +58,9 @@ function education(s: Extract<ResumeSection, { type: "education" }>) {
   const rows = s.entries.map((e) => {
     const row = `${tex(joinNonEmpty([e.degree, e.field], ", "))} & ${tex(joinNonEmpty([e.institution, e.location], ", "))} & ${tex(e.score)} & ${dateRange(e.start, e.end)} \\\\`;
     const list = bullets(e.bullets);
-    return list ? `${row}\n\\multicolumn{4}{@{}p{\\linewidth}@{}}{${list}} \\\\` : row;
+    // Table rows take extra space through booktabs, not \\vspace.
+    const space = e.spaceAfter ? `\n\\addlinespace[${e.spaceAfter}pt]` : "";
+    return (list ? `${row}\n\\multicolumn{4}{@{}p{\\linewidth}@{}}{${list}} \\\\` : row) + space;
   });
   return String.raw`\section{${tex(s.title)}}
 {\small\begin{tabularx}{\linewidth}{@{}L${gap}L${gap}l${gap}r@{}}

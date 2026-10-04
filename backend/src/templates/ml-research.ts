@@ -1,5 +1,5 @@
 import type { ResumeContent, ResumeSection } from "../schemas/resume-content.js";
-import { contactParts, joinNonEmpty, tex, texUrl, visibleContent } from "./latex.js";
+import { contactParts, joinNonEmpty, tex, texUrl, visibleContent, gap } from "./latex.js";
 import { applyLayout, nameGap, type ResumeLayout } from "./layout.js";
 import { bullets, bundleFont, isPublications, renderBody } from "./shared-tech.js";
 
@@ -53,7 +53,7 @@ function publications(s: Extract<ResumeSection, { type: "list" }>) {
   const items = s.entries.map((e) => {
     const title = e.url ? `\\href{${texUrl(e.url)}}{\\textbf{${tex(e.title)}}}` : `\\textbf{${tex(e.title)}}`;
     const cite = joinNonEmpty([title, e.subtitle ? `\\textit{${tex(e.subtitle)}}` : undefined, tex(e.date)], ". ");
-    return [`\\item ${cite}.`, bullets(e.bullets)].filter(Boolean).join("\n");
+    return [`\\item ${cite}.`, bullets(e.bullets) + gap(e)].filter(Boolean).join("\n");
   });
   return `\\section{${tex(s.title)}}\n\\begin{enumerate}[label={\\textcolor{accent}{[\\arabic*]}}, leftmargin=2.2em, topsep=0pt, parsep=0pt, itemsep=2pt]\n${items.join("\n")}\n\\end{enumerate}`;
 }

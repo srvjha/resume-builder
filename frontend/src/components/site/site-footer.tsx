@@ -9,6 +9,7 @@ const columns = [
     links: [
       { to: '/templates', label: 'Templates' },
       { to: '/ats-checker', label: 'ATS checker' },
+      { to: '/guides', label: 'Resume guides' },
       { to: '/pricing', label: 'Pricing' },
       { to: '/docs', label: 'Docs' },
       { to: '/login', label: 'Sign in' },

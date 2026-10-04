@@ -29,7 +29,6 @@ import { Route as SiteAtsCheckerRouteImport } from './routes/_site/ats-checker'
 import { Route as SiteDocsRouteRouteImport } from './routes/_site/docs/route'
 import { Route as SitePricingRouteImport } from './routes/_site/pricing'
 import { Route as SitePrivacyRouteImport } from './routes/_site/privacy'
-import { Route as SiteTemplatesRouteImport } from './routes/_site/templates'
 import { Route as SiteTermsRouteImport } from './routes/_site/terms'
 import { Route as AppAdminIndexRouteImport } from './routes/_app/admin/index'
 import { Route as AppAdminAiRouteImport } from './routes/_app/admin/ai'
@@ -44,6 +43,10 @@ import { Route as AppResumesResumeIdRouteImport } from './routes/_app/resumes/$r
 import { Route as AppResumesNewRouteImport } from './routes/_app/resumes/new'
 import { Route as SiteDocsIndexRouteImport } from './routes/_site/docs/index'
 import { Route as SiteDocsSlugRouteImport } from './routes/_site/docs/$slug'
+import { Route as SiteGuidesIndexRouteImport } from './routes/_site/guides/index'
+import { Route as SiteGuidesSlugRouteImport } from './routes/_site/guides/$slug'
+import { Route as SiteTemplatesIndexRouteImport } from './routes/_site/templates/index'
+import { Route as SiteTemplatesTemplateIdRouteImport } from './routes/_site/templates/$templateId'
 import { Route as AppAdminUsersIndexRouteImport } from './routes/_app/admin/users/index'
 import { Route as AppAdminUsersUserIdRouteImport } from './routes/_app/admin/users/$userId'
 
@@ -145,11 +148,6 @@ const SitePrivacyRoute = SitePrivacyRouteImport.update({
   path: '/privacy',
   getParentRoute: () => SiteRoute,
 } as any)
-const SiteTemplatesRoute = SiteTemplatesRouteImport.update({
-  id: '/templates',
-  path: '/templates',
-  getParentRoute: () => SiteRoute,
-} as any)
 const SiteTermsRoute = SiteTermsRouteImport.update({
   id: '/terms',
   path: '/terms',
@@ -221,6 +219,26 @@ const SiteDocsSlugRoute = SiteDocsSlugRouteImport.update({
   path: '/$slug',
   getParentRoute: () => SiteDocsRouteRoute,
 } as any)
+const SiteGuidesIndexRoute = SiteGuidesIndexRouteImport.update({
+  id: '/guides/',
+  path: '/guides/',
+  getParentRoute: () => SiteRoute,
+} as any)
+const SiteGuidesSlugRoute = SiteGuidesSlugRouteImport.update({
+  id: '/guides/$slug',
+  path: '/guides/$slug',
+  getParentRoute: () => SiteRoute,
+} as any)
+const SiteTemplatesIndexRoute = SiteTemplatesIndexRouteImport.update({
+  id: '/templates/',
+  path: '/templates/',
+  getParentRoute: () => SiteRoute,
+} as any)
+const SiteTemplatesTemplateIdRoute = SiteTemplatesTemplateIdRouteImport.update({
+  id: '/templates/$templateId',
+  path: '/templates/$templateId',
+  getParentRoute: () => SiteRoute,
+} as any)
 const AppAdminUsersIndexRoute = AppAdminUsersIndexRouteImport.update({
   id: '/users/',
   path: '/users/',
@@ -250,7 +268,6 @@ export interface FileRoutesByFullPath {
   '/ats-checker': typeof SiteAtsCheckerRoute
   '/pricing': typeof SitePricingRoute
   '/privacy': typeof SitePrivacyRoute
-  '/templates': typeof SiteTemplatesRoute
   '/terms': typeof SiteTermsRoute
   '/$username/': typeof UsernameIndexRoute
   '/admin/ai': typeof AppAdminAiRoute
@@ -263,9 +280,13 @@ export interface FileRoutesByFullPath {
   '/resumes/$resumeId': typeof AppResumesResumeIdRoute
   '/resumes/new': typeof AppResumesNewRoute
   '/docs/$slug': typeof SiteDocsSlugRoute
+  '/guides/$slug': typeof SiteGuidesSlugRoute
+  '/templates/$templateId': typeof SiteTemplatesTemplateIdRoute
   '/admin/': typeof AppAdminIndexRoute
   '/my-templates/': typeof AppMyTemplatesIndexRoute
   '/docs/': typeof SiteDocsIndexRoute
+  '/guides/': typeof SiteGuidesIndexRoute
+  '/templates/': typeof SiteTemplatesIndexRoute
   '/admin/users/$userId': typeof AppAdminUsersUserIdRoute
   '/admin/users/': typeof AppAdminUsersIndexRoute
 }
@@ -285,7 +306,6 @@ export interface FileRoutesByTo {
   '/ats-checker': typeof SiteAtsCheckerRoute
   '/pricing': typeof SitePricingRoute
   '/privacy': typeof SitePrivacyRoute
-  '/templates': typeof SiteTemplatesRoute
   '/terms': typeof SiteTermsRoute
   '/$username': typeof UsernameIndexRoute
   '/admin/ai': typeof AppAdminAiRoute
@@ -298,9 +318,13 @@ export interface FileRoutesByTo {
   '/resumes/$resumeId': typeof AppResumesResumeIdRoute
   '/resumes/new': typeof AppResumesNewRoute
   '/docs/$slug': typeof SiteDocsSlugRoute
+  '/guides/$slug': typeof SiteGuidesSlugRoute
+  '/templates/$templateId': typeof SiteTemplatesTemplateIdRoute
   '/admin': typeof AppAdminIndexRoute
   '/my-templates': typeof AppMyTemplatesIndexRoute
   '/docs': typeof SiteDocsIndexRoute
+  '/guides': typeof SiteGuidesIndexRoute
+  '/templates': typeof SiteTemplatesIndexRoute
   '/admin/users/$userId': typeof AppAdminUsersUserIdRoute
   '/admin/users': typeof AppAdminUsersIndexRoute
 }
@@ -324,7 +348,6 @@ export interface FileRoutesById {
   '/_site/ats-checker': typeof SiteAtsCheckerRoute
   '/_site/pricing': typeof SitePricingRoute
   '/_site/privacy': typeof SitePrivacyRoute
-  '/_site/templates': typeof SiteTemplatesRoute
   '/_site/terms': typeof SiteTermsRoute
   '/$username/': typeof UsernameIndexRoute
   '/_site/': typeof SiteIndexRoute
@@ -338,9 +361,13 @@ export interface FileRoutesById {
   '/_app/resumes/$resumeId': typeof AppResumesResumeIdRoute
   '/_app/resumes/new': typeof AppResumesNewRoute
   '/_site/docs/$slug': typeof SiteDocsSlugRoute
+  '/_site/guides/$slug': typeof SiteGuidesSlugRoute
+  '/_site/templates/$templateId': typeof SiteTemplatesTemplateIdRoute
   '/_app/admin/': typeof AppAdminIndexRoute
   '/_app/my-templates/': typeof AppMyTemplatesIndexRoute
   '/_site/docs/': typeof SiteDocsIndexRoute
+  '/_site/guides/': typeof SiteGuidesIndexRoute
+  '/_site/templates/': typeof SiteTemplatesIndexRoute
   '/_app/admin/users/$userId': typeof AppAdminUsersUserIdRoute
   '/_app/admin/users/': typeof AppAdminUsersIndexRoute
 }
@@ -364,7 +391,6 @@ export interface FileRouteTypes {
     | '/ats-checker'
     | '/pricing'
     | '/privacy'
-    | '/templates'
     | '/terms'
     | '/$username/'
     | '/admin/ai'
@@ -377,9 +403,13 @@ export interface FileRouteTypes {
     | '/resumes/$resumeId'
     | '/resumes/new'
     | '/docs/$slug'
+    | '/guides/$slug'
+    | '/templates/$templateId'
     | '/admin/'
     | '/my-templates/'
     | '/docs/'
+    | '/guides/'
+    | '/templates/'
     | '/admin/users/$userId'
     | '/admin/users/'
   fileRoutesByTo: FileRoutesByTo
@@ -399,7 +429,6 @@ export interface FileRouteTypes {
     | '/ats-checker'
     | '/pricing'
     | '/privacy'
-    | '/templates'
     | '/terms'
     | '/$username'
     | '/admin/ai'
@@ -412,9 +441,13 @@ export interface FileRouteTypes {
     | '/resumes/$resumeId'
     | '/resumes/new'
     | '/docs/$slug'
+    | '/guides/$slug'
+    | '/templates/$templateId'
     | '/admin'
     | '/my-templates'
     | '/docs'
+    | '/guides'
+    | '/templates'
     | '/admin/users/$userId'
     | '/admin/users'
   id:
@@ -437,7 +470,6 @@ export interface FileRouteTypes {
     | '/_site/ats-checker'
     | '/_site/pricing'
     | '/_site/privacy'
-    | '/_site/templates'
     | '/_site/terms'
     | '/$username/'
     | '/_site/'
@@ -451,9 +483,13 @@ export interface FileRouteTypes {
     | '/_app/resumes/$resumeId'
     | '/_app/resumes/new'
     | '/_site/docs/$slug'
+    | '/_site/guides/$slug'
+    | '/_site/templates/$templateId'
     | '/_app/admin/'
     | '/_app/my-templates/'
     | '/_site/docs/'
+    | '/_site/guides/'
+    | '/_site/templates/'
     | '/_app/admin/users/$userId'
     | '/_app/admin/users/'
   fileRoutesById: FileRoutesById
@@ -609,13 +645,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitePrivacyRouteImport
       parentRoute: typeof SiteRoute
     }
-    '/_site/templates': {
-      id: '/_site/templates'
-      path: '/templates'
-      fullPath: '/templates'
-      preLoaderRoute: typeof SiteTemplatesRouteImport
-      parentRoute: typeof SiteRoute
-    }
     '/_site/terms': {
       id: '/_site/terms'
       path: '/terms'
@@ -713,6 +742,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/docs/$slug'
       preLoaderRoute: typeof SiteDocsSlugRouteImport
       parentRoute: typeof SiteDocsRouteRoute
+    }
+    '/_site/guides/': {
+      id: '/_site/guides/'
+      path: '/guides'
+      fullPath: '/guides/'
+      preLoaderRoute: typeof SiteGuidesIndexRouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/_site/guides/$slug': {
+      id: '/_site/guides/$slug'
+      path: '/guides/$slug'
+      fullPath: '/guides/$slug'
+      preLoaderRoute: typeof SiteGuidesSlugRouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/_site/templates/': {
+      id: '/_site/templates/'
+      path: '/templates'
+      fullPath: '/templates/'
+      preLoaderRoute: typeof SiteTemplatesIndexRouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/_site/templates/$templateId': {
+      id: '/_site/templates/$templateId'
+      path: '/templates/$templateId'
+      fullPath: '/templates/$templateId'
+      preLoaderRoute: typeof SiteTemplatesTemplateIdRouteImport
+      parentRoute: typeof SiteRoute
     }
     '/_app/admin/users/': {
       id: '/_app/admin/users/'
@@ -812,9 +869,12 @@ interface SiteRouteChildren {
   SiteAtsCheckerRoute: typeof SiteAtsCheckerRoute
   SitePricingRoute: typeof SitePricingRoute
   SitePrivacyRoute: typeof SitePrivacyRoute
-  SiteTemplatesRoute: typeof SiteTemplatesRoute
   SiteTermsRoute: typeof SiteTermsRoute
   SiteIndexRoute: typeof SiteIndexRoute
+  SiteGuidesSlugRoute: typeof SiteGuidesSlugRoute
+  SiteTemplatesTemplateIdRoute: typeof SiteTemplatesTemplateIdRoute
+  SiteGuidesIndexRoute: typeof SiteGuidesIndexRoute
+  SiteTemplatesIndexRoute: typeof SiteTemplatesIndexRoute
 }
 
 const SiteRouteChildren: SiteRouteChildren = {
@@ -822,9 +882,12 @@ const SiteRouteChildren: SiteRouteChildren = {
   SiteAtsCheckerRoute: SiteAtsCheckerRoute,
   SitePricingRoute: SitePricingRoute,
   SitePrivacyRoute: SitePrivacyRoute,
-  SiteTemplatesRoute: SiteTemplatesRoute,
   SiteTermsRoute: SiteTermsRoute,
   SiteIndexRoute: SiteIndexRoute,
+  SiteGuidesSlugRoute: SiteGuidesSlugRoute,
+  SiteTemplatesTemplateIdRoute: SiteTemplatesTemplateIdRoute,
+  SiteGuidesIndexRoute: SiteGuidesIndexRoute,
+  SiteTemplatesIndexRoute: SiteTemplatesIndexRoute,
 }
 
 const SiteRouteWithChildren = SiteRoute._addFileChildren(SiteRouteChildren)

@@ -1,12 +1,17 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { docs } from '@/lib/docs'
+import { guides } from '@/lib/guides'
 import { site } from '@/lib/site'
+import { templateCatalog } from '@/lib/templates'
 
 // Public pages only. Share links stay out: their owners decide whether they're found.
 const paths = [
   '/',
   '/templates',
+  ...templateCatalog.map((template) => `/templates/${template.id}`),
   '/ats-checker',
+  '/guides',
+  ...guides.map((guide) => `/guides/${guide.slug}`),
   '/pricing',
   '/docs',
   ...docs.map((doc) => `/docs/${doc.slug}`),

@@ -26,7 +26,7 @@ import {
 // Two rows of the three-column desktop grid.
 const batch = 6
 
-export const Route = createFileRoute('/_site/templates')({
+export const Route = createFileRoute('/_site/templates/')({
   validateSearch: z.object({
     category: z
       .literal(templateCategories.map((category) => category.id))
@@ -35,11 +35,13 @@ export const Route = createFileRoute('/_site/templates')({
   }),
   head: () => ({
     meta: [
-      { title: `Resume templates | ${site.name}` },
+      {
+        title: `Free ATS-Friendly Resume Templates for Freshers | ${site.name}`,
+      },
       {
         name: 'description',
         content:
-          'Free LaTeX-quality resume templates for software engineering, data, product, design, students and more. ATS-friendly and one page.',
+          '14 free resume templates for freshers, campus placements, software, data, banking, consulting and more. LaTeX-quality, ATS-friendly, one page, no LaTeX needed.',
       },
     ],
     links: [{ rel: 'canonical', href: `${site.url}/templates` }],
@@ -122,7 +124,13 @@ function TemplatesPage() {
                 <div className="flex flex-1 flex-col gap-3">
                   <div>
                     <h2 className="font-sans text-xl font-semibold">
-                      {template.name}
+                      <Link
+                        to="/templates/$templateId"
+                        params={{ templateId: template.id }}
+                        className="hover:underline"
+                      >
+                        {template.name}
+                      </Link>
                     </h2>
                     <p className="mt-1 text-muted-foreground">
                       {template.description}

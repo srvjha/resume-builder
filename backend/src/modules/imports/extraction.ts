@@ -144,6 +144,21 @@ function projectTech(x: Entry) {
 // Words that only name a link ("Verify", "Live") aren't content once the URL is attached.
 const linkWord = /^(verify|verified|link|code|live|demo|pdf|github|website|certificate|credential|view|here)$/i;
 
+// A line under a project's name that only repeats its stack and link labels ("React, Go | Live | Code").
+function stackOnly(text: string, technologies: string[]) {
+  const known = new Set(technologies.map((t) => t.toLowerCase()));
+  const parts = text.replace(/\*\*/g, "").split(/\s*[|,·]\s*/).filter(Boolean);
+  return known.size > 0 && parts.every((part) => known.has(part.toLowerCase()) || linkWord.test(part));
+}
+
+// "Full Stack Developer — Acme" when Acme is already the organization, which templates print as well.
+function bareRole(role: string, organization: string) {
+  if (!organization) return role;
+  const org = organization.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const sep = String.raw`\s*(?:[|,@\-–—]|\bat\b)\s*`;
+  return role.replace(new RegExp(`${sep}${org}$|^${org}${sep}`, "i"), "").trim() || role;
+}
+
 function normalizeSection(section: Extraction["sections"][number]): ResumeSection | null {
   const base = { id: shortId(), title: plain(section.title) ?? section.type, hidden: false };
   const e = section.entries;
@@ -158,7 +173,7 @@ function normalizeSection(section: Extraction["sections"][number]): ResumeSectio
             id: shortId(),
             hidden: false,
             organization: plain(x.organization) ?? "",
-            role: plain(x.role) ?? "",
+            role: bareRole(plain(x.role) ?? "", plain(x.organization) ?? ""),
             location: plain(x.location),
             ...range(x),
             bullets: withLeftovers(x, ["title", "subtitle", "name"], [x.organization, x.role]),
@@ -188,16 +203,21 @@ function normalizeSection(section: Extraction["sections"][number]): ResumeSectio
         type: "projects",
         entries: e
           .filter((x) => plain(x.name))
-          .map((x) => ({
-            id: shortId(),
-            hidden: false,
-            name: plain(x.name)!,
-            url: url(x.url),
-            links: projectLinks(x),
-            technologies: projectTech(x),
-            ...range(x),
-            bullets: withLeftovers(x, ["title", "subtitle"], [x.name]).filter((b) => !techLine.test(b.text)),
-          })),
+          .map((x) => {
+            const technologies = projectTech(x);
+            return {
+              id: shortId(),
+              hidden: false,
+              name: plain(x.name)!,
+              url: url(x.url),
+              links: projectLinks(x),
+              technologies,
+              ...range(x),
+              bullets: withLeftovers(x, ["title", "subtitle"], [x.name]).filter(
+                (b) => !techLine.test(b.text) && !stackOnly(b.text, technologies),
+              ),
+            };
+          }),
       };
     case "skills":
       return {

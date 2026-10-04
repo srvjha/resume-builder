@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import { z } from "zod";
 import { db } from "../../db/index.js";
 import { users } from "../../db/schema/index.js";
 import { generateStructured } from "../../lib/ai/generate.js";
@@ -57,6 +58,7 @@ export async function createImport(
   let prompt = "Extract this resume.";
   const files: { data: Buffer; mediaType: string; filename: string }[] = [];
   let pdf: Uint8Array | undefined;
+  let hidden: { text: string; url: string }[] = [];
 
   if ("uploadId" in input) {
     const { upload, body } = await readUpload(userId, input.uploadId);
@@ -64,6 +66,7 @@ export async function createImport(
       files.push({ data: body, mediaType: "application/pdf", filename: upload.fileName });
       pdf = new Uint8Array(body);
       const { links, bold } = await pdfHints(new Uint8Array(body));
+      hidden = links;
       if (links.length) {
         prompt += `\n\nThese links are hidden behind text in the PDF. Each shows the words it sits on (or its line, for an icon), then where it points. Put each URL in the url or links field of the item it belongs to, a mailto: address in basics.email, a tel: number in basics.phone, and profile links in basics.links:\n${links.map((l) => `- "${l.text}" -> ${l.url}`).join("\n")}`;
       }
@@ -89,7 +92,20 @@ export async function createImport(
     prompt,
     files,
   });
-  const { content, missed } = await checkCoverage(normalizeExtraction(data), pdf);
+  const extracted = normalizeExtraction(data);
+  // The model sometimes skips an email or phone that sits only behind an icon.
+  const behind = (scheme: string) => {
+    const link = hidden.find((l) => l.url.toLowerCase().startsWith(scheme));
+    try {
+      return link && decodeURIComponent(link.url.slice(scheme.length).split("?")[0]!).trim();
+    } catch {
+      return undefined;
+    }
+  };
+  const email = behind("mailto:");
+  if (!extracted.basics.email && z.email().safeParse(email).success) extracted.basics.email = email;
+  extracted.basics.phone ||= behind("tel:")?.slice(0, 30) || undefined;
+  const { content, missed } = await checkCoverage(extracted, pdf);
   track(userId, "resume_imported", { from: "uploadId" in input ? "file" : "text", missed_lines: missed.length });
   return { content, aiRunId: runId, missed };
 }

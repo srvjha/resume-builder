@@ -305,3 +305,49 @@ describe("normalizeExtraction project links", () => {
     expect(projects?.type === "projects" && projects.entries[0]!.links.map((l) => l.label)).toEqual(["GitHub", "Live"]);
   });
 });
+
+describe("normalizeExtraction repeats", () => {
+  it("drops the company from the role and a project line that only repeats its stack and links", () => {
+    const content = normalizeExtraction({
+      basics: { name: "A", headline: null, email: null, phone: null, location: null, links: [] },
+      sections: [
+        {
+          type: "experience",
+          title: "Experience",
+          text: null,
+          groups: [],
+          links: [],
+          entries: [
+            entry({ organization: "Carbharatics.com", role: "Full Stack Developer — Carbharatics.com" }),
+            entry({ organization: "Unicapp", role: "Backend Developer at Unicapp" }),
+            entry({ organization: "Go", role: "Go Developer" }),
+          ],
+        },
+        {
+          type: "projects",
+          title: "Projects",
+          text: null,
+          groups: [],
+          links: [],
+          entries: [
+            entry({
+              name: "Crewly",
+              subtitle: "React.js, PostgreSQL, **Prisma** | Live | Code",
+              technologies: ["React.js", "PostgreSQL", "Prisma"],
+              bullets: ["Built a multi-tenant React.js, PostgreSQL app"],
+            }),
+          ],
+        },
+      ],
+    });
+    const [experience, projects] = content.sections;
+    expect(experience?.type === "experience" && experience.entries.map((e) => e.role)).toEqual([
+      "Full Stack Developer",
+      "Backend Developer",
+      "Go Developer",
+    ]);
+    expect(projects?.type === "projects" && projects.entries[0]!.bullets.map((b) => b.text)).toEqual([
+      "Built a multi-tenant React.js, PostgreSQL app",
+    ]);
+  });
+});

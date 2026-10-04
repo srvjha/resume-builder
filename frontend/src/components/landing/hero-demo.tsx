@@ -130,7 +130,8 @@ export function HeroDemo() {
                 key={bullet.step}
                 layout
                 className="relative flex gap-2 pl-1"
-                animate={{ opacity: hidden ? 0.35 : 1 }}
+                // 0.6 keeps the struck line readable (4.5:1 contrast); the strike shows it's removed.
+                animate={{ opacity: hidden ? 0.6 : 1 }}
                 transition={{ duration: 0.4 }}
               >
                 <span aria-hidden="true">•</span>

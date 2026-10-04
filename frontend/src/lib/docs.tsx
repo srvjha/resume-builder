@@ -14,6 +14,10 @@ export type DocPage = {
   sections: DocSection[]
 }
 
+// Prose styles for article bodies (docs and guides), which are plain elements.
+export const prose =
+  'flex flex-col gap-4 leading-relaxed [&_a]:font-medium [&_a]:text-primary [&_a]:underline-offset-4 [&_a:hover]:underline [&_code]:rounded [&_code]:bg-muted [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[0.85em] [&_ol]:flex [&_ol]:list-decimal [&_ol]:flex-col [&_ol]:gap-2 [&_ol]:pl-5 [&_ul]:flex [&_ul]:list-disc [&_ul]:flex-col [&_ul]:gap-2 [&_ul]:pl-5'
+
 export const docGroups = [
   'Getting started',
   'Writing',

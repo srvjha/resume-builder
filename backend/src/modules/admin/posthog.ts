@@ -66,10 +66,23 @@ async function traffic(days: number, timeZone: string) {
       values,
     ).then(rows);
 
-  const [totals, byDay, pages, referrers, countries, devices, browsers, events, api, recordings, compiles, previews] =
-    await Promise.all([
-      hogql(
-        `SELECT
+  const [
+    totals,
+    byDay,
+    pages,
+    referrers,
+    countries,
+    devices,
+    browsers,
+    events,
+    api,
+    recordings,
+    compiles,
+    previews,
+    campaigns,
+  ] = await Promise.all([
+    hogql(
+      `SELECT
          countIf(timestamp >= now() - toIntervalDay({days})),
          count(DISTINCT if(timestamp >= now() - toIntervalDay({days}), person_id, NULL)),
          count(DISTINCT if(timestamp >= now() - toIntervalDay({days}), $session_id, NULL)),
@@ -77,30 +90,30 @@ async function traffic(days: number, timeZone: string) {
          count(DISTINCT if(timestamp < now() - toIntervalDay({days}), person_id, NULL))
        FROM events
        WHERE event = '$pageview' AND timestamp >= now() - toIntervalDay({days} * 2)`,
-        values,
-      ),
-      hogql(
-        `SELECT toString(toDate(toTimeZone(timestamp, {timeZone}))) AS day, count(), count(DISTINCT person_id)
+      values,
+    ),
+    hogql(
+      `SELECT toString(toDate(toTimeZone(timestamp, {timeZone}))) AS day, count(), count(DISTINCT person_id)
        FROM events WHERE ${pageviews} GROUP BY day ORDER BY day`,
-        values,
-      ),
-      breakdown("properties.$pathname"),
-      breakdown("properties.$referring_domain"),
-      breakdown("properties.$geoip_country_name"),
-      breakdown("properties.$device_type"),
-      breakdown("properties.$browser"),
-      hogql(
-        `SELECT event, count() AS total, count(DISTINCT person_id)
+      values,
+    ),
+    breakdown("properties.$pathname"),
+    breakdown("properties.$referring_domain"),
+    breakdown("properties.$geoip_country_name"),
+    breakdown("properties.$device_type"),
+    breakdown("properties.$browser"),
+    hogql(
+      `SELECT event, count() AS total, count(DISTINCT person_id)
        FROM events
        WHERE timestamp >= now() - toIntervalDay({days}) AND NOT startsWith(event, '$') AND event != 'api_request'
        GROUP BY event ORDER BY total DESC LIMIT 20`,
-        values,
-      ),
-      // api_request is sampled (see request-metrics.ts): slow and failed requests are always kept, fast ones 1 in 10.
-      // Each event is repeated 1 / sample_rate times so counts and percentiles reflect real traffic (HogQL has no
-      // weighted quantile); unweighted, the p95 read 30 times too high.
-      hogql(
-        `SELECT route, count() AS requests, quantile(0.5)(duration), quantile(0.95)(duration), countIf(status >= 500)
+      values,
+    ),
+    // api_request is sampled (see request-metrics.ts): slow and failed requests are always kept, fast ones 1 in 10.
+    // Each event is repeated 1 / sample_rate times so counts and percentiles reflect real traffic (HogQL has no
+    // weighted quantile); unweighted, the p95 read 30 times too high.
+    hogql(
+      `SELECT route, count() AS requests, quantile(0.5)(duration), quantile(0.95)(duration), countIf(status >= 500)
        FROM (
          SELECT
            concat(toString(properties.method), ' ', toString(properties.route)) AS route,
@@ -111,21 +124,21 @@ async function traffic(days: number, timeZone: string) {
          WHERE event = 'api_request' AND timestamp >= now() - toIntervalDay({days})
        )
        GROUP BY route ORDER BY requests DESC LIMIT 15`,
-        values,
-      ),
-      posthog<{
-        results: {
-          id: string;
-          distinct_id: string;
-          start_time: string;
-          recording_duration: number;
-          click_count: number;
-          start_url: string | null;
-        }[];
-      }>("/session_recordings/?limit=10"),
-      // PDF compiles, from the steps request-metrics.ts records; weighted like the API table above.
-      hogql(
-        `SELECT count(), countIf(cached), quantileIf(0.5)(compile, NOT cached), quantileIf(0.95)(compile, NOT cached),
+      values,
+    ),
+    posthog<{
+      results: {
+        id: string;
+        distinct_id: string;
+        start_time: string;
+        recording_duration: number;
+        click_count: number;
+        start_url: string | null;
+      }[];
+    }>("/session_recordings/?limit=10"),
+    // PDF compiles, from the steps request-metrics.ts records; weighted like the API table above.
+    hogql(
+      `SELECT count(), countIf(cached), quantileIf(0.5)(compile, NOT cached), quantileIf(0.95)(compile, NOT cached),
          quantile(0.5)(lookup)
        FROM (
          SELECT
@@ -137,15 +150,35 @@ async function traffic(days: number, timeZone: string) {
          WHERE event = 'api_request' AND properties.compile_cached IS NOT NULL
            AND timestamp >= now() - toIntervalDay({days})
        )`,
-        values,
-      ),
-      // Sent by the browser: from an edit to the new PDF on screen, including the debounce.
-      hogql(
-        `SELECT quantile(0.5)(toFloat(properties.duration_ms)), quantile(0.95)(toFloat(properties.duration_ms))
+      values,
+    ),
+    // Sent by the browser: from an edit to the new PDF on screen, including the debounce.
+    hogql(
+      `SELECT quantile(0.5)(toFloat(properties.duration_ms)), quantile(0.95)(toFloat(properties.duration_ms))
          FROM events WHERE event = 'preview_shown' AND timestamp >= now() - toIntervalDay({days})`,
-        values,
-      ),
-    ]);
+      values,
+    ),
+    // Tagged links (?utm_source=…&utm_campaign=…), credited to each visitor's first tagged visit in the range.
+    // A sign-up counts when that same person signed up in the range.
+    hogql(
+      `SELECT source, campaign, count() AS visitors,
+           countIf(person_id IN (
+             SELECT DISTINCT person_id FROM events
+             WHERE event = 'user_signed_up' AND timestamp >= now() - toIntervalDay({days})
+           )) AS signups
+         FROM (
+           SELECT person_id,
+             argMin(toString(properties.$utm_source), timestamp) AS source,
+             argMin(coalesce(toString(properties.$utm_campaign), ''), timestamp) AS campaign
+           FROM events
+           WHERE event = '$pageview' AND timestamp >= now() - toIntervalDay({days})
+             AND properties.$utm_source IS NOT NULL AND toString(properties.$utm_source) != ''
+           GROUP BY person_id
+         )
+         GROUP BY source, campaign ORDER BY visitors DESC LIMIT 12`,
+      values,
+    ),
+  ]);
 
   const [current = []] = totals;
   return {
@@ -168,6 +201,12 @@ async function traffic(days: number, timeZone: string) {
     })(),
     pages,
     referrers,
+    campaigns: campaigns.map(([source, campaign, visitors, signups]) => ({
+      source: str(source, "unknown"),
+      campaign: str(campaign, ""),
+      visitors: num(visitors),
+      signups: num(signups),
+    })),
     countries,
     devices,
     browsers,

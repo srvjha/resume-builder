@@ -23707,6 +23707,37 @@
                                     "additionalProperties": false
                                   }
                                 },
+                                "campaigns": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "source": {
+                                        "type": "string"
+                                      },
+                                      "campaign": {
+                                        "type": "string"
+                                      },
+                                      "visitors": {
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      },
+                                      "signups": {
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      }
+                                    },
+                                    "required": [
+                                      "source",
+                                      "campaign",
+                                      "visitors",
+                                      "signups"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                },
                                 "countries": {
                                   "type": "array",
                                   "items": {
@@ -23936,6 +23967,7 @@
                                 "byDay",
                                 "pages",
                                 "referrers",
+                                "campaigns",
                                 "countries",
                                 "devices",
                                 "browsers",

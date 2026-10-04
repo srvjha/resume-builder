@@ -232,6 +232,52 @@ function TrafficReport({ data }: { data: TrafficData }) {
         />
       </div>
 
+      <Section
+        title="Campaigns"
+        description="Visitors who arrived on a tagged link, and how many signed up. Tag a link with ?utm_source=x&utm_campaign=launch to see it here."
+      >
+        {data.campaigns.length === 0 ? (
+          <EmptyNote>No visits from tagged links in this period.</EmptyNote>
+        ) : (
+          <div className="overflow-x-auto rounded-lg border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Source</TableHead>
+                  <TableHead>Campaign</TableHead>
+                  <TableHead className="text-right">Visitors</TableHead>
+                  <TableHead className="text-right">Sign-ups</TableHead>
+                  <TableHead className="text-right">Sign-up rate</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.campaigns.map((row) => (
+                  <TableRow key={`${row.source}/${row.campaign}`}>
+                    <TableCell className="font-mono text-sm">
+                      {row.source}
+                    </TableCell>
+                    <TableCell className="font-mono text-sm">
+                      {row.campaign || (
+                        <span className="text-muted-foreground">none</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {formatNumber(row.visitors)}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {formatNumber(row.signups)}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {Math.round((row.signups / row.visitors) * 100)}%
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </Section>
+
       <div className="grid gap-10 md:grid-cols-3">
         <BreakdownList
           title="Countries"

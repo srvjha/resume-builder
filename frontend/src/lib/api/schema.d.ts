@@ -7523,6 +7523,12 @@ export interface paths {
                                         label: string;
                                         count: number;
                                     }[];
+                                    campaigns: {
+                                        source: string;
+                                        campaign: string;
+                                        visitors: number;
+                                        signups: number;
+                                    }[];
                                     countries: {
                                         label: string;
                                         count: number;

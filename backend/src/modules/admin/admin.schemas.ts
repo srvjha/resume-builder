@@ -249,6 +249,8 @@ const trafficData = z.object({
   byDay: z.array(z.object({ day: z.string(), views: int, visitors: int })),
   pages: labelled,
   referrers: labelled,
+  // Visitors who arrived on a tagged link, by source and campaign, and how many of them signed up.
+  campaigns: z.array(z.object({ source: z.string(), campaign: z.string(), visitors: int, signups: int })),
   countries: labelled,
   devices: labelled,
   browsers: labelled,

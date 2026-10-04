@@ -14,4 +14,6 @@ export const createDraftBody = z.object({
 export const importResponse = z.object({
   content: resumeContentSchema,
   aiRunId: z.uuid(),
+  // PDF lines the AI left out. Placed ones are already in content as hidden bullets; the rest had no entry to go under.
+  missed: z.array(z.object({ text: z.string(), placed: z.boolean() })).default([]),
 });

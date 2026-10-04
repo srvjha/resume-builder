@@ -4,6 +4,7 @@ import {
   CodeIcon,
   FilePlusIcon,
   SparklesIcon,
+  EyeOffIcon,
   FileUpIcon,
   UploadCloudIcon,
   UserRoundIcon,
@@ -142,6 +143,8 @@ function NewResumePage() {
   const [fileTex, setFileTex] = useState('')
   // What the AI read from an uploaded or pasted resume, shown for review before creating.
   const [imported, setImported] = useState<ResumeContent | null>(null)
+  // PDF lines the AI skipped. Placed ones are already in the import as hidden bullets.
+  const [missed, setMissed] = useState<Missed>([])
   const [choosingTemplate, setChoosingTemplate] = useState(false)
 
   const isTexFile = file ? /\.tex$/i.test(file.name) : false
@@ -165,7 +168,10 @@ function NewResumePage() {
   const templateName =
     templateCatalog.find((t) => t.id === templateId)?.name ?? 'Developer'
 
-  async function importContent(): Promise<ResumeContent> {
+  async function importContent(): Promise<{
+    content: ResumeContent
+    missed: Missed
+  }> {
     if (file) {
       const form = new FormData()
       form.append('file', file)
@@ -182,10 +188,9 @@ function NewResumePage() {
           body.error?.message,
           body.error?.details,
         )
-      const result = await unwrap(
+      return unwrap(
         api.POST('/v1/imports', { body: { uploadId: body.data.id } }),
       )
-      return result.content
     }
     if (source === 'ai') {
       const draft = await unwrap(
@@ -193,18 +198,16 @@ function NewResumePage() {
           body: { role: role.trim(), notes: notes.trim() },
         }),
       )
-      return draft.content
+      return { content: draft.content, missed: [] }
     }
-    const result = await unwrap(
-      api.POST('/v1/imports', { body: { text: pastedText } }),
-    )
-    return result.content
+    return unwrap(api.POST('/v1/imports', { body: { text: pastedText } }))
   }
 
   const read = useMutation({
     mutationFn: importContent,
-    onSuccess: (content) => {
+    onSuccess: ({ content, missed: skipped }) => {
       setImported(content)
+      setMissed(skipped)
       setChoosingTemplate(false)
       if (!title && content.basics.name) setTitle(content.basics.name)
     },
@@ -230,7 +233,7 @@ function NewResumePage() {
           source: { type: 'tex', texSource: tex },
         }
       } else if (source === 'upload' || source === 'ai') {
-        const content = imported ?? (await importContent())
+        const content = imported ?? (await importContent()).content
         if (saveToProfile && !hasProfile) {
           await unwrap(api.PUT('/v1/profile', { body: { content } }))
           queryClient.invalidateQueries({ queryKey: ['profile'] })
@@ -368,6 +371,7 @@ function NewResumePage() {
                   'None found'}
               </dd>
             </dl>
+            <MissedLines missed={missed} />
             <Field className="max-w-md">
               <FieldLabel htmlFor="review-title">Resume name</FieldLabel>
               <Input
@@ -786,5 +790,55 @@ function NewResumePage() {
         )}
       </div>
     </div>
+  )
+}
+
+type Missed = { text: string; placed: boolean }[]
+
+// After an import, the lines the AI skipped: placed ones are hidden bullets, the rest need adding by hand.
+function MissedLines({ missed }: { missed: Missed }) {
+  if (missed.length === 0) return null
+  const placed = missed.filter((line) => line.placed)
+  const unplaced = missed.filter((line) => !line.placed)
+  const list = (lines: Missed) => (
+    <ul className="mt-2 list-disc pl-4">
+      {lines.slice(0, 5).map((line) => (
+        <li key={line.text} className="line-clamp-2">
+          {line.text}
+        </li>
+      ))}
+      {lines.length > 5 && <li>And {lines.length - 5} more</li>}
+    </ul>
+  )
+  return (
+    <Alert>
+      <EyeOffIcon />
+      <AlertTitle>
+        {missed.length === 1
+          ? 'We found 1 line the AI skipped'
+          : `We found ${missed.length} lines the AI skipped`}
+      </AlertTitle>
+      <AlertDescription>
+        {placed.length > 0 && (
+          <div>
+            <p>
+              Added as hidden bullets under the entry they came from, so they
+              won't print until you turn them on with the eye icon in the
+              editor:
+            </p>
+            {list(placed)}
+          </div>
+        )}
+        {unplaced.length > 0 && (
+          <div className={placed.length > 0 ? 'mt-3' : undefined}>
+            <p>
+              Not added, because there was no entry to put them under. Add them
+              in the editor if you need them:
+            </p>
+            {list(unplaced)}
+          </div>
+        )}
+      </AlertDescription>
+    </Alert>
   )
 }

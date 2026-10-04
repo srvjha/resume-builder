@@ -7,6 +7,11 @@ import { assertAiQuota } from "../usage/quotas.js";
 import { extractionSchema, normalizeExtraction } from "./extraction.js";
 import { pdfHints } from "./pdf-hints.js";
 import { track } from "../../lib/analytics.js";
+import { logger } from "../../lib/logger.js";
+import type { ResumeContent } from "../../schemas/resume-content.js";
+import { extractTextItems } from "../ats/parser/extract.js";
+import { parseItems } from "../ats/parser/parse.js";
+import { restoreMissedLines } from "./coverage.js";
 
 const system = `You extract resumes into structured JSON.
 Rules:
@@ -30,6 +35,18 @@ Rules:
 - Keep the source's section order and titles.
 - Fill every field; use null or [] when something doesn't apply.`;
 
+// A failed rule-based read never blocks an import; the AI's result is returned as it is.
+async function checkCoverage(content: ResumeContent, pdf: Uint8Array | undefined) {
+  if (!pdf) return { content, missed: [] };
+  try {
+    const { items, pageWidth, pageHeight } = await extractTextItems(pdf);
+    return restoreMissedLines(content, parseItems(items, { width: pageWidth, height: pageHeight }));
+  } catch (err) {
+    logger.warn({ err }, "Coverage check failed");
+    return { content, missed: [] };
+  }
+}
+
 const texLabel = "LaTeX source (ignore formatting commands, extract the content)";
 
 export async function createImport(
@@ -39,11 +56,13 @@ export async function createImport(
   await assertAiQuota(userId, "import");
   let prompt = "Extract this resume.";
   const files: { data: Buffer; mediaType: string; filename: string }[] = [];
+  let pdf: Uint8Array | undefined;
 
   if ("uploadId" in input) {
     const { upload, body } = await readUpload(userId, input.uploadId);
     if (upload.kind === "pdf") {
       files.push({ data: body, mediaType: "application/pdf", filename: upload.fileName });
+      pdf = new Uint8Array(body);
       const { links, bold } = await pdfHints(new Uint8Array(body));
       if (links.length) {
         prompt += `\n\nThese links are hidden behind text in the PDF. Each shows the words it sits on (or its line, for an icon), then where it points. Put each URL in the url or links field of the item it belongs to, a mailto: address in basics.email, a tel: number in basics.phone, and profile links in basics.links:\n${links.map((l) => `- "${l.text}" -> ${l.url}`).join("\n")}`;
@@ -70,8 +89,9 @@ export async function createImport(
     prompt,
     files,
   });
-  track(userId, "resume_imported", { from: "uploadId" in input ? "file" : "text" });
-  return { content: normalizeExtraction(data), aiRunId: runId };
+  const { content, missed } = await checkCoverage(normalizeExtraction(data), pdf);
+  track(userId, "resume_imported", { from: "uploadId" in input ? "file" : "text", missed_lines: missed.length });
+  return { content, aiRunId: runId, missed };
 }
 
 const draftSystem = `You write a resume from a person's own rough notes, as structured JSON.

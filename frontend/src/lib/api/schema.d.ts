@@ -4660,6 +4660,11 @@ export interface paths {
                                 };
                                 /** Format: uuid */
                                 aiRunId: string;
+                                /** @default [] */
+                                missed: {
+                                    text: string;
+                                    placed: boolean;
+                                }[];
                             };
                         };
                     };
@@ -4880,6 +4885,11 @@ export interface paths {
                                 };
                                 /** Format: uuid */
                                 aiRunId: string;
+                                /** @default [] */
+                                missed: {
+                                    text: string;
+                                    placed: boolean;
+                                }[];
                             };
                         };
                     };

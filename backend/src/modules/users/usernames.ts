@@ -24,6 +24,7 @@ const RESERVED = new Set([
   "dashboard",
   "docs",
   "edit",
+  "guides",
   "help",
   "home",
   "jobs",

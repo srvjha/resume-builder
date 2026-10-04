@@ -214,6 +214,7 @@ export const Route = createFileRoute('/_site/pricing')({
           'Build unlimited resumes free. Season Pass ₹499 for six months of AI tailoring, or Pro at ₹129 a month.',
       },
     ],
+    links: [{ rel: 'canonical', href: `${site.url}/pricing` }],
     scripts: [
       {
         type: 'application/ld+json',

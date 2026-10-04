@@ -42,6 +42,7 @@ export const Route = createFileRoute('/_site/templates')({
           'Free LaTeX-quality resume templates for software engineering, data, product, design, students and more. ATS-friendly and one page.',
       },
     ],
+    links: [{ rel: 'canonical', href: `${site.url}/templates` }],
   }),
   component: TemplatesPage,
 })

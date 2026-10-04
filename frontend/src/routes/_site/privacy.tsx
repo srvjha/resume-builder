@@ -3,7 +3,10 @@ import { LegalPage } from '@/components/site/legal-page'
 import { site } from '@/lib/site'
 
 export const Route = createFileRoute('/_site/privacy')({
-  head: () => ({ meta: [{ title: `Privacy | ${site.name}` }] }),
+  head: () => ({
+    meta: [{ title: `Privacy | ${site.name}` }],
+    links: [{ rel: 'canonical', href: `${site.url}/privacy` }],
+  }),
   component: () => (
     <LegalPage
       title="Privacy policy"

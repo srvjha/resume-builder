@@ -3,7 +3,10 @@ import { LegalPage } from '@/components/site/legal-page'
 import { site } from '@/lib/site'
 
 export const Route = createFileRoute('/_site/terms')({
-  head: () => ({ meta: [{ title: `Terms | ${site.name}` }] }),
+  head: () => ({
+    meta: [{ title: `Terms | ${site.name}` }],
+    links: [{ rel: 'canonical', href: `${site.url}/terms` }],
+  }),
   component: () => (
     <LegalPage
       title="Terms of use"

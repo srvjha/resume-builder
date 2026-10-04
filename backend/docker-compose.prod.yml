@@ -44,7 +44,7 @@ services:
     restart: unless-stopped
     environment:
       COMPILE_TIMEOUT_MS: "20000"
-      # Three at once on the 4-core VPS, still capped below so a burst can't starve the API, Postgres or pragati.
+      # Three at once on the 4-core VPS, still capped below so a burst can't starve the API, Postgres or the other app.
       COMPILE_CONCURRENCY: "3"
     read_only: true
     tmpfs:
@@ -93,7 +93,7 @@ services:
       postgres: { condition: service_healthy }
 
 networks:
-  # The existing reverse proxy's network, e.g. pragati_default. Find it with: docker network ls
+  # The existing reverse proxy's network, e.g. otherapp_default. Find it with: docker network ls
   proxy:
     external: true
     name: ${PROXY_NETWORK}

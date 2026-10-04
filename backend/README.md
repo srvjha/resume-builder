@@ -152,6 +152,10 @@ First setup:
 After that, every push to `main` that changes `backend/` deploys itself through
 `.github/workflows/deploy-backend.yml` (checks, then SSH, pull, rebuild and a health check).
 
+Two health endpoints: `GET /health` only says the process is up (deploys wait on it), and `GET /health/deep`
+also runs a query on Postgres and pings the compiler, answering 503 with the part that is down.
+`.github/workflows/uptime.yml` calls the deep one every 5 minutes and GitHub emails on failure.
+
 After editing `.env.production` on the server, recreate the containers so they read it (a plain `restart` keeps
 the old values):
 

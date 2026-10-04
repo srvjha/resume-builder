@@ -283,8 +283,11 @@ export const docs: DocPage[] = [
         body: (
           <p>
             The preview updates as you type and shows the page count. If a
-            resume runs over its page limit, the count turns red so you can trim
-            it, or ask the AI to "Trim it to fit on one page".
+            resume runs over its page limit, a warning appears above the preview
+            with quick fixes: remove space you added, switch to compact spacing,
+            or allow another page (one page reads best, so that is the last
+            resort). You can also hide or shorten something, or ask the AI to
+            "Trim it to fit on one page".
           </p>
         ),
       },
@@ -354,6 +357,19 @@ export const docs: DocPage[] = [
         ),
       },
       {
+        id: 'space-below',
+        title: 'Space between sections and entries',
+        body: (
+          <p>
+            To add room after one section or one entry, like a single project,
+            open its <b>⋯</b> menu and choose <b>Space below</b>: None, Small,
+            Medium or Large. It changes only that spot, and works in every
+            template. If the extra space pushes the resume past its page limit,
+            the preview warns you and offers to remove it.
+          </p>
+        ),
+      },
+      {
         id: 'your-own',
         title: 'Your own templates',
         body: (
@@ -382,6 +398,19 @@ export const docs: DocPage[] = [
             and shows a live preview in the template you choose. Nothing is
             saved until you create the resume, and you can edit everything
             afterwards.
+          </p>
+        ),
+      },
+      {
+        id: 'nothing-lost',
+        title: 'Nothing gets lost',
+        body: (
+          <p>
+            After the AI reads a PDF, Shortlist also reads the file line by line
+            and checks every line made it in. If the AI skipped one, it is added
+            back as a hidden bullet under the entry it came from, and the review
+            screen lists it. Hidden bullets don't print; turn one on with the
+            eye icon in the editor.
           </p>
         ),
       },
@@ -1280,7 +1309,8 @@ export const docs: DocPage[] = [
             The Season Pass is one payment and never renews on its own. Pro
             renews monthly until you cancel, and stays active until the end of
             the month you paid for. Payments are handled by Razorpay; we never
-            see your card or UPI details.
+            see your card or UPI details. To upgrade, see what you have used, or
+            cancel Pro, open <b>Plans and billing</b> in the sidebar.
           </p>
         ),
       },

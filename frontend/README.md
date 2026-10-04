@@ -31,14 +31,17 @@ up in the backend. To see the admin dashboard, sign in with an email listed in t
 ```
 src/
   routes/
-    _site/*            public pages: landing, pricing, templates, privacy, terms
+    _site/*            public pages: landing, pricing, templates, ATS checker, docs, privacy, terms
     login.tsx          sign in (Google, GitHub, ChatGPT when enabled, guest in development)
     _app/*             signed-in app, rendered in the browser only:
                          dashboard      overview, stats and getting started
                          workspace      all resumes
                          resumes/*      new resume flow and the editor
                          my-templates/* saved templates
-                         profile, jobs, analytics, settings
+                         ats            ATS checker for a saved resume
+                         profile, jobs, analytics
+                         billing        plans, usage and checkout
+                         settings       account, AI provider keys, your data
                          admin/*        admin dashboard (overview, users, AI, revenue, content, traffic, system)
     $username/*        public profile and share pages, rendered on the server
   components/

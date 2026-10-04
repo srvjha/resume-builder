@@ -23,9 +23,14 @@ describe("usernames", () => {
   it("reserves every top-level frontend route, so no public profile hides behind one", () => {
     const routes = new URL("../../frontend/src/routes/", import.meta.url);
     const names = ["", "_app", "_site"].flatMap((dir) =>
-      readdirSync(new URL(dir ? `${dir}/` : "", routes)).map((name) => name.replace(/\.tsx$/, "")),
+      readdirSync(new URL(dir ? `${dir}/` : "", routes)).map((name) =>
+        name.replace(/\.tsx?$/, "").replace(/\[\.\]/g, "."),
+      ),
     );
-    const topLevel = names.filter((name) => !name.startsWith("_") && !name.startsWith("$") && name !== "index");
+    // A route with a dot, like sitemap.xml, can't clash: usernames never contain one.
+    const topLevel = names.filter(
+      (name) => !name.startsWith("_") && !name.startsWith("$") && name !== "index" && !name.includes("."),
+    );
     expect(topLevel.filter((name) => !isReservedUsername(name))).toEqual([]);
   });
 });

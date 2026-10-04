@@ -1,4 +1,5 @@
-import { AlertTriangleIcon, FileWarningIcon } from 'lucide-react'
+import { AlertTriangleIcon, FileWarningIcon, InfoIcon } from 'lucide-react'
+import { useState } from 'react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -35,9 +36,21 @@ export function PdfPreview({
     removeSpace?: () => void
     compact?: () => void
     allowPages?: (pages: number) => void
+    // Roomier spacing for a page with empty space at the bottom.
+    spread?: { label: string; apply: () => void }
   }
 }) {
   const over = pageCount !== null && pageCount > pageLimit
+  const [fill, setFill] = useState<number | null>(null)
+  const [keepSpace, setKeepSpace] = useState(false)
+  // ponytail: 50% and 85% are guesses. Below half full the page needs more content, not spacing, and above 85%
+  // the space doesn't show; tune both from feedback.
+  const roomy =
+    !keepSpace &&
+    pageCount === pageLimit &&
+    fill !== null &&
+    fill >= 0.5 &&
+    fill < 0.85
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-11 shrink-0 items-center gap-2 border-b px-4 text-sm">
@@ -100,6 +113,31 @@ export function PdfPreview({
         </Alert>
       )}
 
+      {roomy && fixes?.spread && (
+        <Alert className="shrink-0 rounded-none border-x-0 border-t-0">
+          <InfoIcon />
+          <AlertTitle>Space left at the bottom of the page</AlertTitle>
+          <AlertDescription>
+            <p>
+              About {Math.round((1 - fill) * 100)}% of the last page is empty.
+              Roomier spacing spreads your content down the page.
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" onClick={fixes.spread.apply}>
+                Use {fixes.spread.label} spacing
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setKeepSpace(true)}
+              >
+                Keep it as is
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {errors && errors.length > 0 && (
         <div className="shrink-0 border-b p-3">
           <Alert variant="destructive">
@@ -147,7 +185,7 @@ export function PdfPreview({
         {url ? (
           <div className="size-full overflow-y-auto overscroll-contain">
             <div className="mx-auto max-w-[760px] px-4 py-6 sm:px-8">
-              <PdfPages url={url} />
+              <PdfPages url={url} onFill={setFill} />
             </div>
           </div>
         ) : failed ? (

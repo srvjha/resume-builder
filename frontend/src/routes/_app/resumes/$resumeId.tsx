@@ -321,6 +321,10 @@ function ResumeEditor({
       />
     )
   const currentTemplate = templateCatalog.find((t) => t.id === templateId)
+  const roomier =
+    layoutSettings.spacing === 'compact'
+      ? ('normal' as const)
+      : ('relaxed' as const)
   const previewPane = (
     <PdfPreview
       {...preview}
@@ -336,6 +340,17 @@ function ResumeEditor({
                 const next = { ...layoutSettings, spacing: 'compact' as const }
                 setLayoutSettings(next)
                 update.mutate({ layout: next })
+              }
+            : undefined,
+        spread:
+          structured && layoutSettings.spacing !== 'relaxed'
+            ? {
+                label: roomier,
+                apply: () => {
+                  const next = { ...layoutSettings, spacing: roomier }
+                  setLayoutSettings(next)
+                  update.mutate({ layout: next })
+                },
               }
             : undefined,
         allowPages: (pages) => {

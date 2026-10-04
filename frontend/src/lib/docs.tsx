@@ -287,7 +287,10 @@ export const docs: DocPage[] = [
             with quick fixes: remove space you added, switch to compact spacing,
             or allow another page (one page reads best, so that is the last
             resort). You can also hide or shorten something, or ask the AI to
-            "Trim it to fit on one page".
+            "Trim it to fit on one page". The other way round, when a full
+            resume leaves a gap at the bottom of the page (common after
+            tailoring hides weaker items), a hint offers roomier spacing to
+            spread it down the page.
           </p>
         ),
       },

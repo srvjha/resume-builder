@@ -2,7 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 
 // Renders a PDF to canvases with PDF.js so the preview matches the app's design on every device,
 // instead of the browser's own PDF viewer.
-export function PdfPages({ url }: { url: string }) {
+// onFill gets how far down the last page the text reaches, from 0 to 1.
+export function PdfPages({
+  url,
+  onFill,
+}: {
+  url: string
+  onFill?: (fill: number) => void
+}) {
   const container = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(0)
 
@@ -48,6 +55,13 @@ export function PdfPages({ url }: { url: string }) {
         canvases.push(canvas)
       }
       if (!run.cancelled) element.replaceChildren(...canvases)
+      const last = await doc.getPage(doc.numPages)
+      const { height } = last.getViewport({ scale: 1 })
+      const baselines = (await last.getTextContent()).items.flatMap((item) =>
+        'str' in item && item.str.trim() ? [item.transform[5] as number] : [],
+      )
+      if (!run.cancelled && baselines.length)
+        onFill?.(1 - Math.min(...baselines) / height)
       await task.destroy()
     })().catch(() => {
       // A newer render replaced this one, or the PDF failed to load; the previous pages stay visible.
@@ -56,7 +70,7 @@ export function PdfPages({ url }: { url: string }) {
     return () => {
       run.cancelled = true
     }
-  }, [url, width])
+  }, [url, width, onFill])
 
   return <div ref={container} className="flex w-full flex-col gap-4" />
 }

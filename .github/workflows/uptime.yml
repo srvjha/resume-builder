@@ -1,0 +1,27 @@
+name: Uptime
+
+# Every 5 minutes: the API (with Postgres and the compiler) and the website.
+# A failed run emails whoever last edited this schedule, through GitHub's notification settings.
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: uptime
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: API, database and compiler
+        run: |
+          curl -fsS --max-time 20 --retry 2 --retry-delay 15 --retry-all-errors \
+            https://api.shortlist.co.in/health/deep
+      - name: Website
+        if: always()
+        run: |
+          curl -fsS --max-time 20 --retry 2 --retry-delay 15 --retry-all-errors \
+            -o /dev/null -w "HTTP %{http_code} in %{time_total}s\n" https://shortlist.co.in/

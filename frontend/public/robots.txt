@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+
+# Signed-in app pages: nothing to index, and they redirect to sign-in.
+Disallow: /dashboard
+Disallow: /workspace
+Disallow: /resumes
+Disallow: /jobs
+Disallow: /ats$
+Disallow: /analytics
+Disallow: /profile
+Disallow: /settings
+Disallow: /billing
+Disallow: /my-templates
+Disallow: /admin
+
+Sitemap: https://shortlist.co.in/sitemap.xml

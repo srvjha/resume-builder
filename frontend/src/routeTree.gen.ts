@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as SiteRouteImport } from './routes/_site'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as UsernameIndexRouteImport } from './routes/$username/index'
 import { Route as UsernameSlugRouteImport } from './routes/$username/$slug'
 import { Route as AppAdminRouteRouteImport } from './routes/_app/admin/route'
@@ -57,6 +58,11 @@ const SiteRoute = SiteRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const UsernameIndexRoute = UsernameIndexRouteImport.update({
@@ -229,6 +235,7 @@ const AppAdminUsersUserIdRoute = AppAdminUsersUserIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof SiteIndexRoute
   '/login': typeof LoginRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AppAdminRouteRouteWithChildren
   '/docs': typeof SiteDocsRouteRouteWithChildren
   '/$username/$slug': typeof UsernameSlugRoute
@@ -265,6 +272,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof SiteIndexRoute
   '/login': typeof LoginRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/$username/$slug': typeof UsernameSlugRoute
   '/analytics': typeof AppAnalyticsRoute
   '/ats': typeof AppAtsRoute
@@ -301,6 +309,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/_site': typeof SiteRouteWithChildren
   '/login': typeof LoginRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_app/admin': typeof AppAdminRouteRouteWithChildren
   '/_site/docs': typeof SiteDocsRouteRouteWithChildren
   '/$username/$slug': typeof UsernameSlugRoute
@@ -340,6 +349,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/sitemap.xml'
     | '/admin'
     | '/docs'
     | '/$username/$slug'
@@ -376,6 +386,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/sitemap.xml'
     | '/$username/$slug'
     | '/analytics'
     | '/ats'
@@ -411,6 +422,7 @@ export interface FileRouteTypes {
     | '/_app'
     | '/_site'
     | '/login'
+    | '/sitemap.xml'
     | '/_app/admin'
     | '/_site/docs'
     | '/$username/$slug'
@@ -450,6 +462,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   SiteRoute: typeof SiteRouteWithChildren
   LoginRoute: typeof LoginRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   UsernameSlugRoute: typeof UsernameSlugRoute
   UsernameIndexRoute: typeof UsernameIndexRoute
 }
@@ -475,6 +488,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/$username/': {
@@ -813,6 +833,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   SiteRoute: SiteRouteWithChildren,
   LoginRoute: LoginRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   UsernameSlugRoute: UsernameSlugRoute,
   UsernameIndexRoute: UsernameIndexRoute,
 }

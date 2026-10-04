@@ -416,7 +416,7 @@ function ResumeEditor({
               </PopoverTrigger>
               <PopoverContent
                 align="end"
-                className="@container max-h-[min(40rem,80svh)] w-[min(52rem,calc(100vw-2rem))] overflow-y-auto"
+                className="@container max-h-[min(40rem,80svh)] w-[min(52rem,calc(100vw-2rem))] overflow-y-auto overscroll-contain"
               >
                 <TemplatePicker
                   value={templateId}
@@ -536,7 +536,11 @@ function ResumeEditor({
           onLayoutChanged={layout.onLayoutChanged}
           className="min-h-0 flex-1"
         >
-          <ResizablePanel id="edit" minSize={320} className="overflow-y-auto">
+          <ResizablePanel
+            id="edit"
+            minSize={320}
+            className="overflow-y-auto overscroll-contain"
+          >
             {editorPane}
           </ResizablePanel>
           <ResizableHandle withHandle disabled={focus} />
@@ -562,7 +566,7 @@ function ResumeEditor({
         <div className="min-h-0 flex-1">
           <div
             className={cn(
-              'h-full overflow-y-auto',
+              'h-full overflow-y-auto overscroll-contain',
               pane === 'preview' && 'hidden',
             )}
           >

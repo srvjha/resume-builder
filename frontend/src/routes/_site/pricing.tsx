@@ -1,11 +1,6 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { CheckIcon, KeyRoundIcon, ShieldCheckIcon } from 'lucide-react'
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion'
+import { FaqList } from '@/components/site/faq-list'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -207,7 +202,9 @@ const structuredData = {
 export const Route = createFileRoute('/_site/pricing')({
   head: () => ({
     meta: [
-      { title: `Pricing | ${site.name}` },
+      {
+        title: `Pricing: Free Resume Builder, Paid AI Tailoring | ${site.name}`,
+      },
       {
         name: 'description',
         content:
@@ -445,18 +442,7 @@ function PricingPage() {
         <h2 id="billing-faq" className="text-3xl font-semibold tracking-tight">
           Questions about pricing
         </h2>
-        <Accordion type="single" collapsible>
-          {faqs.map((faq) => (
-            <AccordionItem key={faq.q} value={faq.q}>
-              <AccordionTrigger className="text-left font-sans text-base">
-                {faq.q}
-              </AccordionTrigger>
-              <AccordionContent className="text-base text-muted-foreground">
-                {faq.a}
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+        <FaqList faqs={faqs} />
       </section>
 
       <section className="mt-24 flex flex-col items-center gap-5 rounded-2xl border bg-card px-6 py-14 text-center">

@@ -7,12 +7,7 @@ import {
   LockIcon,
   XIcon,
 } from 'lucide-react'
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion'
+import { FaqList } from '@/components/site/faq-list'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { site } from '@/lib/site'
@@ -335,18 +330,7 @@ export function Faq() {
       >
         Questions students ask us
       </h2>
-      <Accordion type="single" collapsible className="w-full">
-        {faqs.map((faq) => (
-          <AccordionItem key={faq.q} value={faq.q}>
-            <AccordionTrigger className="text-left font-sans text-base">
-              {faq.q}
-            </AccordionTrigger>
-            <AccordionContent className="text-base text-muted-foreground">
-              {faq.a}
-            </AccordionContent>
-          </AccordionItem>
-        ))}
-      </Accordion>
+      <FaqList faqs={faqs} />
     </section>
   )
 }

@@ -1,14 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { AtsChecker } from '@/components/ats/ats-checker'
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion'
+import { FaqList } from '@/components/site/faq-list'
 import { site } from '@/lib/site'
 
-const title = `Free ATS resume checker | ${site.name}`
+const title = `Free ATS Resume Checker: Score Your Resume Online | ${site.name}`
 const description =
   'Check how well a typical applicant tracking system and a recruiter will read your resume. Free score out of 100 with concrete fixes. Nothing is stored.'
 
@@ -94,18 +89,7 @@ function AtsCheckerPage() {
           <h2 id="ats-faq" className="text-3xl font-semibold tracking-tight">
             Questions about ATS checks
           </h2>
-          <Accordion type="single" collapsible>
-            {faqs.map((faq) => (
-              <AccordionItem key={faq.q} value={faq.q}>
-                <AccordionTrigger className="text-left font-sans text-base">
-                  {faq.q}
-                </AccordionTrigger>
-                <AccordionContent className="text-base text-muted-foreground">
-                  {faq.a}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
+          <FaqList faqs={faqs} />
         </section>
         <footer className="mt-16 flex flex-col gap-2 border-t pt-6 text-xs text-muted-foreground lg:-mx-24">
           <p>

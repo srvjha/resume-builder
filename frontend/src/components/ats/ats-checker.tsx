@@ -3,6 +3,7 @@ import { Link } from '@tanstack/react-router'
 import { DownloadIcon, ShieldCheckIcon, UploadCloudIcon } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { AtsReport } from '@/components/ats/ats-report'
+import { ScanProgress, scanSteps, stepMs } from '@/components/ats/scan-progress'
 import { Button } from '@/components/ui/button'
 import {
   Field,
@@ -125,20 +126,32 @@ export function AtsChecker() {
         ? `That is longer than ${maxChars.toLocaleString('en-IN')} characters. Paste only the resume.`
         : null
 
+  const steps = scanSteps({
+    pdf: tab === 'pdf' && Boolean(file),
+    words: text ? text.split(/\s+/).length : 0,
+    job: Boolean(jobDescription.trim()),
+  })
   const check = useMutation({
-    mutationFn: () =>
-      unwrap(
-        api.POST('/v1/ats-reports', {
-          body: {
-            text,
-            ...(tab === 'pdf' &&
-              file && { items: file.items, page: file.page }),
-            ...(jobDescription.trim() && {
-              jobDescription: jobDescription.trim(),
-            }),
-          },
-        }),
-      ),
+    // The check itself takes well under a second; a short minimum lets each step be seen
+    // instead of the report appearing before the button has visibly done anything.
+    mutationFn: async () => {
+      const [report] = await Promise.all([
+        unwrap(
+          api.POST('/v1/ats-reports', {
+            body: {
+              text,
+              ...(tab === 'pdf' &&
+                file && { items: file.items, page: file.page }),
+              ...(jobDescription.trim() && {
+                jobDescription: jobDescription.trim(),
+              }),
+            },
+          }),
+        ),
+        new Promise((resolve) => setTimeout(resolve, steps.length * stepMs)),
+      ])
+      return report
+    },
   })
 
   useEffect(() => {
@@ -337,6 +350,7 @@ export function AtsChecker() {
           </div>
         </form>
       </div>
+      {check.isPending && <ScanProgress steps={steps} />}
       {check.data && (
         <section
           aria-labelledby="ats-result"

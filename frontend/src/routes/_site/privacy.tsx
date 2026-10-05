@@ -10,7 +10,7 @@ export const Route = createFileRoute('/_site/privacy')({
   component: () => (
     <LegalPage
       title="Privacy policy"
-      updated={new Date('2026-09-27T00:00:00+05:30')}
+      updated={new Date('2026-10-05T00:00:00+05:30')}
     >
       <p>
         A resume holds a lot of personal information. This page explains what{' '}
@@ -59,8 +59,9 @@ export const Route = createFileRoute('/_site/privacy')({
           removed permanently.
         </li>
         <li>
-          Deleted resumes can be recovered for 30 days, then they are gone for
-          good.
+          Deleted resumes are kept for 30 days in case you deleted one by
+          mistake: email us within that time and we can restore it. After 30
+          days they are removed for good.
         </li>
       </ul>
       <h2>Security</h2>

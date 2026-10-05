@@ -1,6 +1,6 @@
-import { index, integer, jsonb, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { boolean, index, integer, jsonb, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { users } from "./auth.js";
-import { timestamps } from "./columns.js";
+import { createdAt, timestamps } from "./columns.js";
 
 export const subscriptionPlan = pgEnum("subscription_plan", ["season_pass", "pro"]);
 
@@ -63,3 +63,42 @@ export const webhookEvents = pgTable("webhook_events", {
   id: text().primaryKey(), // "razorpay:<event id>"
   receivedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
+
+// "ambassador" codes belong to one person, so their redemptions show who brought which users.
+export const promoCodeKind = pgEnum("promo_code_kind", ["promo", "ambassador"]);
+
+// A code that grants a plan for free, like PLACEMENT100 or RAHUL-IITD.
+export const promoCodes = pgTable("promo_codes", {
+  id: uuid().primaryKey().defaultRandom(),
+  // Stored uppercase; redemption matches case-insensitively.
+  code: text().notNull().unique(),
+  kind: promoCodeKind().notNull().default("promo"),
+  plan: subscriptionPlan().notNull().default("season_pass"),
+  months: integer().notNull(),
+  // Null means no limit.
+  maxRedemptions: integer(),
+  expiresAt: timestamp({ withTimezone: true }),
+  active: boolean().notNull().default(true),
+  // Who the code is for: the ambassador's name, or the campaign.
+  owner: text(),
+  note: text(),
+  ...timestamps,
+});
+
+// One row per use. Each user can redeem one code ever, so codes can't be stacked for more months.
+export const promoRedemptions = pgTable(
+  "promo_redemptions",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    promoCodeId: uuid()
+      .notNull()
+      .references(() => promoCodes.id, { onDelete: "cascade" }),
+    userId: uuid()
+      .notNull()
+      .unique()
+      .references(() => users.id, { onDelete: "cascade" }),
+    subscriptionId: uuid().references(() => subscriptions.id, { onDelete: "set null" }),
+    createdAt: createdAt(),
+  },
+  (t) => [index().on(t.promoCodeId)],
+);

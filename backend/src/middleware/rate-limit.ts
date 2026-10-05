@@ -24,3 +24,5 @@ export const publicLimiter = limiter(minute, 120);
 export const compileLimiter = limiter(minute, 30);
 export const aiLimiter = limiter(minute, 10);
 export const atsLimiter = limiter(10 * minute, 10);
+// Slows anyone guessing promo codes.
+export const redeemLimiter = limiter(10 * minute, 10);

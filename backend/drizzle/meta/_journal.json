@@ -99,6 +99,13 @@
       "when": 1791020885775,
       "tag": "0013_ai_keys_per_provider",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1791189332324,
+      "tag": "0014_promo_codes",
+      "breakpoints": true
     }
   ]
 }

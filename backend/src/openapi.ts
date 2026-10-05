@@ -20,6 +20,13 @@ import {
 import { atsReport, createAtsReportBody, createResumeAtsReportBody } from "./modules/ats/ats.schemas.js";
 import { coverageQuery, coverageResponse } from "./modules/coverage/coverage.routes.js";
 import { checkoutResponse, createCheckoutBody, subscriptionResponse } from "./modules/billing/billing.schemas.js";
+import {
+  createPromoCodeBody,
+  createRedemptionBody,
+  promoCodeListResponse,
+  promoCodeParams,
+  updatePromoCodeBody,
+} from "./modules/promo-codes/promo-codes.schemas.js";
 import { createDraftBody, createImportBody, importResponse } from "./modules/imports/imports.schemas.js";
 import { usageResponse } from "./modules/usage/usage.routes.js";
 import {
@@ -523,6 +530,40 @@ const paths: ZodOpenApiPathsObject = {
       summary: "Cancel Pro at the end of the billing period",
       tag: "Billing",
       response: subscriptionResponse,
+    }),
+  },
+
+  "/v1/promo-redemptions": {
+    post: op({
+      summary: "Redeem a promo or ambassador code for a free plan",
+      tag: "Billing",
+      body: createRedemptionBody,
+      response: subscriptionResponse,
+      status: 201,
+    }),
+  },
+
+  "/v1/admin/promo-codes": {
+    get: op({
+      summary: "Promo and ambassador codes with redemption stats",
+      tag: "Admin",
+      response: promoCodeListResponse,
+    }),
+    post: op({
+      summary: "Create a promo or ambassador code",
+      tag: "Admin",
+      body: createPromoCodeBody,
+      response: promoCodeListResponse,
+      status: 201,
+    }),
+  },
+  "/v1/admin/promo-codes/{promoCodeId}": {
+    patch: op({
+      summary: "Turn a code on or off",
+      tag: "Admin",
+      params: promoCodeParams,
+      body: updatePromoCodeBody,
+      response: promoCodeListResponse,
     }),
   },
 

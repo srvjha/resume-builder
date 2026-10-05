@@ -173,7 +173,7 @@ export function mergedMonths(ranges: [number, number][]) {
 }
 
 // Internships are left out: a job asking for N years means full-time work.
-function resumeExperience(r: Resume) {
+export function resumeExperience(r: Resume) {
   const ranges: [number, number][] = [];
   let undated = 0;
   let roles = 0;
@@ -207,7 +207,13 @@ function resumeExperience(r: Resume) {
       }
     }
   }
-  return { years: Math.round(mergedMonths(ranges.filter(([s, e]) => e > s)) / 1.2) / 10, roles, undated };
+  return {
+    years: Math.round(mergedMonths(ranges.filter(([s, e]) => e > s)) / 1.2) / 10,
+    roles,
+    undated,
+    // [first month, month after the last], as month indexes; reversed ranges are kept for the date checks.
+    ranges,
+  };
 }
 
 function checkExperience(s: string, r: Resume): Finding[] {

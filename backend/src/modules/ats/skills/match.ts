@@ -111,6 +111,19 @@ export function findSkills(text: string, context?: { skillsSection?: string }): 
   return unique([...scan(text, false), ...(context?.skillsSection ? scan(context.skillsSection, true) : [])]);
 }
 
+// Every way a skill is written: its name and aliases, for "Machine Learning (ML)" style advice.
+export function skillForms(skill: string) {
+  const entry = (data as Entry[]).find((e) => e.name === skill);
+  return entry ? [entry.name, ...entry.aliases] : [skill];
+}
+
+// How often each skill appears, counting every mention rather than once per skill.
+export function skillCounts(text: string) {
+  const counts = new Map<string, number>();
+  for (const o of scan(text, false)) counts.set(o.name.entry.name, (counts.get(o.name.entry.name) ?? 0) + 1);
+  return counts;
+}
+
 const NICE =
   /\b(?:nice|good)[ -]to[ -]have\b|\bpreferred\b|\bpreferably\b|\bbonus\b|\ba plus\b|\bplus point\b|\badvantage(?:ous)?\b|\bdesirable\b|\bdesired\b|\boptional\b|\bnot (?:required|mandatory)\b/i;
 const MUST =

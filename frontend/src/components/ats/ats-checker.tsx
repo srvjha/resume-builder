@@ -32,6 +32,27 @@ type TextItem = NonNullable<
 const maxParsedPages = 4
 const boldFont = /bold|black|heavy|semibold|demi/i
 
+// Profile links (LinkedIn, a GitHub profile, an email, a portfolio's home page) are what a recruiter needs
+// to read. A project's "Live" or "Code" link behind its label is normal, so deeper links aren't checked.
+function isProfileLink(url: string) {
+  if (/^mailto:/i.test(url)) return true
+  let parsed: URL
+  try {
+    parsed = new URL(url)
+  } catch {
+    return false
+  }
+  const segments = parsed.pathname.split('/').filter(Boolean).length
+  if (/(^|\.)linkedin\.com$/i.test(parsed.hostname)) return true
+  if (
+    /(^|\.)(github|gitlab|behance|dribbble|kaggle|leetcode|medium)\.com$/i.test(
+      parsed.hostname,
+    )
+  )
+    return segments <= 1
+  return segments === 0
+}
+
 // A link counts as visible when its address, without the protocol or "www.", is written in the text.
 // Wrapped lines and spaces are ignored, so a URL split across two lines still counts.
 function linkVisible(text: string, url: string) {
@@ -111,7 +132,7 @@ async function readPdf(file: File) {
       page: size,
       pages: doc.numPages,
       hiddenLinks: [...links]
-        .filter((url) => !linkVisible(text, url))
+        .filter((url) => isProfileLink(url) && !linkVisible(text, url))
         .slice(0, 50),
     }
   } finally {

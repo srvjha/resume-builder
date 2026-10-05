@@ -22,7 +22,7 @@ import { track } from "../../lib/analytics.js";
 import { ConflictError, NotFoundError } from "../../lib/errors.js";
 import { storage } from "../../lib/storage.js";
 import { dayKeys } from "../analytics/analytics.service.js";
-import { recomputePlan } from "../billing/billing.service.js";
+import { grantPlan, recomputePlan } from "../billing/billing.service.js";
 import { getUsage } from "../usage/quotas.js";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -489,12 +489,7 @@ export async function resetUsage(adminId: string, userId: string) {
 export async function grantSubscription(adminId: string, userId: string, plan: "season_pass" | "pro", months: number) {
   const [user] = await db.select({ id: users.id }).from(users).where(eq(users.id, userId));
   if (!user) throw new NotFoundError("User");
-  const start = new Date();
-  const end = new Date(start);
-  end.setMonth(end.getMonth() + months);
-  await db
-    .insert(subscriptions)
-    .values({ userId, plan, status: "active", currentPeriodStart: start, currentPeriodEnd: end });
+  await grantPlan(userId, plan, months);
   await recomputePlan(userId);
   track(adminId, "admin_plan_granted", { target_user_id: userId, plan, months });
 }

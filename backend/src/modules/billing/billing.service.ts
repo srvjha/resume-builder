@@ -27,6 +27,23 @@ export async function recomputePlan(userId: string) {
   return plan;
 }
 
+// A plan given for free, by an admin or a promo code; it runs for `months` from now.
+export async function grantPlan(
+  userId: string,
+  plan: "season_pass" | "pro",
+  months: number,
+  executor: Pick<typeof db, "insert"> = db,
+) {
+  const start = new Date();
+  const end = new Date(start);
+  end.setMonth(end.getMonth() + months);
+  const [subscription] = await executor
+    .insert(subscriptions)
+    .values({ userId, plan, status: "active", currentPeriodStart: start, currentPeriodEnd: end })
+    .returning({ id: subscriptions.id });
+  return subscription!;
+}
+
 export async function createCheckout(userId: string, plan: "season_pass" | "pro") {
   const keyId = env.RAZORPAY_KEY_ID;
   if (!keyId) throw new AppError(503, "PAYMENTS_NOT_CONFIGURED", "Payments are not configured");

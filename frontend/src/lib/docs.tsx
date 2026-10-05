@@ -1288,6 +1288,20 @@ export const docs: DocPage[] = [
         ),
       },
       {
+        id: 'codes',
+        title: 'Promo and ambassador codes',
+        body: (
+          <p>
+            Got a code from a campus ambassador, a college club or us? Open{' '}
+            <Link to="/billing">Plans and billing</Link>, enter it under "Have a
+            code?" and press Redeem. The plan it gives starts right away. A link
+            with the code in it fills the box for you. Each account can redeem
+            one code, and a code can't be used on an account that already has a
+            paid plan.
+          </p>
+        ),
+      },
+      {
         id: 'counting',
         title: 'How AI use is counted',
         body: (

@@ -11,8 +11,8 @@ export const prices = { season_pass: 49_900, pro: 12_900 } as const;
 type Plan = (typeof users.$inferSelect)["plan"];
 
 // The user's plan is derived from their active subscriptions, never set directly.
-export async function recomputePlan(userId: string) {
-  const active = await db
+export async function recomputePlan(userId: string, executor: Pick<typeof db, "select" | "update"> = db) {
+  const active = await executor
     .select({ plan: subscriptions.plan })
     .from(subscriptions)
     .where(
@@ -23,7 +23,7 @@ export async function recomputePlan(userId: string) {
       ),
     );
   const plan: Plan = active.some((s) => s.plan === "pro") ? "pro" : active.length > 0 ? "season_pass" : "free";
-  await db.update(users).set({ plan }).where(eq(users.id, userId));
+  await executor.update(users).set({ plan }).where(eq(users.id, userId));
   return plan;
 }
 

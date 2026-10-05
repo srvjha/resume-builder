@@ -182,11 +182,16 @@ const faqs = [
 ]
 
 // Product and Offer data so search engines and AI assistants can read the prices.
+// A web app, not a Product: Google reads Product as goods in a shop and then asks for shipping, returns,
+// images and reviews, none of which apply here.
 const structuredData = {
   '@context': 'https://schema.org',
-  '@type': 'Product',
+  '@type': 'WebApplication',
   name: site.name,
   description: site.description,
+  url: site.url,
+  applicationCategory: 'BusinessApplication',
+  operatingSystem: 'Web',
   offers: [
     { name: 'Free', price: '0' },
     { name: 'Season Pass (6 months)', price: '499' },

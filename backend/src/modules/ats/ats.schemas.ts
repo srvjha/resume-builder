@@ -24,6 +24,16 @@ export const createAtsReportBody = z
     // The PDF's text runs, read in the browser, so the parser can check layout. Sent with `page`.
     items: z.array(textItem).max(6000).optional(),
     page: z.object({ width: size.positive(), height: size.positive() }).optional(),
+    // The uploaded file's details, read in the browser; the file itself is never sent.
+    file: z
+      .object({
+        name: z.string().trim().min(1).max(255),
+        sizeBytes: z.number().int().min(0).max(100_000_000),
+        pages: z.number().int().min(1).max(500),
+        // Links whose address isn't written in the visible text, like a URL behind an icon.
+        hiddenLinks: z.array(z.string().max(500)).max(50).default([]),
+      })
+      .optional(),
   })
   .refine((body) => !body.items === !body.page, { message: "Send items and page together", path: ["page"] });
 
@@ -47,6 +57,8 @@ export const atsReport = z
             status: z.enum(["pass", "warn", "fail"]),
             detail: z.string(),
             fix: z.string().nullable(),
+            // The resume lines behind a failing check, with the word to highlight.
+            lines: z.array(z.object({ text: z.string(), highlight: z.string().optional() })).optional(),
           }),
         ),
       }),

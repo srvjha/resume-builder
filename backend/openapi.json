@@ -18772,6 +18772,40 @@
                       "width",
                       "height"
                     ]
+                  },
+                  "file": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                      },
+                      "sizeBytes": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 100000000
+                      },
+                      "pages": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 500
+                      },
+                      "hiddenLinks": {
+                        "default": [],
+                        "maxItems": 50,
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "maxLength": 500
+                        }
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "sizeBytes",
+                      "pages"
+                    ]
                   }
                 },
                 "required": [
@@ -26175,6 +26209,24 @@
                           "string",
                           "null"
                         ]
+                      },
+                      "lines": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "text": {
+                              "type": "string"
+                            },
+                            "highlight": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "text"
+                          ],
+                          "additionalProperties": false
+                        }
                       }
                     },
                     "required": [

@@ -103,7 +103,14 @@ describe("scoreResume", () => {
     });
     expect(withJob.categories.map((c) => c.maxScore)).toEqual([15, 10, 15, 25, 10, 25]);
     const checks = checksOf(withJob, "job");
-    expect(Object.keys(checks)).toEqual(["must-have", "hard-skills", "soft-skills", "job-title"]);
+    expect(Object.keys(checks)).toEqual([
+      "must-have",
+      "hard-skills",
+      "soft-skills",
+      "job-title",
+      "title-headline",
+      "acronyms",
+    ]);
     expect(checks["must-have"]!.status).toBe("fail");
     expect(checks["must-have"]!.fix).toContain("Kubernetes");
     expect(checks["soft-skills"]!.status).toBe("warn");
@@ -168,6 +175,7 @@ describe("scoreResume", () => {
       "jobs",
       "name",
       "density",
+      "date-format",
     ]);
     expect(checks["parse-rate"]!.status).toBe("pass");
     expect(report.parse).toMatchObject({
@@ -182,6 +190,7 @@ describe("scoreResume", () => {
       "characters",
       "icons",
       "dates",
+      "date-format",
     ]);
     const unexpected = parsePdfItems(items, page)!;
     expect(unexpected.parseRate).toBeNull();

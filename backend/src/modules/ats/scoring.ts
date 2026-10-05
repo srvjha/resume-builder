@@ -3,17 +3,29 @@ import { compileTex } from "../../lib/latex/compile.js";
 import type { ResumeContent } from "../../schemas/resume-content.js";
 import { visibleContent } from "../../templates/latex.js";
 import type { atsReport } from "./ats.schemas.js";
-import { findKnockouts } from "./knockouts.js";
+import { findKnockouts, resumeExperience } from "./knockouts.js";
 import { extractTextItems } from "./parser/extract.js";
 import { parseItems } from "./parser/parse.js";
 import { type Expected, parseQuality } from "./parser/quality.js";
 import type { ParseReport, TextItem } from "./parser/types.js";
-import { matchJob, titleMatch } from "./skills/match.js";
+import { matchJob, skillCounts, skillForms, titleMatch } from "./skills/match.js";
 import { ACTION_VERBS, CLICHES, IRREGULAR_VERBS, SECTION_HEADINGS } from "./words.js";
 
 type AtsReport = z.infer<typeof atsReport>;
 type Status = "pass" | "warn" | "fail";
-type Check = { id: string; label: string; status: Status; detail: string; fix: string | null; weight: number };
+// A line from the resume behind a check, with the word to highlight in it.
+type Line = { text: string; highlight?: string };
+type Check = {
+  id: string;
+  label: string;
+  status: Status;
+  detail: string;
+  fix: string | null;
+  weight: number;
+  lines?: Line[];
+};
+// What the browser knows about an uploaded PDF that its text doesn't say.
+export type PdfFile = { name: string; sizeBytes: number; pages: number; hiddenLinks: string[] };
 
 type Facts = {
   text: string;
@@ -25,6 +37,9 @@ type Facts = {
   paragraphs: number;
   // Headline and role lines, for matching the job's title.
   titles: string[];
+  // The headline and summary only: where a recruiter looks for the target title.
+  headline: string[];
+  email: string | null;
   skillsText: string;
   // Known only for structured content.
   experienceEntries: number | null;
@@ -164,6 +179,10 @@ function factsFromText(raw: string): Facts {
   const headerLines = lines.filter((line) => line.trim()).slice(0, 6);
   const header = headerLines.join("\n");
   const plainIn = (id: string) => parsed.filter((line) => line.kind === "plain" && line.section === id);
+  // Lines above the first section heading (at most 6), where the title under a name sits.
+  const filled = lines.map((line) => line.trim()).filter(Boolean);
+  const firstHeading = filled.findIndex((line) => headingId(line));
+  const intro = filled.slice(0, firstHeading === -1 ? 6 : Math.min(firstHeading, 6));
   return {
     text,
     structured: false,
@@ -178,6 +197,8 @@ function factsFromText(raw: string): Facts {
         .map((line) => line.text)
         .filter((line) => countWords(line) <= 12),
     ],
+    headline: [...intro, ...plainIn("summary").map((line) => line.text)],
+    email: text.match(EMAIL)?.[0] ?? null,
     skillsText: plainIn("skills")
       .map((line) => line.text)
       .join("\n"),
@@ -268,6 +289,11 @@ function factsFromContent(full: ResumeContent): Facts {
     oddHeadings,
     paragraphs: bullets.filter((bullet) => countWords(bullet) > 60).length,
     titles,
+    headline: [
+      ...(content.basics.headline ? [content.basics.headline] : []),
+      ...content.sections.flatMap((section) => (section.type === "summary" ? [section.text] : [])),
+    ],
+    email: content.basics.email ?? null,
     skillsText: skills.join("\n"),
     experienceEntries,
     undatedEntries,
@@ -281,14 +307,35 @@ function factsFromContent(full: ResumeContent): Facts {
   };
 }
 
-const check = (id: string, label: string, weight: number, status: Status, detail: string, fix: string): Check => ({
+const check = (
+  id: string,
+  label: string,
+  weight: number,
+  status: Status,
+  detail: string,
+  fix: string,
+  lines: Line[] = [],
+): Check => ({
   id,
   label,
   weight,
   status,
   detail,
   fix: status === "pass" ? null : fix,
+  // Lines only explain a problem; a passing check shows none.
+  ...(status !== "pass" &&
+    lines.length > 0 && {
+      // One entry per resume line, even when two problems sit on the same line.
+      lines: lines.filter((line, i) => lines.findIndex((other) => other.text === line.text) === i).slice(0, 3),
+    }),
 });
+const lineOf = (raw: string, highlight?: string): Line => {
+  const text = raw.replace(BULLET, "").trim();
+  return {
+    text: text.length > 160 ? `${text.slice(0, 157).trimEnd()}...` : text,
+    ...(highlight && { highlight }),
+  };
+};
 
 const band = (value: number, pass: number, warn: number): Status =>
   value >= pass ? "pass" : value >= warn ? "warn" : "fail";
@@ -351,6 +398,140 @@ function parsingChecks(facts: Facts): Check[] {
           years > 0 ? `${plural(years, "year")} found in dates.` : "No years found anywhere in the resume.",
           'Add month and year to every role and degree, for example "Jun 2023 - Present".',
         ),
+  ];
+}
+
+// ---- Dates, gaps and file details ----
+
+const MONTH_NAMES = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split(" ");
+const monthLabel = (index: number) => `${MONTH_NAMES[((index % 12) + 12) % 12]} ${Math.floor(index / 12)}`;
+const currentMonth = () => new Date().getFullYear() * 12 + new Date().getMonth();
+const NAMED_DATE = /\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]{0,6}\.?\s+(?:19|20)\d{2}\b/gi;
+const NUMERIC_DATE = /\b(?:0?[1-9]|1[0-2])[/.](?:19|20)\d{2}\b|\b(?:19|20)\d{2}[-/.](?:0[1-9]|1[0-2])\b/g;
+const SEASON_DATE = /\b(?:spring|summer|fall|autumn|winter)\s+(?:19|20)\d{2}\b/gi;
+
+function experience(facts: Facts, content: ResumeContent | null) {
+  return resumeExperience({ text: facts.text, ...(content && { content: visibleContent(content) }) });
+}
+
+// Mixed formats, seasons, roles that end before they start, and start dates in the future.
+function dateChecks(facts: Facts, content: ResumeContent | null): Check[] {
+  const named = facts.structured ? [] : (facts.text.match(NAMED_DATE) ?? []);
+  const numeric = facts.structured ? [] : (facts.text.match(NUMERIC_DATE) ?? []);
+  const seasons = facts.text.match(SEASON_DATE) ?? [];
+  const ranges = experience(facts, content)?.ranges ?? [];
+  const reversed = ranges.filter(([start, end]) => end <= start);
+  const future = ranges.filter(([start]) => start > currentMonth() + 1);
+  const mixed = named.length > 0 && numeric.length > 0;
+  const problems = [
+    ...reversed.map(
+      ([start, end]) => `a role that ends (${monthLabel(end - 1)}) before it starts (${monthLabel(start)})`,
+    ),
+    ...future.map(([start]) => `a role starting in the future (${monthLabel(start)})`),
+    ...(mixed ? [`mixed formats, like "${named[0]}" and "${numeric[0]}"`] : []),
+    ...(seasons.length > 0 ? [`seasons instead of months, like "${seasons[0]}"`] : []),
+  ];
+  return [
+    check(
+      "date-format",
+      "Consistent dates",
+      2,
+      reversed.length > 0 ? "fail" : problems.length > 0 ? "warn" : "pass",
+      problems.length === 0 ? "Dates use one format and run in order." : `Found ${problems.join("; ")}.`,
+      'Write every date the same way, month and year, like "Jun 2024 - Present". An ATS works out your experience from these dates, and a season or a mixed format can stop it reading them.',
+      [...(mixed ? [lineOf(numeric[0]!)] : []), ...seasons.slice(0, 1).map((d) => lineOf(d))],
+    ),
+  ];
+}
+
+// Gaps over six months between full-time roles. Freshers are skipped: study is the gap.
+function gapChecks(facts: Facts, content: ResumeContent | null): Check[] {
+  if (isEarlyCareer(facts)) return [];
+  const ranges = (experience(facts, content)?.ranges ?? []).filter(([s, e]) => e > s).sort((a, b) => a[0] - b[0]);
+  if (ranges.length < 2) return [];
+  const gaps: string[] = [];
+  let reach = ranges[0]![1];
+  for (const [start, end] of ranges.slice(1)) {
+    if (start - reach > 6)
+      gaps.push(`${start - reach} months between ${monthLabel(reach - 1)} and ${monthLabel(start)}`);
+    reach = Math.max(reach, end);
+  }
+  return [
+    check(
+      "gaps",
+      "Gaps between roles",
+      1,
+      gaps.length === 0 ? "pass" : "warn",
+      gaps.length === 0 ? "No gaps over six months between roles." : `A gap of ${gaps.join(", and one of ")}.`,
+      "Recruiters often ask about gaps over six months. If you studied, freelanced, travelled or cared for family, add one line for it so the gap is explained before they ask.",
+    ),
+  ];
+}
+
+// Words that say nothing about whose resume it is: "resume_final_v3 (2).pdf" names nobody.
+const GENERIC_FILE_WORDS =
+  /\b(?:resume|cv|copy|final|draft|new|updated|latest|untitled|document\d*|doc|scan|img|image|file|v\d+)\b/gi;
+
+function fileChecks(file: PdfFile): Check[] {
+  const words = file.name.replace(/\.pdf$/i, "").replace(/[_\-.()]+/g, " ");
+  const vague = words.replace(GENERIC_FILE_WORDS, "").replace(/[^\p{L}]/gu, "").length < 3;
+  const mb = file.sizeBytes / 1024 / 1024;
+  return [
+    check(
+      "file-name",
+      "File name",
+      1,
+      vague ? "warn" : "pass",
+      vague ? `"${file.name}" doesn't say whose resume it is.` : `"${file.name}" names the file clearly.`,
+      'Name the file after yourself, like "Aarav-Sharma-Resume.pdf". Recruiters download dozens of files called resume.pdf.',
+    ),
+    check(
+      "file-size",
+      "File size",
+      1,
+      mb > 2.5 ? "fail" : mb > 1 ? "warn" : "pass",
+      `${mb < 0.1 ? `${Math.max(1, Math.round(file.sizeBytes / 1024))} KB` : `${mb.toFixed(1)} MB`}.`,
+      "Keep the PDF under 1 MB. Some ATS reject files over 2 MB, and large files usually mean images or embedded fonts a parser can't read anyway. Export again without photos or background images.",
+    ),
+    ...(file.hiddenLinks.length > 0
+      ? [
+          check(
+            "hidden-links",
+            "Links written out",
+            2,
+            "warn",
+            `${plural(file.hiddenLinks.length, "link")} sit behind a word or icon, so a parser that reads only text never sees ${file.hiddenLinks.length === 1 ? "it" : "them"}.`,
+            'Write links out where they can be read, like linkedin.com/in/your-name or github.com/you, instead of hiding them behind an icon or a word like "Portfolio".',
+            file.hiddenLinks.map((url) => lineOf(url)),
+          ),
+        ]
+      : [check("hidden-links", "Links written out", 2, "pass", "Every link is written out as text.", "")]),
+  ];
+}
+
+// Text under 4.5 pt or outside the page: invisible to a recruiter but read by the ATS, which recruiters treat as cheating.
+function hiddenTextChecks(items: TextItem[], page: { width: number; height: number }): Check[] {
+  const hidden = items.filter(
+    (item) =>
+      item.text.trim() &&
+      (item.height < 4.5 ||
+        item.x > page.width ||
+        item.x + item.width < 0 ||
+        item.y > page.height ||
+        item.y + item.height < 0),
+  );
+  return [
+    check(
+      "hidden-text",
+      "No hidden text",
+      2,
+      hidden.length === 0 ? "pass" : "fail",
+      hidden.length === 0
+        ? "No tiny or off-page text found."
+        : `${plural(hidden.length, "piece")} of text too small to see or outside the page.`,
+      "Remove tiny or off-page text. Pasting keywords in invisible text is easy for an ATS to read and for a recruiter to spot, and it gets resumes rejected.",
+      hidden.map((item) => lineOf(item.text.trim())),
+    ),
   ];
 }
 
@@ -435,8 +616,26 @@ function contactChecks(facts: Facts): Check[] {
       otherLink ? "GitHub, portfolio or other profile link found." : "No GitHub or portfolio link found.",
       "Add a GitHub, portfolio or coding profile link so reviewers can see your work.",
     ),
+    ...(facts.email
+      ? [
+          check(
+            "email-address",
+            "Professional email",
+            1,
+            INFORMAL_EMAIL.test(facts.email.split("@")[0]!) ? "warn" : "pass",
+            INFORMAL_EMAIL.test(facts.email.split("@")[0]!)
+              ? `"${facts.email}" reads as informal.`
+              : "Your email address looks professional.",
+            "Use an address built from your name, like firstname.lastname@gmail.com. It's the first thing a recruiter reads.",
+          ),
+        ]
+      : []),
   ];
 }
+
+// Only words that are never part of a name, so "kingshuk" or "angelina" aren't flagged.
+const INFORMAL_EMAIL =
+  /sexy|cutie|babygirl|babyboy|rockstar|xoxo|lover|swag|killer|gamer|hottie|naughty|devil|crazy|cool(?!ey)/i;
 
 const isEarlyCareer = (facts: Facts) =>
   facts.experienceEntries !== null ? facts.experienceEntries <= 1 : !facts.sections.includes("experience");
@@ -499,6 +698,33 @@ function sectionChecks(facts: Facts): Check[] {
   ];
 }
 
+// Freshers lead with Education (and Projects); with work experience, Experience comes before Education.
+function sectionOrderChecks(facts: Facts): Check[] {
+  const experienceAt = facts.sections.indexOf("experience");
+  const educationAt = facts.sections.indexOf("education");
+  if (experienceAt === -1 || educationAt === -1) return [];
+  const early = isEarlyCareer(facts);
+  const ok = early ? educationAt < experienceAt : experienceAt < educationAt;
+  return [
+    check(
+      "section-order",
+      "Section order",
+      1,
+      ok ? "pass" : "warn",
+      ok
+        ? early
+          ? "Education comes first, as recruiters expect from students and freshers."
+          : "Experience comes before Education, as recruiters expect once you have worked."
+        : early
+          ? "Experience comes before Education, but with little work experience recruiters look for your education first."
+          : "Education comes before Experience. With work experience, recruiters look for your roles first.",
+      early
+        ? "Move Education to the top, followed by Skills and Projects, then Experience."
+        : "Move Experience to the top and Education to the end.",
+    ),
+  ];
+}
+
 function startsWithActionVerb(bullet: string) {
   const word = (bullet.replace(/^[^\p{L}]+/u, "").split(/[^\p{L}]/u)[0] ?? "").toLowerCase();
   if (ACTION_VERBS.has(word) || IRREGULAR_VERBS.has(word) || /^[a-z]{3,}ed$/.test(word)) return true;
@@ -508,6 +734,15 @@ function startsWithActionVerb(bullet: string) {
     ) ||
     (word.endsWith("ing") && ACTION_VERBS.has(`${word.slice(0, -3)}e`))
   );
+}
+
+const firstWord = (bullet: string) => bullet.replace(/^[^\p{L}]+/u, "").split(/[^\p{L}]/u)[0] ?? "";
+
+function firstPersonLines(text: string) {
+  return text.split("\n").flatMap((line) => {
+    const word = (/\bI(?:'m|'ve|'d)?(?![\w/.])/.exec(line) ?? /\b(?:me|my|myself)\b/i.exec(line))?.[0];
+    return word ? [lineOf(line.trim(), word)] : [];
+  });
 }
 
 // A digit or % that isn't just a year, e.g. "cut load time by 40%" or "served 2k users".
@@ -530,6 +765,18 @@ function impactChecks(facts: Facts): Check[] {
   const numberShare = share(total - unquantified.length, Math.max(total, 6));
   const badLength = share(long.length + short.length, total);
 
+  // The same opening word on 3 or more bullets, like "Developed" five times.
+  const openers = new Map<string, string[]>();
+  for (const bullet of bullets) {
+    const word = firstWord(bullet);
+    if (word.length > 2) openers.set(word.toLowerCase(), [...(openers.get(word.toLowerCase()) ?? []), bullet]);
+  }
+  const repeated = [...openers.entries()]
+    .filter(([, list]) => list.length >= 3)
+    .sort((a, b) => b[1].length - a[1].length);
+  // A skill named 8 or more times reads as keyword stuffing to a recruiter.
+  const stuffed = [...skillCounts(facts.text).entries()].filter(([, n]) => n >= 8).sort((a, b) => b[1] - a[1]);
+
   return [
     check(
       "bullet-count",
@@ -548,6 +795,7 @@ function impactChecks(facts: Facts): Check[] {
       weakVerb.length > 0
         ? `Start each bullet with a strong verb like Built, Led, Reduced or Shipped. For example, rewrite ${quote(weakVerb[0]!)}.`
         : "Start each bullet with a strong verb like Built, Led, Reduced or Shipped.",
+      weakVerb.map((bullet) => lineOf(bullet, firstWord(bullet))),
     ),
     check(
       "quantified",
@@ -558,6 +806,7 @@ function impactChecks(facts: Facts): Check[] {
       unquantified.length > 0
         ? `Add a number to show scale or results (users, %, time saved, rank). For example, ${quote(unquantified[0]!)}: how many, how fast, how much?`
         : "Add a number to show scale or results (users, %, time saved, rank).",
+      unquantified.map((bullet) => lineOf(bullet)),
     ),
     check(
       "bullet-length",
@@ -570,6 +819,7 @@ function impactChecks(facts: Facts): Check[] {
         : short[0]
           ? `Give short bullets the what, how and result. For example, expand ${quote(short[0])}.`
           : "Write bullets of one or two lines: what you did, how, and the result.",
+      [...long, ...short].map((bullet) => lineOf(bullet)),
     ),
     check(
       "first-person",
@@ -578,6 +828,7 @@ function impactChecks(facts: Facts): Check[] {
       firstPerson === 0 ? "pass" : firstPerson <= 2 ? "warn" : "fail",
       firstPerson === 0 ? 'No "I", "me" or "my" found.' : `"I", "me" or "my" used ${plural(firstPerson, "time")}.`,
       'Drop "I", "me" and "my": write "Built X" rather than "I built X".',
+      firstPersonLines(facts.text),
     ),
     check(
       "paragraphs",
@@ -590,6 +841,27 @@ function impactChecks(facts: Facts): Check[] {
       "Break long paragraphs into short bullet points. Recruiters skim, and parsers handle bullets better.",
     ),
     check(
+      "repeated-openers",
+      "Varied verbs",
+      1,
+      repeated.length === 0 ? "pass" : "warn",
+      repeated.length === 0
+        ? "No verb starts more than two bullets."
+        : `${repeated.map(([, list]) => `"${firstWord(list[0]!)}" starts ${plural(list.length, "bullet")}`).join(", ")}.`,
+      "Vary your opening verbs so each bullet reads as its own achievement: Built, Cut, Launched, Led, Automated, Designed.",
+      repeated.flatMap(([, list]) => list.map((bullet) => lineOf(bullet, firstWord(bullet)))),
+    ),
+    check(
+      "keyword-stuffing",
+      "No keyword stuffing",
+      1,
+      stuffed.length === 0 ? "pass" : "warn",
+      stuffed.length === 0
+        ? "No skill is repeated suspiciously often."
+        : `${stuffed.map(([skill, n]) => `${skill} appears ${n} times`).join(", ")}.`,
+      "Name each skill once in Skills and in the bullets where you used it. Repeating it many times doesn't rank you higher, and recruiters read it as stuffing.",
+    ),
+    check(
       "cliches",
       "No filler phrases",
       1,
@@ -598,23 +870,37 @@ function impactChecks(facts: Facts): Check[] {
         ? "No filler phrases found."
         : `Filler phrases found: ${cliches.map((phrase) => `"${phrase}"`).join(", ")}.`,
       'Replace filler like "team player" or "responsible for" with what you did and what changed because of it.',
+      cliches.flatMap((phrase) => {
+        const line = facts.text.split("\n").find((l) => l.toLowerCase().includes(phrase));
+        return line ? [lineOf(line.trim(), phrase)] : [];
+      }),
     ),
   ];
 }
 
-function lengthChecks(facts: Facts): Check[] {
+const WORST: Record<Status, number> = { pass: 0, warn: 1, fail: 2 };
+
+// The real page count from an uploaded PDF, otherwise an estimate from the word count.
+function lengthChecks(facts: Facts, realPages?: number): Check[] {
   const { words } = facts;
   const early = isEarlyCareer(facts);
-  const pages = Math.max(1, Math.round(words / 550));
-  const status: Status =
+  const pages = realPages ?? Math.max(1, Math.round(words / 550));
+  const byWords: Status =
     words < 150 || words > 1200 ? "fail" : words < 300 || words > 900 || (early && words > 750) ? "warn" : "pass";
+  const byPages: Status =
+    realPages === undefined ? "pass" : pages > (early ? 2 : 3) ? "fail" : pages > (early ? 1 : 2) ? "warn" : "pass";
+  const status = WORST[byPages] > WORST[byWords] ? byPages : byWords;
   const fix =
     words < 300
       ? "Add detail: 2 to 4 bullets per role and project, and your key skills. Aim for 400 to 700 words."
       : early
         ? "Trim to one page (about 400 to 700 words). Cut older or weaker bullets first."
         : "Trim to two pages at most (under 900 words). Cut bullets older roles don't need.";
-  return [check("word-count", "Length", 1, status, `${plural(words, "word")}, about ${plural(pages, "page")}.`, fix)];
+  const detail =
+    realPages === undefined
+      ? `${plural(words, "word")}, about ${plural(pages, "page")}.`
+      : `${plural(pages, "page")}, ${plural(words, "word")}.`;
+  return [check("word-count", "Length", realPages === undefined ? 1 : 2, status, detail, fix)];
 }
 
 const list = (skills: string[], max = 6) => skills.slice(0, max).join(", ");
@@ -683,6 +969,48 @@ function jobMatch(facts: Facts, jobText: string) {
       ),
     );
 
+  // The title is on the resume but not in the headline or summary, where recruiters look first.
+  if (title && title.level !== "none") {
+    const inHeadline = titleMatch(facts.headline, jobText).level;
+    checks.push(
+      check(
+        "title-headline",
+        "Title in your headline",
+        1,
+        inHeadline === "none" ? "warn" : "pass",
+        inHeadline === "none"
+          ? `"${title.jobTitle}" isn't in your headline or summary.`
+          : "Your headline or summary names the job's title.",
+        `Put "${title.jobTitle}" in the line under your name or in your summary, if it describes you.`,
+      ),
+    );
+  }
+
+  // Skills the job names that the resume writes only one way: "ML" with no "Machine Learning", or the reverse.
+  const resumeLower = facts.text.toLowerCase();
+  const oneForm = hard.matched.flatMap((skill) => {
+    const forms = skillForms(skill);
+    const short = forms.find((f) => /^[A-Z][A-Z0-9&]{1,5}$/.test(f));
+    const long = forms.find((f) => f.includes(" ") && /^[\p{L} ]+$/u.test(f));
+    if (!short || !long) return [];
+    const hasShort = new RegExp(`(?<![\\p{L}\\p{N}])${short}(?![\\p{L}\\p{N}])`, "u").test(facts.text);
+    const hasLong = resumeLower.includes(long.toLowerCase());
+    return hasShort === hasLong ? [] : [`${long} (${short})`];
+  });
+  if (hard.matched.length > 0)
+    checks.push(
+      check(
+        "acronyms",
+        "Acronyms spelled out",
+        1,
+        oneForm.length === 0 ? "pass" : "warn",
+        oneForm.length === 0
+          ? "Skills with a short form are written both ways, or need no expanding."
+          : `Written only one way: ${list(oneForm)}.`,
+        `Write both forms once, like ${oneForm[0] ?? "Machine Learning (ML)"}. Some ATS searches match only the exact form the recruiter typed.`,
+      ),
+    );
+
   return {
     checks,
     hasSkills: hard.matched.length + hard.missing.length + softTotal > 0,
@@ -706,6 +1034,9 @@ export function scoreResume(input: {
   jobText?: string | null | undefined;
   // What a parser read from the resume's PDF; text-based format checks are used without it.
   parse?: ParseReport | null;
+  // An uploaded PDF's own details and text runs, for file and hidden-text checks.
+  file?: PdfFile | null;
+  pdf?: { items: TextItem[]; page: { width: number; height: number } } | null;
 }): AtsReport {
   const facts = input.content ? factsFromContent(input.content) : factsFromText(input.text ?? "");
   const { parse } = input;
@@ -714,19 +1045,32 @@ export function scoreResume(input: {
   const hasJob = Boolean(match?.hasSkills);
   const weights = hasJob ? WEIGHTS.withJob : WEIGHTS.withoutJob;
 
-  const groups = [
-    { id: "parsing", label: "Parsing and format", checks: parse ? parserChecks(facts, parse) : parsingChecks(facts) },
+  const groups: { id: string; label: string; checks: Check[] }[] = [
+    {
+      id: "parsing",
+      label: "Parsing and format",
+      checks: [
+        ...(parse ? parserChecks(facts, parse) : parsingChecks(facts)),
+        ...dateChecks(facts, input.content ?? null),
+        ...(input.file ? fileChecks(input.file) : []),
+        ...(input.pdf ? hiddenTextChecks(input.pdf.items, input.pdf.page) : []),
+      ],
+    },
     { id: "contact", label: "Contact details", checks: contactChecks(facts) },
     {
       id: "sections",
       label: "Standard sections",
-      // The parser's own headings check covers this.
-      checks: sectionChecks(facts).filter((c) => !parse || c.id !== "headings"),
+      checks: [
+        // The parser's own headings check covers this.
+        ...sectionChecks(facts).filter((c) => !parse || c.id !== "headings"),
+        ...sectionOrderChecks(facts),
+        ...gapChecks(facts, input.content ?? null),
+      ],
     },
     { id: "impact", label: "Impact and content", checks: impactChecks(facts) },
-    { id: "length", label: "Length", checks: lengthChecks(facts) },
+    { id: "length", label: "Length", checks: lengthChecks(facts, input.file?.pages) },
     ...(hasJob && match ? [{ id: "job", label: "Job match", checks: match.checks }] : []),
-  ] as const;
+  ];
   const losses: { label: string; lost: number }[] = [];
   const categories = groups.map((group) => {
     const maxScore = weights[group.id as keyof typeof weights];

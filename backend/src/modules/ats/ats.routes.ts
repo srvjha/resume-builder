@@ -80,11 +80,13 @@ atsRouter.post(
   "/ats-reports",
   atsLimiter,
   ...validated({ body: createAtsReportBody }, (req, res) => {
-    const { text, jobDescription, items, page } = req.body;
+    const { text, jobDescription, items, page, file } = req.body;
     const report = scoreResume({
       text,
       jobText: jobDescription,
       parse: items && page ? parsePdfItems(items, page) : null,
+      pdf: items && page ? { items, page } : null,
+      file: file ?? null,
     });
     trackServer("ats_report_created", {
       source: "public",

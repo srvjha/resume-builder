@@ -7,6 +7,7 @@ import { ConfirmDialog } from '@/components/app/confirm-dialog'
 import { PageHeader } from '@/components/app/page-header'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Card,
   CardContent,
@@ -28,7 +29,11 @@ import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/_app/billing')({
   // A plan from the pricing page or a sign-in redirect, shown highlighted.
-  validateSearch: z.object({ plan: z.enum(['season_pass', 'pro']).optional() }),
+  // `code` comes from a shared promo or ambassador link and fills in the code box.
+  validateSearch: z.object({
+    plan: z.enum(['season_pass', 'pro']).optional(),
+    code: z.string().max(40).optional(),
+  }),
   head: () => ({ meta: [{ title: `Plans and billing | ${site.name}` }] }),
   loader: ({ context }) => {
     void context.queryClient.prefetchQuery(meQuery)
@@ -39,7 +44,7 @@ export const Route = createFileRoute('/_app/billing')({
 })
 
 function BillingPage() {
-  const { plan } = Route.useSearch()
+  const { plan, code } = Route.useSearch()
   const { data: me } = useQuery(meQuery)
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-5 py-8 sm:px-8">
@@ -48,7 +53,7 @@ function BillingPage() {
         description="Your plan, what you've used this month, and upgrades."
       />
       {me ? (
-        <Billing me={me} highlight={plan} />
+        <Billing me={me} highlight={plan} code={code} />
       ) : (
         <Skeleton className="h-80" />
       )}
@@ -102,9 +107,11 @@ function UsageRow({
 function Billing({
   me,
   highlight,
+  code,
 }: {
   me: Me
   highlight?: 'season_pass' | 'pro'
+  code?: string
 }) {
   const { data: usage } = useQuery(usageQuery)
   const { data: subscription } = useQuery(subscriptionQuery)
@@ -237,6 +244,69 @@ function Billing({
           ))}
         </div>
       )}
+
+      {me.plan === 'free' && <RedeemCode initial={code} onRedeemed={refresh} />}
     </div>
+  )
+}
+
+function RedeemCode({
+  initial = '',
+  onRedeemed,
+}: {
+  initial?: string
+  onRedeemed: () => void
+}) {
+  const [code, setCode] = useState(initial)
+  const redeem = useMutation({
+    mutationFn: () =>
+      unwrap(api.POST('/v1/promo-redemptions', { body: { code } })),
+    onSuccess: (result) => {
+      onRedeemed()
+      const end = result.subscription?.currentPeriodEnd
+      toast.success(
+        `${planLabels[result.plan]} added${end ? `, active until ${formatDate(end)}` : ''}.`,
+      )
+    },
+    onError: (error) => toast.error(errorMessage(error)),
+  })
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Have a code?</CardTitle>
+        <CardDescription>
+          Enter a promo or ambassador code to get a plan for free.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form
+          className="flex flex-col gap-2 sm:flex-row"
+          onSubmit={(event) => {
+            event.preventDefault()
+            if (code.trim()) redeem.mutate()
+          }}
+        >
+          <Input
+            aria-label="Promo code"
+            placeholder="PLACEMENT100"
+            value={code}
+            onChange={(event) => setCode(event.target.value)}
+            autoCapitalize="characters"
+            autoComplete="off"
+            spellCheck={false}
+            className="uppercase sm:max-w-xs"
+          />
+          <Button
+            type="submit"
+            variant="outline"
+            disabled={!code.trim() || redeem.isPending}
+          >
+            {redeem.isPending && <Spinner data-icon="inline-start" />}
+            Redeem
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   )
 }

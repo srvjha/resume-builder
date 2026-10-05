@@ -19,6 +19,7 @@ const tabs = [
   { to: '/admin/users', label: 'Users', exact: false },
   { to: '/admin/ai', label: 'AI', exact: false },
   { to: '/admin/revenue', label: 'Revenue', exact: false },
+  { to: '/admin/promo-codes', label: 'Promo codes', exact: false },
   { to: '/admin/content', label: 'Content', exact: false },
   { to: '/admin/traffic', label: 'Traffic', exact: false },
   { to: '/admin/system', label: 'System', exact: false },

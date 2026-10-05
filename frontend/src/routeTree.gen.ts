@@ -33,6 +33,7 @@ import { Route as SiteTermsRouteImport } from './routes/_site/terms'
 import { Route as AppAdminIndexRouteImport } from './routes/_app/admin/index'
 import { Route as AppAdminAiRouteImport } from './routes/_app/admin/ai'
 import { Route as AppAdminContentRouteImport } from './routes/_app/admin/content'
+import { Route as AppAdminPromoCodesRouteImport } from './routes/_app/admin/promo-codes'
 import { Route as AppAdminRevenueRouteImport } from './routes/_app/admin/revenue'
 import { Route as AppAdminSystemRouteImport } from './routes/_app/admin/system'
 import { Route as AppAdminTrafficRouteImport } from './routes/_app/admin/traffic'
@@ -168,6 +169,11 @@ const AppAdminContentRoute = AppAdminContentRouteImport.update({
   path: '/content',
   getParentRoute: () => AppAdminRouteRoute,
 } as any)
+const AppAdminPromoCodesRoute = AppAdminPromoCodesRouteImport.update({
+  id: '/promo-codes',
+  path: '/promo-codes',
+  getParentRoute: () => AppAdminRouteRoute,
+} as any)
 const AppAdminRevenueRoute = AppAdminRevenueRouteImport.update({
   id: '/revenue',
   path: '/revenue',
@@ -272,6 +278,7 @@ export interface FileRoutesByFullPath {
   '/$username/': typeof UsernameIndexRoute
   '/admin/ai': typeof AppAdminAiRoute
   '/admin/content': typeof AppAdminContentRoute
+  '/admin/promo-codes': typeof AppAdminPromoCodesRoute
   '/admin/revenue': typeof AppAdminRevenueRoute
   '/admin/system': typeof AppAdminSystemRoute
   '/admin/traffic': typeof AppAdminTrafficRoute
@@ -310,6 +317,7 @@ export interface FileRoutesByTo {
   '/$username': typeof UsernameIndexRoute
   '/admin/ai': typeof AppAdminAiRoute
   '/admin/content': typeof AppAdminContentRoute
+  '/admin/promo-codes': typeof AppAdminPromoCodesRoute
   '/admin/revenue': typeof AppAdminRevenueRoute
   '/admin/system': typeof AppAdminSystemRoute
   '/admin/traffic': typeof AppAdminTrafficRoute
@@ -353,6 +361,7 @@ export interface FileRoutesById {
   '/_site/': typeof SiteIndexRoute
   '/_app/admin/ai': typeof AppAdminAiRoute
   '/_app/admin/content': typeof AppAdminContentRoute
+  '/_app/admin/promo-codes': typeof AppAdminPromoCodesRoute
   '/_app/admin/revenue': typeof AppAdminRevenueRoute
   '/_app/admin/system': typeof AppAdminSystemRoute
   '/_app/admin/traffic': typeof AppAdminTrafficRoute
@@ -395,6 +404,7 @@ export interface FileRouteTypes {
     | '/$username/'
     | '/admin/ai'
     | '/admin/content'
+    | '/admin/promo-codes'
     | '/admin/revenue'
     | '/admin/system'
     | '/admin/traffic'
@@ -433,6 +443,7 @@ export interface FileRouteTypes {
     | '/$username'
     | '/admin/ai'
     | '/admin/content'
+    | '/admin/promo-codes'
     | '/admin/revenue'
     | '/admin/system'
     | '/admin/traffic'
@@ -475,6 +486,7 @@ export interface FileRouteTypes {
     | '/_site/'
     | '/_app/admin/ai'
     | '/_app/admin/content'
+    | '/_app/admin/promo-codes'
     | '/_app/admin/revenue'
     | '/_app/admin/system'
     | '/_app/admin/traffic'
@@ -673,6 +685,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminContentRouteImport
       parentRoute: typeof AppAdminRouteRoute
     }
+    '/_app/admin/promo-codes': {
+      id: '/_app/admin/promo-codes'
+      path: '/promo-codes'
+      fullPath: '/admin/promo-codes'
+      preLoaderRoute: typeof AppAdminPromoCodesRouteImport
+      parentRoute: typeof AppAdminRouteRoute
+    }
     '/_app/admin/revenue': {
       id: '/_app/admin/revenue'
       path: '/revenue'
@@ -791,6 +810,7 @@ declare module '@tanstack/react-router' {
 interface AppAdminRouteRouteChildren {
   AppAdminAiRoute: typeof AppAdminAiRoute
   AppAdminContentRoute: typeof AppAdminContentRoute
+  AppAdminPromoCodesRoute: typeof AppAdminPromoCodesRoute
   AppAdminRevenueRoute: typeof AppAdminRevenueRoute
   AppAdminSystemRoute: typeof AppAdminSystemRoute
   AppAdminTrafficRoute: typeof AppAdminTrafficRoute
@@ -802,6 +822,7 @@ interface AppAdminRouteRouteChildren {
 const AppAdminRouteRouteChildren: AppAdminRouteRouteChildren = {
   AppAdminAiRoute: AppAdminAiRoute,
   AppAdminContentRoute: AppAdminContentRoute,
+  AppAdminPromoCodesRoute: AppAdminPromoCodesRoute,
   AppAdminRevenueRoute: AppAdminRevenueRoute,
   AppAdminSystemRoute: AppAdminSystemRoute,
   AppAdminTrafficRoute: AppAdminTrafficRoute,

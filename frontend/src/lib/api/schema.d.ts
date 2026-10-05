@@ -6604,6 +6604,316 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/promo-redemptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Redeem a promo or ambassador code for a free plan */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        code: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data: {
+                                /** @enum {string} */
+                                plan: "free" | "season_pass" | "pro";
+                                subscription: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    /** @enum {string} */
+                                    plan: "season_pass" | "pro";
+                                    /** @enum {string} */
+                                    status: "created" | "active" | "past_due" | "cancelled" | "expired";
+                                    currentPeriodEnd: string | null;
+                                    cancelledAt: string | null;
+                                } | null;
+                            };
+                        };
+                    };
+                };
+                /** @description Error */
+                default: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/promo-codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Promo and ambassador codes with redemption stats */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data: {
+                                codes: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    code: string;
+                                    /** @enum {string} */
+                                    kind: "promo" | "ambassador";
+                                    /** @enum {string} */
+                                    plan: "season_pass" | "pro";
+                                    months: number;
+                                    maxRedemptions: number | null;
+                                    expiresAt: string | null;
+                                    active: boolean;
+                                    owner: string | null;
+                                    note: string | null;
+                                    createdAt: string;
+                                    redemptions: number;
+                                    madeResume: number;
+                                    tailored: number;
+                                    paid: number;
+                                    lastRedeemedAt: string | null;
+                                }[];
+                                recent: {
+                                    code: string;
+                                    /** Format: uuid */
+                                    userId: string;
+                                    email: string;
+                                    name: string;
+                                    redeemedAt: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description Error */
+                default: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Create a promo or ambassador code */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        code: string;
+                        /**
+                         * @default promo
+                         * @enum {string}
+                         */
+                        kind?: "promo" | "ambassador";
+                        /**
+                         * @default season_pass
+                         * @enum {string}
+                         */
+                        plan?: "season_pass" | "pro";
+                        months: number;
+                        maxRedemptions?: number;
+                        expiresAt?: string;
+                        owner?: string;
+                        note?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data: {
+                                codes: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    code: string;
+                                    /** @enum {string} */
+                                    kind: "promo" | "ambassador";
+                                    /** @enum {string} */
+                                    plan: "season_pass" | "pro";
+                                    months: number;
+                                    maxRedemptions: number | null;
+                                    expiresAt: string | null;
+                                    active: boolean;
+                                    owner: string | null;
+                                    note: string | null;
+                                    createdAt: string;
+                                    redemptions: number;
+                                    madeResume: number;
+                                    tailored: number;
+                                    paid: number;
+                                    lastRedeemedAt: string | null;
+                                }[];
+                                recent: {
+                                    code: string;
+                                    /** Format: uuid */
+                                    userId: string;
+                                    email: string;
+                                    name: string;
+                                    redeemedAt: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description Error */
+                default: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/promo-codes/{promoCodeId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Turn a code on or off */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    promoCodeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        active: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data: {
+                                codes: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    code: string;
+                                    /** @enum {string} */
+                                    kind: "promo" | "ambassador";
+                                    /** @enum {string} */
+                                    plan: "season_pass" | "pro";
+                                    months: number;
+                                    maxRedemptions: number | null;
+                                    expiresAt: string | null;
+                                    active: boolean;
+                                    owner: string | null;
+                                    note: string | null;
+                                    createdAt: string;
+                                    redemptions: number;
+                                    madeResume: number;
+                                    tailored: number;
+                                    paid: number;
+                                    lastRedeemedAt: string | null;
+                                }[];
+                                recent: {
+                                    code: string;
+                                    /** Format: uuid */
+                                    userId: string;
+                                    email: string;
+                                    name: string;
+                                    redeemedAt: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description Error */
+                default: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
     "/v1/admin/overview": {
         parameters: {
             query?: never;

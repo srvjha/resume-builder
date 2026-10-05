@@ -226,6 +226,11 @@ export const adminAiQuery = (days: AdminRange) =>
       ),
   })
 
+export const adminPromoCodesQuery = queryOptions({
+  queryKey: queryKeys.adminReport('promo-codes'),
+  queryFn: () => unwrap(api.GET('/v1/admin/promo-codes')),
+})
+
 export const adminRevenueQuery = (days: AdminRange) =>
   queryOptions({
     queryKey: queryKeys.adminReport('revenue', days),

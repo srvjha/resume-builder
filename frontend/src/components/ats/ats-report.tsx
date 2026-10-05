@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import type { AtsCheckStatus, AtsReport as Report } from '@/lib/api/types'
+import { checkExamples } from '@/components/ats/check-examples'
 import { sortChecks } from '@/lib/ats'
 import { cn } from '@/lib/utils'
 
@@ -44,6 +45,30 @@ const statuses: Record<
     className: 'bg-success/10 text-success',
     iconClassName: 'text-success',
   },
+}
+
+// The line with its problem word marked, matched without regard to case.
+function Highlighted({
+  text,
+  highlight = '',
+}: {
+  text: string
+  highlight?: string
+}) {
+  const at = highlight
+    ? text.toLowerCase().indexOf(highlight.toLowerCase())
+    : -1
+  if (at === -1) return text
+  const end = at + highlight.length
+  return (
+    <>
+      {text.slice(0, at)}
+      <mark className="rounded-sm bg-highlight/60 px-0.5 text-foreground">
+        {text.slice(at, end)}
+      </mark>
+      {text.slice(end)}
+    </>
+  )
 }
 
 function ScoreRing({ score, className }: { score: number; className: string }) {
@@ -183,7 +208,11 @@ export function AtsReport({
   const toFix = report.categories.flatMap((category) =>
     sortChecks(category.checks)
       .filter((check) => check.status !== 'pass')
-      .map((check) => ({ ...check, category: category.label })),
+      .map((check) => ({
+        ...check,
+        category: category.label,
+        example: checkExamples[check.id],
+      })),
   )
   const statList = [
     { label: 'Words', value: stats.words },
@@ -267,11 +296,33 @@ export function AtsReport({
                     <p className="text-sm text-muted-foreground">
                       {check.detail}
                     </p>
+                    {check.lines && check.lines.length > 0 && (
+                      <ul
+                        aria-label="From your resume"
+                        className="flex flex-col gap-1 border-l-2 pl-3 text-sm"
+                      >
+                        {check.lines.map((line) => (
+                          <li key={line.text} className="break-words">
+                            <Highlighted {...line} />
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                     {check.fix && (
                       <p className="text-sm">
                         <span className="font-medium">How to fix: </span>
                         {check.fix}
                       </p>
+                    )}
+                    {check.example && (
+                      <dl className="grid gap-x-3 gap-y-1 rounded-md bg-muted/50 p-3 text-sm sm:grid-cols-[auto_1fr]">
+                        <dt className="text-muted-foreground">Before</dt>
+                        <dd className="text-muted-foreground line-through decoration-muted-foreground/40">
+                          {check.example.before}
+                        </dd>
+                        <dt className="font-medium">After</dt>
+                        <dd>{check.example.after}</dd>
+                      </dl>
                     )}
                   </li>
                 ))}

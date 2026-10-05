@@ -5703,6 +5703,13 @@ export interface paths {
                             width: number;
                             height: number;
                         };
+                        file?: {
+                            name: string;
+                            sizeBytes: number;
+                            pages: number;
+                            /** @default [] */
+                            hiddenLinks?: string[];
+                        };
                     };
                 };
             };
@@ -8219,6 +8226,10 @@ export interface components {
                     status: "pass" | "warn" | "fail";
                     detail: string;
                     fix: string | null;
+                    lines?: {
+                        text: string;
+                        highlight?: string;
+                    }[];
                 }[];
             }[];
             keywords: {

@@ -32,6 +32,18 @@ type TextItem = NonNullable<
 const maxParsedPages = 4
 const boldFont = /bold|black|heavy|semibold|demi/i
 
+// A link counts as visible when its address, without the protocol or "www.", is written in the text.
+// Wrapped lines and spaces are ignored, so a URL split across two lines still counts.
+function linkVisible(text: string, url: string) {
+  const core = url
+    .replace(/^mailto:/i, '')
+    .replace(/^https?:\/\/(www\.)?/i, '')
+    .replace(/[?#].*$/, '')
+    .replace(/\/$/, '')
+    .toLowerCase()
+  return text.replace(/\s+/g, '').toLowerCase().includes(core)
+}
+
 // Same loading as PdfPages: pdf.js and its worker only load when someone picks a file.
 // The text runs of the first pages go to the server's parser, built exactly like backend parser/extract.ts.
 async function readPdf(file: File) {
@@ -43,6 +55,7 @@ async function readPdf(file: File) {
     const doc = await task.promise
     const pages: string[] = []
     const items: TextItem[] = []
+    const links = new Set<string>()
     let size = { width: 0, height: 0 }
     for (let number = 1; number <= doc.numPages; number++) {
       const page = await doc.getPage(number)
@@ -57,6 +70,10 @@ async function readPdf(file: File) {
           )
           .join(''),
       )
+      for (const annotation of await page.getAnnotations()) {
+        const url = (annotation as { url?: string }).url
+        if (url && /^(https?:|mailto:)/i.test(url)) links.add(url)
+      }
       if (number > maxParsedPages) continue
       const fontNames = new Map<string, string>()
       for (const run of content.items) {
@@ -87,10 +104,15 @@ async function readPdf(file: File) {
         })
       }
     }
+    const text = pages.join('\n\n').trim()
     return {
-      text: pages.join('\n\n').trim(),
+      text,
       items: items.slice(0, 6000),
       page: size,
+      pages: doc.numPages,
+      hiddenLinks: [...links]
+        .filter((url) => !linkVisible(text, url))
+        .slice(0, 50),
     }
   } finally {
     await task.destroy()
@@ -108,7 +130,10 @@ export function AtsChecker() {
   const { data: session } = useSession()
   const [tab, setTab] = useState<'pdf' | 'text'>('pdf')
   const [file, setFile] = useState<
-    ({ name: string } & Awaited<ReturnType<typeof readPdf>>) | null
+    | ({ name: string; sizeBytes: number } & Awaited<
+        ReturnType<typeof readPdf>
+      >)
+    | null
   >(null)
   const [fileError, setFileError] = useState<string | null>(null)
   const [reading, setReading] = useState(false)
@@ -141,7 +166,18 @@ export function AtsChecker() {
             body: {
               text,
               ...(tab === 'pdf' &&
-                file && { items: file.items, page: file.page }),
+                file && {
+                  items: file.items,
+                  page: file.page,
+                  file: {
+                    name: file.name.slice(0, 255),
+                    sizeBytes: file.sizeBytes,
+                    pages: file.pages,
+                    hiddenLinks: file.hiddenLinks.map((url) =>
+                      url.slice(0, 500),
+                    ),
+                  },
+                }),
               ...(jobDescription.trim() && {
                 jobDescription: jobDescription.trim(),
               }),
@@ -175,7 +211,7 @@ export function AtsChecker() {
         )
         return
       }
-      setFile({ name: next.name, ...extracted })
+      setFile({ name: next.name, sizeBytes: next.size, ...extracted })
     } catch {
       setFileError(
         'We could not open this PDF. It may be damaged or password protected. Try another file, or paste the text instead.',

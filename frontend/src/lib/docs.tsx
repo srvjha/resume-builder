@@ -1007,20 +1007,28 @@ export const docs: DocPage[] = [
                     <td>15</td>
                     <td>
                       How well a parser reads your PDF: columns, contact details
-                      in page headers, icon characters, scanned pages
+                      in page headers, icon characters, scanned pages,
+                      consistent dates, file name and size, links hidden behind
+                      icons, tiny or off-page text
                     </td>
                   </tr>
                   <tr>
                     <td>Contact details</td>
                     <td>15</td>
                     <td>10</td>
-                    <td>Email, phone, location, LinkedIn or portfolio</td>
+                    <td>
+                      Email, phone, location, LinkedIn or portfolio, a
+                      professional email address
+                    </td>
                   </tr>
                   <tr>
                     <td>Standard sections</td>
                     <td>15</td>
                     <td>15</td>
-                    <td>Experience, education, skills, standard headings</td>
+                    <td>
+                      Experience, education, skills, standard headings, section
+                      order for your stage, gaps over six months between roles
+                    </td>
                   </tr>
                   <tr>
                     <td>Impact and content</td>
@@ -1028,24 +1036,34 @@ export const docs: DocPage[] = [
                     <td>25</td>
                     <td>
                       Action verbs, numbers in bullets, bullet length, no "I",
-                      no filler
+                      no filler, varied verbs, no keyword stuffing
                     </td>
                   </tr>
                   <tr>
                     <td>Length</td>
                     <td>15</td>
                     <td>10</td>
-                    <td>About 300 to 900 words</td>
+                    <td>
+                      About 300 to 900 words, and the real page count of an
+                      uploaded PDF
+                    </td>
                   </tr>
                   <tr>
                     <td>Job match</td>
                     <td>0</td>
                     <td>25</td>
-                    <td>Must-have skills, other skills, job title</td>
+                    <td>
+                      Must-have skills, other skills, job title, the title in
+                      your headline, acronyms written out
+                    </td>
                   </tr>
                 </tbody>
               </table>
             </div>
+            <p>
+              Each problem shows the lines from your resume behind it, with the
+              word to change highlighted, and a before and after example.
+            </p>
           </>
         ),
       },

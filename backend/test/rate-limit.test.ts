@@ -16,7 +16,12 @@ vi.mock("../src/lib/auth.js", () => ({
   },
 }));
 vi.mock("../src/db/index.js", () => ({
-  db: { select: () => Promise.reject(new Error("no database in this test")) },
+  // Thrown, not a rejected promise: the route's own error handling catches it and nothing is left unhandled.
+  db: {
+    select: () => {
+      throw new Error("no database in this test");
+    },
+  },
 }));
 
 const { app } = await import("../src/app.js");

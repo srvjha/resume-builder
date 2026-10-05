@@ -349,7 +349,8 @@ function SettingsPage() {
         }
         className="gap-6"
       >
-        <TabsList className="max-w-full justify-start overflow-x-auto">
+        <TabsList className="max-w-full justify-start overflow-x-auto overflow-y-hidden">
+          {/* overflow-x alone makes overflow-y auto too, and the active tab's shadow then shows a scrollbar. */}
           <TabsTrigger value="account">Account</TabsTrigger>
           <TabsTrigger value="ai">AI provider</TabsTrigger>
           <TabsTrigger value="data">Your data</TabsTrigger>

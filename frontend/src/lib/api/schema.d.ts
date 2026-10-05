@@ -1345,6 +1345,10 @@ export interface paths {
                                     label: string;
                                     views: number;
                                 }[];
+                                cities: {
+                                    label: string;
+                                    views: number;
+                                }[];
                                 devices: {
                                     label: string;
                                     views: number;

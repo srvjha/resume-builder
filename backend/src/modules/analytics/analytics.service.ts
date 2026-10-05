@@ -1,4 +1,4 @@
-import { and, count, countDistinct, desc, eq, gte, isNull, lt, sql } from "drizzle-orm";
+import { and, count, countDistinct, desc, eq, gte, isNull, lt, type SQL, sql } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { linkViews, resumes, shareLinks } from "../../db/schema/index.js";
 
@@ -26,7 +26,7 @@ export async function getAnalytics(userId: string, days: number, timeZone: strin
       .from(linkViews)
       .innerJoin(shareLinks, eq(linkViews.shareLinkId, shareLinks.id));
   const breakdown = (
-    column: typeof linkViews.referrer | typeof linkViews.country | typeof linkViews.device,
+    column: typeof linkViews.referrer | typeof linkViews.country | typeof linkViews.device | SQL,
     fallback: string,
   ) =>
     db
@@ -39,7 +39,7 @@ export async function getAnalytics(userId: string, days: number, timeZone: strin
       .limit(8);
   const day = sql<string>`to_char(${linkViews.viewedAt} at time zone ${timeZone}, 'YYYY-MM-DD')`;
 
-  const [[current], [previous], byDay, links, referrers, countries, devices, recentViews] = await Promise.all([
+  const [[current], [previous], byDay, links, referrers, countries, cities, devices, recentViews] = await Promise.all([
     views().where(inRange),
     views().where(inPrevious),
     db
@@ -66,6 +66,8 @@ export async function getAnalytics(userId: string, days: number, timeZone: strin
       .orderBy(sql`5 desc`, desc(shareLinks.lastViewedAt)),
     breakdown(linkViews.referrer, "direct"),
     breakdown(linkViews.country, "unknown"),
+    // "Pune, Maharashtra": the region tells apart cities that share a name.
+    breakdown(sql`nullif(concat_ws(', ', ${linkViews.city}, ${linkViews.region}), '')`, "unknown"),
     breakdown(linkViews.device, "unknown"),
     db
       .select({
@@ -99,6 +101,7 @@ export async function getAnalytics(userId: string, days: number, timeZone: strin
     links,
     referrers,
     countries,
+    cities,
     devices,
     recentViews,
   };

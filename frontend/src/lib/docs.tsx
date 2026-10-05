@@ -1193,9 +1193,10 @@ export const docs: DocPage[] = [
           <p>
             Each link shows its views, the number of people, where they came
             from, their approximate city, region and country, and their device.
-            The <b>Analytics</b> page adds them up across all your links. Your
-            own views while signed in aren't counted, and we never store
-            visitors' IP addresses.
+            The <b>Analytics</b> page adds them up across all your links, with
+            your top sources, countries, cities and devices. Your own views
+            while signed in aren't counted, and we never store visitors' IP
+            addresses.
           </p>
         ),
       },

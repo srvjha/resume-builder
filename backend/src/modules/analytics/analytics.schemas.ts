@@ -40,6 +40,7 @@ export const analyticsResponse = z.object({
   ),
   referrers: breakdown,
   countries: breakdown,
+  cities: breakdown,
   devices: breakdown,
   recentViews: z.array(
     z.object({

@@ -3852,6 +3852,27 @@
                             "additionalProperties": false
                           }
                         },
+                        "cities": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "label": {
+                                "type": "string"
+                              },
+                              "views": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              }
+                            },
+                            "required": [
+                              "label",
+                              "views"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
                         "devices": {
                           "type": "array",
                           "items": {
@@ -3937,6 +3958,7 @@
                         "links",
                         "referrers",
                         "countries",
+                        "cities",
                         "devices",
                         "recentViews"
                       ],

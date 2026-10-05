@@ -6,6 +6,7 @@ import { BreakdownList } from '@/components/analytics/breakdown-list'
 import { Change } from '@/components/analytics/change'
 import { PremiumInsights } from '@/components/analytics/insights'
 import {
+  cityLabel,
   countryLabel,
   deviceLabel,
   referrerLabel,
@@ -198,7 +199,7 @@ function Report({ data }: { data: Analytics }) {
         <ViewsChart data={data.viewsByDay} />
       </section>
 
-      <div className="grid gap-10 md:grid-cols-3">
+      <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
         <BreakdownList
           title="Where they came from"
           rows={data.referrers}
@@ -209,6 +210,7 @@ function Report({ data }: { data: Analytics }) {
           rows={data.countries}
           label={countryLabel}
         />
+        <BreakdownList title="Cities" rows={data.cities} label={cityLabel} />
         <BreakdownList
           title="Devices"
           rows={data.devices}

@@ -35,6 +35,11 @@ export function countryLabel(code: string | null) {
   }
 }
 
+// "Pune, MH": the city with its region code, as the hosting provider reports it.
+export function cityLabel(place: string | null) {
+  return !place || place === 'unknown' ? 'Unknown' : place
+}
+
 export function deviceLabel(device: string | null) {
   if (!device || device === 'unknown') return 'Unknown'
   return device.charAt(0).toUpperCase() + device.slice(1)

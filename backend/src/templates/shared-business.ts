@@ -1,5 +1,5 @@
 import type { ResumeSection } from "../schemas/resume-content.js";
-import { dateRange, joinNonEmpty, tex, texRich, texUrl, gap, withGap } from "./latex.js";
+import { dateRange, joinNonEmpty, tex, texRich, texUrl, gap, withGap, displayUrl } from "./latex.js";
 
 // Section bodies shared by the business templates (banking, finance, consulting, marketing, executive).
 // Each template defines these macros in its preamble and lays them out its own way:
@@ -129,7 +129,9 @@ function renderBody(s: ResumeSection, options: BusinessOptions): string {
     case "summary":
       return s.text ? `\\summarytext{${texRich(s.text)}}` : "";
     case "links":
-      return s.links.length ? `\\linkline{${s.links.map((l) => linked(l.url, l.label)).join("\\linksep ")}}` : "";
+      return s.links.length
+        ? `\\linkline{${s.links.map((l) => `\\mbox{${tex(l.label)}: ${linked(l.url, displayUrl(l.url))}}`).join("\\linksep ")}}`
+        : "";
   }
 }
 

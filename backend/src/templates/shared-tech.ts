@@ -1,6 +1,6 @@
 import type { ResumeSection } from "../schemas/resume-content.js";
 import { renderSections } from "./classic-body.js";
-import { tex, texRich, texUrl, withGap } from "./latex.js";
+import { tex, texRich, texUrl, withGap, displayUrl } from "./latex.js";
 
 // Helpers for the field-specific templates (research, analyst, product, designer, campus).
 
@@ -12,9 +12,6 @@ export function bullets(items: { text: string }[]) {
     "\\resumeItemListEnd",
   ].join("\n");
 }
-
-// "https://www.aarav.design/work/" -> "aarav.design/work", for printing a link people can type.
-export const displayUrl = (url: string) => url.replace(/^(https?:\/\/)?(www\.)?/, "").replace(/\/$/, "");
 
 export const isPublications = (section: ResumeSection): section is Extract<ResumeSection, { type: "list" }> =>
   section.type === "list" && /publication|paper|preprint/i.test(section.title);
@@ -34,7 +31,9 @@ function skillsBlock(s: Extract<ResumeSection, { type: "skills" }>) {
 
 function linksBlock(s: Extract<ResumeSection, { type: "links" }>) {
   if (s.links.length === 0) return "";
-  const links = s.links.map((l) => `\\href{${texUrl(l.url)}}{\\underline{${tex(l.label)}}}`).join(", ");
+  const links = s.links
+    .map((l) => `\\mbox{${tex(l.label)}: \\href{${texUrl(l.url)}}{\\underline{${tex(displayUrl(l.url))}}}}`)
+    .join(", ");
   return `\\section{${tex(s.title)}}\n${links}\\par`;
 }
 

@@ -1,8 +1,18 @@
 import type { ResumeContent, ResumeSection } from "../schemas/resume-content.js";
 import { renderSections } from "./classic-body.js";
-import { contactParts, dateRange, joinNonEmpty, tex, texUrl, visibleContent, gap, withGap } from "./latex.js";
+import {
+  contactParts,
+  dateRange,
+  joinNonEmpty,
+  tex,
+  texUrl,
+  visibleContent,
+  gap,
+  withGap,
+  displayUrl,
+} from "./latex.js";
 import { applyLayout, nameGap, type ResumeLayout } from "./layout.js";
-import { bullets, bundleFont, displayUrl } from "./shared-tech.js";
+import { bullets, bundleFont } from "./shared-tech.js";
 
 // Two-column layout for UI/UX and product designers: a light display name, a narrow sidebar for contact,
 // skills, education and short lists, and the main column for experience and work. paracol lets both

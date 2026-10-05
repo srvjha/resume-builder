@@ -1,5 +1,16 @@
 import type { ResumeSection } from "../schemas/resume-content.js";
-import { compactList, dateRange, fitsOneLine, joinNonEmpty, tex, texRich, texUrl, gap, withGap } from "./latex.js";
+import {
+  compactList,
+  dateRange,
+  fitsOneLine,
+  joinNonEmpty,
+  tex,
+  texRich,
+  texUrl,
+  gap,
+  withGap,
+  displayUrl,
+} from "./latex.js";
 
 // Section bodies shared by the templates. Each template defines these macros in its preamble:
 // \resumeSubheading{title}{right}{subtitle}{right-sub}, \resumeProjectHeading{left}{right},
@@ -88,7 +99,10 @@ export function renderSections(sections: ResumeSection[]) {
       if (section.type === "links") {
         if (section.links.length === 0) return "";
         const links = section.links
-          .map((link) => `\\href{${texUrl(link.url)}}{\\underline{${tex(link.label)}}}`)
+          .map(
+            (link) =>
+              `\\mbox{${tex(link.label)}: \\href{${texUrl(link.url)}}{\\underline{${tex(displayUrl(link.url))}}}}`,
+          )
           .join(", ");
         return `\\section{${tex(section.title)}}\n\\begin{itemize}[leftmargin=0.15in, label={}]\n\\small{\\item{${links}}}\n\\end{itemize}`;
       }

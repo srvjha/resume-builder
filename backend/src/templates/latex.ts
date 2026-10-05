@@ -122,16 +122,34 @@ const icon = (name: string) => `\\BeginAccSupp{ActualText={}}\\raisebox{-0.1\\he
 const iconLink = (url: string, name: string, label: string) =>
   `\\href{${texUrl(url)}}{${icon(name)}\\underline{${tex(label)}}}`;
 
+// A link as it reads on the page: "linkedin.com/in/aarav", not "https://www.linkedin.com/in/aarav/".
+export const displayUrl = (url: string) =>
+  url
+    .replace(/^https?:\/\/(www\.)?/i, "")
+    .replace(/[?#].*$/, "")
+    .replace(/\/$/, "");
+
 // Contact details with an icon each; email and links are underlined and clickable. Templates load fontawesome5
-// and accsupp.
+// and accsupp. Links show their address, not a label like "LinkedIn": an ATS keeps only the visible text, so a
+// label alone leaves the recruiter without the address.
 export function contactParts(basics: ResumeContent["basics"]) {
-  return [
-    basics.phone ? `${icon("\\faPhone")}${tex(basics.phone)}` : undefined,
-    basics.email ? iconLink(`mailto:${basics.email}`, "\\faEnvelope", basics.email) : undefined,
-    basics.location ? `${icon("\\faMapMarker")}${tex(basics.location)}` : undefined,
-    ...basics.links.map((link) => {
-      const target = `${link.label} ${link.url}`.toLowerCase();
-      return iconLink(link.url, linkIcons.find(([pattern]) => pattern.test(target))?.[1] ?? "\\faGlobe", link.label);
-    }),
-  ].filter((part): part is string => Boolean(part));
+  return (
+    [
+      basics.phone ? `${icon("\\faPhone")}${tex(basics.phone)}` : undefined,
+      basics.email ? iconLink(`mailto:${basics.email}`, "\\faEnvelope", basics.email) : undefined,
+      basics.location ? `${icon("\\faMapMarker")}${tex(basics.location)}` : undefined,
+      ...basics.links.map((link) => {
+        const target = `${link.label} ${link.url}`.toLowerCase();
+        return iconLink(
+          link.url,
+          linkIcons.find(([pattern]) => pattern.test(target))?.[1] ?? "\\faGlobe",
+          displayUrl(link.url),
+        );
+      }),
+    ]
+      .filter((part): part is string => Boolean(part))
+      // A long contact line wraps between items (templates join them with spacing that can't break on its
+      // own), never inside a phone number or address.
+      .map((part) => `\\allowbreak\\mbox{${part}}`)
+  );
 }

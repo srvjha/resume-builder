@@ -10,6 +10,7 @@ import {
   visibleContent,
   gap,
   withGap,
+  displayUrl,
 } from "./latex.js";
 import { applyLayout, nameGap, type ResumeLayout } from "./layout.js";
 
@@ -113,7 +114,7 @@ function renderSection(s: ResumeSection): string {
       if (s.links.length === 0) return "";
       return section(
         s.title,
-        `\\begin{itemize}[leftmargin=0.15in, label={}]\n  \\item \\small{\n    ${s.links.map((l) => link(l.url, l.label)).join(", ")}\n  }\n\\end{itemize}`,
+        `\\begin{itemize}[leftmargin=0.15in, label={}]\n  \\item \\small{\n    ${s.links.map((l) => `\\mbox{${tex(l.label)}: ${link(l.url, displayUrl(l.url))}}`).join(", ")}\n  }\n\\end{itemize}`,
       );
     case "experience": {
       if (s.entries.length === 0) return "";

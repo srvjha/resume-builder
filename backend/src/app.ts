@@ -9,6 +9,7 @@ import { razorpayWebhookRouter } from "./modules/billing/billing.routes.js";
 import { logger } from "./lib/logger.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { notFound } from "./middleware/not-found.js";
+import { optionalAuth } from "./middleware/optional-auth.js";
 import { apiLimiter } from "./middleware/rate-limit.js";
 import { buildOpenApiDocument } from "./openapi.js";
 import { v1 } from "./routes.js";
@@ -56,7 +57,9 @@ app.get("/v1/openapi.json", (_req, res) => {
   res.json(openApiDocument);
 });
 
-app.use("/v1", apiLimiter, v1);
+// The session is read first so signed-in users are limited per account: a whole campus on one Wi-Fi
+// shares an IP.
+app.use("/v1", optionalAuth, apiLimiter, v1);
 
 app.use(notFound);
 app.use(errorHandler);

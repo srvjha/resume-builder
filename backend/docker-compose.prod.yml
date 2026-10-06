@@ -3,7 +3,9 @@
 name: resumebuilder
 
 services:
-  api:
+  # Named shortlist-api, not api: Compose adds the service name as an alias on every network, and on the
+  # shared caddy-edge network a generic "api" would collide with other apps' services.
+  shortlist-api:
     build: { context: ., target: api }
     restart: unless-stopped
     env_file: .env.production
@@ -17,10 +19,8 @@ services:
       edge: {}
       backend: {}
       compile: {}
-      # Shared with the Caddy that already serves ports 80/443 on the VPS; the alias avoids
-      # clashing with other apps' services on that network.
-      proxy:
-        aliases: [shortlist-api]
+      # Shared with the one Caddy on the VPS that serves ports 80/443 for every app.
+      caddy-edge: {}
     depends_on:
       postgres: { condition: service_healthy }
       compiler: { condition: service_started }
@@ -36,7 +36,7 @@ services:
       COMPILER_URL: http://compiler:4100
     # edge gives outbound internet access (R2, AI providers); backend reaches Postgres.
     networks: [edge, backend]
-    depends_on: [api]
+    depends_on: [shortlist-api]
 
   # Untrusted LaTeX runs here: no secrets, no internet (internal network only), read-only filesystem, capped resources.
   compiler:
@@ -71,7 +71,7 @@ services:
       timeout: 3s
       retries: 10
     networks:
-      # The api also sits on the proxy network, where other apps may have a "postgres" too.
+      # Only on the private network; the alias keeps DATABASE_URL independent of the service name.
       backend:
         aliases: [shortlist-postgres]
 
@@ -93,12 +93,13 @@ services:
       postgres: { condition: service_healthy }
 
 networks:
-  # The existing reverse proxy's network, e.g. otherapp_default. Find it with: docker network ls
-  proxy:
+  # The reverse proxy's doorway network, created once on the VPS: docker network create caddy-edge.
+  # Only the API joins it; databases stay on shortlist-backend.
+  caddy-edge:
     external: true
-    name: ${PROXY_NETWORK}
+    name: caddy-edge
   edge: {}
-  backend: { internal: true }
+  backend: { internal: true, name: shortlist-backend }
   compile: { internal: true }
 
 volumes:

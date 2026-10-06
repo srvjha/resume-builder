@@ -115,9 +115,10 @@ Every variable is listed in `.env.example`. Where to get them:
 ## Deploy to the VPS
 
 The production stack (`docker-compose.prod.yml`) runs the API, the worker, the LaTeX compiler, Postgres and
-nightly encrypted backups. HTTPS comes from a Caddy that already runs on the VPS for another app; the API joins
-that Caddy's Docker network (`PROXY_NETWORK`) under the alias `shortlist-api`, and Postgres answers only to the
-alias `shortlist-postgres` so it can't be confused with another app's `postgres` on the shared network.
+nightly encrypted backups. HTTPS comes from the one Caddy on the VPS, shared with another app. Only the API
+joins the shared `caddy-edge` network, as the service `shortlist-api` (never a generic name like `api`, which
+Compose would register on that network and collide with another app's service). Postgres and the other internals
+stay on the private `shortlist-backend` network.
 
 The compiler runs untrusted LaTeX, so it holds no secrets, has no internet access (the TeX packages are
 downloaded when the image is built), runs as a non-root user on a read-only filesystem, and has CPU, memory and
@@ -135,7 +136,8 @@ First setup:
    ```
 4. Create `.env.production` from `.env.example` with production values (`NODE_ENV=production`,
    `STORAGE_DRIVER=r2`, `FRONTEND_URL=https://shortlist.co.in`, `BETTER_AUTH_URL=https://api.shortlist.co.in`,
-   `COOKIE_DOMAIN=.shortlist.co.in`). Set `PROXY_NETWORK` to the existing Caddy's network from `docker network ls`.
+   `COOKIE_DOMAIN=.shortlist.co.in`). The shared `caddy-edge` network must exist (`docker network create caddy-edge`),
+   with the Caddy container attached to it.
    Leave out `DATABASE_URL` and `COMPILER_URL`; the compose file sets them. Keep the file at `chmod 600`.
 5. Start it:
    ```sh

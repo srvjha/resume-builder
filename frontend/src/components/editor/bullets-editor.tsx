@@ -17,6 +17,9 @@ import { cn } from '@/lib/utils'
 import { move, newId } from './content-helpers'
 import type { Bullet } from './content-helpers'
 
+// ponytail: counts characters, not rendered width; about 100 fit on a line in most templates at 11pt.
+const isLong = (text: string) => text.replaceAll('**', '').length > 200
+
 function IconAction({
   label,
   onClick,
@@ -71,17 +74,31 @@ export function BulletsEditor({
           <span className="mt-2.5 text-muted-foreground" aria-hidden="true">
             •
           </span>
-          <Textarea
-            aria-label={`Bullet ${index + 1}`}
-            value={bullet.text}
-            rows={2}
-            placeholder="Built X using Y, which improved Z by N%"
-            className={cn(
-              'min-h-0 resize-none field-sizing-content',
-              bullet.hidden && 'opacity-50',
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <Textarea
+              aria-label={`Bullet ${index + 1}`}
+              aria-describedby={
+                isLong(bullet.text) ? `${bullet.id}-long` : undefined
+              }
+              value={bullet.text}
+              rows={2}
+              placeholder="Built X using Y, which improved Z by N%"
+              className={cn(
+                'min-h-0 resize-none field-sizing-content',
+                bullet.hidden && 'opacity-50',
+              )}
+              onChange={(event) => update(index, { text: event.target.value })}
+            />
+            {isLong(bullet.text) && (
+              <p
+                id={`${bullet.id}-long`}
+                className="text-xs text-muted-foreground"
+              >
+                About 3 lines on the page. Shorter bullets help it fit on one
+                page.
+              </p>
             )}
-            onChange={(event) => update(index, { text: event.target.value })}
-          />
+          </div>
           <div className="flex shrink-0 flex-col opacity-60 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 sm:flex-row">
             <IconAction
               label="Move up"

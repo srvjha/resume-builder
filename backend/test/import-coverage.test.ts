@@ -102,4 +102,15 @@ describe("import coverage check", () => {
   it("ignores template column labels", () => {
     expect(restoreMissedLines(content(), parsed(["Degree Institution Score Year"])).missed).toEqual([]);
   });
+
+  it("puts sections back in the PDF's order when the AI moved them", () => {
+    const input = parsed();
+    input.sections.reverse();
+    input.sections[0]!.heading = "EXPERIENCE";
+    const extracted = content();
+    extracted.sections.push({ id: "ach", type: "list", title: "Achievements", hidden: false, entries: [] });
+    const order = restoreMissedLines(extracted, input).content.sections.map((s) => s.id);
+    // Achievements has no heading in the PDF, so it stays after Experience, the section it followed.
+    expect(order).toEqual(["exp", "ach", "skills"]);
+  });
 });

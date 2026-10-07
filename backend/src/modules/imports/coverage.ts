@@ -107,5 +107,24 @@ export function restoreMissedLines(content: ResumeContent, parsed: ParsedResume)
       missed.push({ text, placed });
     }
   }
+  next.sections = inPdfOrder(next.sections, parsed.sections);
   return { content: next, missed };
+}
+
+const plain = (title: string) => title.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+// The model doesn't always keep the source's section order, so the PDF's own headings decide it.
+// A section with no matching heading stays right after the section it followed.
+export function inPdfOrder(sections: ResumeContent["sections"], headings: ParsedResume["sections"]) {
+  let previous = -1;
+  return sections
+    .map((section, index) => {
+      let found = headings.findIndex((h) => plain(h.heading) === plain(section.title));
+      if (found === -1 && section.type !== "list")
+        found = headings.findIndex((h) => h.kind && sectionTypes[h.kind] === section.type);
+      if (found !== -1) previous = found;
+      return { section, index, rank: found !== -1 ? found : previous + 0.5 };
+    })
+    .sort((a, b) => a.rank - b.rank || a.index - b.index)
+    .map(({ section }) => section);
 }

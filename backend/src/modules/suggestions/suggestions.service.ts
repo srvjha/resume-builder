@@ -34,7 +34,8 @@ type CreateInput = z.infer<typeof createSuggestionBody>;
 const rules = `Rules you must follow:
 - Never invent facts. Don't add employers, titles, dates, numbers, metrics, tools or skills that don't appear in
   the resume or the master profile. You may rephrase, reorder, emphasise with **bold**, or hide content.
-- Keep bullets to one or two lines, starting with a strong action verb, no first person.
+- Keep bullets to one or two lines (under 200 characters), starting with a strong action verb, no first person.
+  A rewritten bullet is never longer than the one it replaces, unless that one was under 120 characters.
 - Refer to items only by the ids given in the JSON. Propose only changes that clearly help.
 - Follow the conventions (spelling, date format, terminology) of the job's location when a job is given,
   otherwise keep the resume's own.

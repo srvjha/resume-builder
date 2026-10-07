@@ -52,6 +52,15 @@ describe.skipIf(!hasTectonic)("templates compile", () => {
       expect(result.ok, JSON.stringify(result)).toBe(true);
     });
 
+    it(`${template.id} with a skills section added but not filled in`, async () => {
+      const empty = resumeContentSchema.parse({
+        basics: { name: "Only Name" },
+        sections: [{ id: "s", title: "Technical Skills", type: "skills", groups: [{ id: "g", name: "Languages", items: [] }] }],
+      });
+      const result = await compile(template.render(empty));
+      expect(result.ok, JSON.stringify(result)).toBe(true);
+    });
+
     it(`${template.id} with every spacing preset and font size`, async () => {
       for (const layout of [
         { spacing: "compact", fontSize: 10 },

@@ -14,7 +14,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
-import { move, newId } from './content-helpers'
+import { move, newId, toggleBold } from './content-helpers'
 import type { Bullet } from './content-helpers'
 
 // ponytail: counts characters, not rendered width; about 100 fit on a line in most templates at 11pt.
@@ -66,7 +66,7 @@ export function BulletsEditor({
       <p className="text-sm font-medium">
         Bullet points{' '}
         <span className="font-normal text-muted-foreground">
-          Wrap words in **double asterisks** to make them bold.
+          Select words and press Ctrl+B (⌘B on Mac) to bold them.
         </span>
       </p>
       {bullets.map((bullet, index) => (
@@ -88,6 +88,9 @@ export function BulletsEditor({
                 bullet.hidden && 'opacity-50',
               )}
               onChange={(event) => update(index, { text: event.target.value })}
+              onKeyDown={(event) =>
+                toggleBold(event, (text) => update(index, { text }))
+              }
             />
             {isLong(bullet.text) && (
               <p

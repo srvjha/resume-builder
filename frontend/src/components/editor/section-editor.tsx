@@ -33,7 +33,13 @@ import { Textarea } from '@/components/ui/textarea'
 import type { ResumeSection } from '@/lib/api/types'
 import { cn } from '@/lib/utils'
 import { BulletsEditor } from './bullets-editor'
-import { createEntry, entryLabel, move, newId } from './content-helpers'
+import {
+  createEntry,
+  entryLabel,
+  move,
+  newId,
+  toggleBold,
+} from './content-helpers'
 import type {
   EducationEntry,
   ExperienceEntry,
@@ -468,9 +474,12 @@ function SummaryEditor({
         placeholder="Two or three lines on who you are, what you are best at and what you want next."
         className="min-h-24 resize-none field-sizing-content"
         onChange={(event) => onChange({ ...section, text: event.target.value })}
+        onKeyDown={(event) =>
+          toggleBold(event, (text) => onChange({ ...section, text }))
+        }
       />
       <FieldDescription className="flex justify-between gap-4">
-        <span>Wrap words in **double asterisks** to make them bold.</span>
+        <span>Select words and press Ctrl+B (⌘B on Mac) to bold them.</span>
         <span className="tabular-nums">
           {section.text.length}/{SUMMARY_MAX}
         </span>

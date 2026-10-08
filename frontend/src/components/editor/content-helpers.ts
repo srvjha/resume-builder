@@ -106,3 +106,45 @@ export function entryLabel(
       return pick('title', 'subtitle') || 'New item'
   }
 }
+
+// Ctrl+B or ⌘B wraps the selected words in ** (the bold marker the templates read), or unwraps them.
+export function toggleBold(
+  event: React.KeyboardEvent<HTMLTextAreaElement>,
+  onChange: (text: string) => void,
+) {
+  if (event.key.toLowerCase() !== 'b' || !(event.metaKey || event.ctrlKey))
+    return
+  const field = event.currentTarget
+  const { value } = field
+  let start = field.selectionStart
+  let end = field.selectionEnd
+  // A double-click can take the space after a word; ** must hug the words.
+  while (start < end && value[start] === ' ') start++
+  while (end > start && value[end - 1] === ' ') end--
+  if (start === end) return
+  event.preventDefault()
+  const selected = value.slice(start, end)
+  const around =
+    value.slice(start - 2, start) === '**' && value.slice(end, end + 2) === '**'
+  const inside =
+    selected.length > 4 && selected.startsWith('**') && selected.endsWith('**')
+  const [text, from, to] = around
+    ? [
+        value.slice(0, start - 2) + selected + value.slice(end + 2),
+        start - 2,
+        end - 2,
+      ]
+    : inside
+      ? [
+          value.slice(0, start) + selected.slice(2, -2) + value.slice(end),
+          start,
+          end - 4,
+        ]
+      : [
+          value.slice(0, start) + `**${selected}**` + value.slice(end),
+          start + 2,
+          end + 2,
+        ]
+  onChange(text)
+  requestAnimationFrame(() => field.setSelectionRange(from, to))
+}

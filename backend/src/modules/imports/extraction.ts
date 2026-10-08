@@ -310,3 +310,32 @@ function fitToLimits(content: Record<string, unknown>): ResumeContent {
     }
   }
 }
+
+const escapeRegex = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+// The model doesn't always wrap the PDF's bold words in **, so this does it for bullets and summaries.
+// Text already inside ** is left alone, and only whole words match ("Go" never bolds part of "Google").
+export function applyBold(content: ResumeContent, phrases: string[]): ResumeContent {
+  const usable = phrases.filter((p) => p.length > 1 && !p.includes("*")).sort((a, b) => b.length - a.length);
+  if (usable.length === 0) return content;
+  const pattern = new RegExp(`(?<![\\p{L}\\p{N}])(${usable.map(escapeRegex).join("|")})(?![\\p{L}\\p{N}])`, "gu");
+  const bold = (text: string) =>
+    text
+      .split(/(\*\*[^*]+\*\*)/)
+      .map((part) => (part.startsWith("**") ? part : part.replace(pattern, "**$1**")))
+      .join("");
+  return {
+    ...content,
+    sections: content.sections.map((section) => {
+      if (section.type === "summary") return { ...section, text: bold(section.text) };
+      if (!("entries" in section)) return section;
+      return {
+        ...section,
+        entries: section.entries.map((entry) => ({
+          ...entry,
+          bullets: entry.bullets.map((bullet) => ({ ...bullet, text: bold(bullet.text) })),
+        })),
+      } as typeof section;
+    }),
+  };
+}

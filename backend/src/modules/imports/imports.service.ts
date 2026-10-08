@@ -5,7 +5,7 @@ import { users } from "../../db/schema/index.js";
 import { generateStructured } from "../../lib/ai/generate.js";
 import { readUpload } from "../uploads/uploads.service.js";
 import { assertAiQuota } from "../usage/quotas.js";
-import { extractionSchema, normalizeExtraction } from "./extraction.js";
+import { applyBold, extractionSchema, normalizeExtraction } from "./extraction.js";
 import { pdfHints } from "./pdf-hints.js";
 import { track } from "../../lib/analytics.js";
 import { logger } from "../../lib/logger.js";
@@ -59,6 +59,7 @@ export async function createImport(
   const files: { data: Buffer; mediaType: string; filename: string }[] = [];
   let pdf: Uint8Array | undefined;
   let hidden: { text: string; url: string }[] = [];
+  let boldPhrases: string[] = [];
 
   if ("uploadId" in input) {
     const { upload, body } = await readUpload(userId, input.uploadId);
@@ -67,6 +68,7 @@ export async function createImport(
       pdf = new Uint8Array(body);
       const { links, bold } = await pdfHints(new Uint8Array(body));
       hidden = links;
+      boldPhrases = bold;
       if (links.length) {
         prompt += `\n\nThese links are hidden behind text in the PDF. Each shows the words it sits on (or its line, for an icon), then where it points. Put each URL in the url or links field of the item it belongs to, a mailto: address in basics.email, a tel: number in basics.phone, and profile links in basics.links:\n${links.map((l) => `- "${l.text}" -> ${l.url}`).join("\n")}`;
       }
@@ -92,7 +94,7 @@ export async function createImport(
     prompt,
     files,
   });
-  const extracted = normalizeExtraction(data);
+  const extracted = applyBold(normalizeExtraction(data), boldPhrases);
   // The model sometimes skips an email or phone that sits only behind an icon.
   const behind = (scheme: string) => {
     const link = hidden.find((l) => l.url.toLowerCase().startsWith(scheme));

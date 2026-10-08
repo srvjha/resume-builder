@@ -5,7 +5,7 @@ export const resumeLayoutSchema = z.object({
   spacing: z.enum(["compact", "normal", "relaxed"]).default("normal"),
   fontSize: z.union([z.literal(10), z.literal(11), z.literal(12)]).optional(),
   // How profile links show in the contact line. Without it, an icon and the address.
-  links: z.enum(["icon-and-link", "icon", "text"]).optional(),
+  links: z.enum(["icon-and-link", "icon-and-name", "link"]).optional(),
 });
 
 export type ResumeLayout = z.infer<typeof resumeLayoutSchema>;

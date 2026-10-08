@@ -139,15 +139,15 @@ export const displayUrl = (url: string) =>
 // Contact details with an icon each; email and links are underlined and clickable. Templates load fontawesome5
 // and accsupp. Links show their address, not a label like "LinkedIn": an ATS keeps only the visible text, so a
 // label alone leaves the recruiter without the address.
-// "icon" shows profile links as a clickable icon alone, so an ATS and a printed copy lose the address (the
-// editor says so); "text" drops every icon. Email and phone always stay readable.
+// "icon-and-name" shows a profile link as its icon and name ("LinkedIn"), so an ATS and a printed copy lose the
+// address (the editor says so); "link" drops every icon. Email and phone always stay readable.
 export function contactParts(basics: ResumeContent["basics"], links?: ResumeLayout["links"]) {
-  const mark = (name: string) => (links === "text" ? "" : icon(name));
+  const mark = (name: string) => (links === "link" ? "" : icon(name));
   return (
     [
       basics.phone ? `${mark("\\faPhone")}${tex(basics.phone)}` : undefined,
       basics.email
-        ? links === "text"
+        ? links === "link"
           ? `\\href{${texUrl(`mailto:${basics.email}`)}}{\\underline{${tex(basics.email)}}}`
           : iconLink(`mailto:${basics.email}`, "\\faEnvelope", basics.email)
         : undefined,
@@ -156,8 +156,8 @@ export function contactParts(basics: ResumeContent["basics"], links?: ResumeLayo
         const target = `${link.label} ${link.url}`.toLowerCase();
         const name = linkIcons.find(([pattern]) => pattern.test(target))?.[1] ?? "\\faGlobe";
         const address = displayUrl(link.url);
-        if (links === "icon") return `\\href{${texUrl(link.url)}}{${icon(name).replace(/\\,$/, "")}}`;
-        if (links === "text") return `\\href{${texUrl(link.url)}}{\\underline{${tex(address)}}}`;
+        if (links === "icon-and-name") return iconLink(link.url, name, link.label.trim() || address);
+        if (links === "link") return `\\href{${texUrl(link.url)}}{\\underline{${tex(address)}}}`;
         return iconLink(link.url, name, address);
       }),
     ]

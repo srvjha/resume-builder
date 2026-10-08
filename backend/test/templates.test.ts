@@ -61,8 +61,8 @@ describe.skipIf(!hasTectonic)("templates compile", () => {
       expect(result.ok, JSON.stringify(result)).toBe(true);
     });
 
-    it(`${template.id} with links as icons only and as text only`, async () => {
-      for (const links of ["icon", "text"] as const) {
+    it(`${template.id} with links as icon and name, and as link only`, async () => {
+      for (const links of ["icon-and-name", "link"] as const) {
         const result = await compile(template.render(sampleResume, { spacing: "normal", links }));
         expect(result.ok, JSON.stringify(result)).toBe(true);
       }
@@ -101,19 +101,20 @@ describe("contact link styles", () => {
   const withLinks = structuredClone(sampleResume);
   withLinks.basics.links = [{ label: "GitHub", url: "https://github.com/srvjha" }];
 
-  it("shows a clickable icon without the address, and keeps the email readable", () => {
+  it("shows the icon and the link's name instead of its address, and keeps the email readable", () => {
     for (const template of templates) {
-      const texSource = template.render(withLinks, { spacing: "normal", links: "icon" });
+      const texSource = template.render(withLinks, { spacing: "normal", links: "icon-and-name" });
       expect(texSource).toContain("\\href{https://github.com/srvjha}");
       expect(texSource).toContain("\\faGithub");
-      expect(texSource).not.toContain("github.com/srvjha}}");
+      expect(texSource).toContain("\\underline{GitHub}");
+      expect(texSource).not.toContain("\\underline{github.com/srvjha}");
       expect(texSource).toContain(withLinks.basics.email!);
     }
   });
 
-  it("drops every contact icon in text mode", () => {
+  it("drops every contact icon in link mode", () => {
     for (const template of templates) {
-      const texSource = template.render(withLinks, { spacing: "normal", links: "text" });
+      const texSource = template.render(withLinks, { spacing: "normal", links: "link" });
       for (const icon of ["\\faGithub", "\\faEnvelope", "\\faPhone"]) expect(texSource).not.toContain(icon);
       expect(texSource).toContain("github.com/srvjha");
     }

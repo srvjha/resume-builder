@@ -7245,8 +7245,8 @@
                                 "type": "string",
                                 "enum": [
                                   "icon-and-link",
-                                  "icon",
-                                  "text"
+                                  "icon-and-name",
+                                  "link"
                                 ]
                               }
                             },
@@ -8304,8 +8304,8 @@
                               "type": "string",
                               "enum": [
                                 "icon-and-link",
-                                "icon",
-                                "text"
+                                "icon-and-name",
+                                "link"
                               ]
                             }
                           },
@@ -9354,8 +9354,8 @@
                               "type": "string",
                               "enum": [
                                 "icon-and-link",
-                                "icon",
-                                "text"
+                                "icon-and-name",
+                                "link"
                               ]
                             }
                           },
@@ -10360,8 +10360,8 @@
                         "type": "string",
                         "enum": [
                           "icon-and-link",
-                          "icon",
-                          "text"
+                          "icon-and-name",
+                          "link"
                         ]
                       }
                     }
@@ -10486,8 +10486,8 @@
                               "type": "string",
                               "enum": [
                                 "icon-and-link",
-                                "icon",
-                                "text"
+                                "icon-and-name",
+                                "link"
                               ]
                             }
                           },
@@ -15284,8 +15284,8 @@
                             "type": "string",
                             "enum": [
                               "icon-and-link",
-                              "icon",
-                              "text"
+                              "icon-and-name",
+                              "link"
                             ]
                           }
                         }

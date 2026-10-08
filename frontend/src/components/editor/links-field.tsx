@@ -1,9 +1,10 @@
-import { PlusIcon, XIcon } from 'lucide-react'
+import { ArrowDownIcon, ArrowUpIcon, PlusIcon, XIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Field, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import type { Link } from './content-helpers'
+import { move } from './content-helpers'
 import { SensitiveToggle } from './fields'
 
 export function LinksEditor({
@@ -29,7 +30,12 @@ export function LinksEditor({
       {links.map((link, index) => (
         <div
           key={index}
-          className="grid grid-cols-[1fr_2fr_auto_auto] items-end gap-2"
+          className={cn(
+            'grid items-end gap-2',
+            links.length > 1
+              ? 'grid-cols-[1fr_2fr_auto_auto_auto]'
+              : 'grid-cols-[1fr_2fr_auto_auto]',
+          )}
         >
           <Field>
             <FieldLabel
@@ -60,6 +66,32 @@ export function LinksEditor({
               onChange={(event) => update(index, { url: event.target.value })}
             />
           </Field>
+          {links.length > 1 && (
+            <div className="flex">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                className="size-8"
+                aria-label={`Move ${link.label || 'link'} up`}
+                disabled={index === 0}
+                onClick={() => onChange(move(links, index, -1))}
+              >
+                <ArrowUpIcon />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                className="size-8"
+                aria-label={`Move ${link.label || 'link'} down`}
+                disabled={index === links.length - 1}
+                onClick={() => onChange(move(links, index, 1))}
+              >
+                <ArrowDownIcon />
+              </Button>
+            </div>
+          )}
           <SensitiveToggle
             label={`${link.label || 'link'} URL`}
             pressed={link.sensitive ?? false}

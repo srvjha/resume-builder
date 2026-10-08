@@ -351,3 +351,61 @@ describe("normalizeExtraction repeats", () => {
     ]);
   });
 });
+
+describe("normalizeExtraction taglines and stacks", () => {
+  const section = (type: "projects" | "experience", fields: Parameters<typeof entry>[0]) => ({
+    type,
+    title: type,
+    text: null,
+    groups: [],
+    links: [],
+    entries: [entry(fields)],
+  });
+  const first = (content: ReturnType<typeof normalizeExtraction>) => {
+    const s = content.sections[0]!;
+    if (!("entries" in s)) throw new Error("no entries");
+    return s.entries[0]!;
+  };
+
+  it("moves a bare tech list into technologies and hides the project's tagline", () => {
+    const project = first(
+      normalizeExtraction({
+        basics: { name: "A", headline: null, email: null, phone: null, location: null, links: [] },
+        sections: [
+          section("projects", {
+            name: "Yugati",
+            bullets: [
+              "Agentic Email & Calendar Assistant",
+              "OpenAI Agents SDK, GPT-4.1, Next.js, TypeScript, Redis",
+              "Built and deployed a production agentic AI assistant, streaming responses via SSE.",
+            ],
+          }),
+        ],
+      }),
+    );
+    expect(project).toMatchObject({ technologies: ["OpenAI Agents SDK", "GPT-4.1", "Next.js", "TypeScript", "Redis"] });
+    expect(project.bullets.map((b) => [b.text, b.hidden])).toEqual([
+      ["Agentic Email & Calendar Assistant", true],
+      ["Built and deployed a production agentic AI assistant, streaming responses via SSE.", false],
+    ]);
+  });
+
+  it("hides a sub-heading under a job but keeps short real bullets", () => {
+    const job = first(
+      normalizeExtraction({
+        basics: { name: "A", headline: null, email: null, phone: null, location: null, links: [] },
+        sections: [
+          section("experience", {
+            organization: "Bug0",
+            role: "Software Engineer",
+            location: "Hybrid, India",
+            subtitle: "Hybrid, India",
+            bullets: ["AI-Driven QA Automation", "Led a team of 6 engineers", "Cut test flakiness by 40%"],
+          }),
+        ],
+      }),
+    );
+    // The location the model also copied into subtitle doesn't come back as a bullet.
+    expect(job.bullets.map((b) => b.hidden)).toEqual([true, false, false]);
+  });
+});

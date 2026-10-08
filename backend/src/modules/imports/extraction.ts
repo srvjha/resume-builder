@@ -141,6 +141,31 @@ function projectTech(x: Entry) {
   return (listed.length ? listed : fromLine).slice(0, 20);
 }
 
+// A comma list of short names with no sentence in it ("OpenAI Agents SDK, GPT-4.1, Next.js") is a project's stack.
+const stackParts = (text: string) => text.replace(/\*\*/g, "").split(/,(?![^(]*\))/).map((part) => part.trim());
+const stackList = (text: string) => {
+  const parts = stackParts(text);
+  return (
+    parts.length >= 3 &&
+    !/[.!?]$/.test(text.trim()) &&
+    parts.every((part) => part && part.length <= 30 && part.split(/\s+/).length <= 4)
+  );
+};
+
+// A short Title Case line among bullets is a tagline or a heading ("AI-Driven QA Automation"), not something the
+// person did. There is no field for it, so it stays as a hidden bullet: kept in the editor, left off the PDF.
+const smallWord = /^(a|an|and|&|as|at|by|for|in|of|on|or|the|to|with|via|[/+|-])$/i;
+const headingLine = (text: string) => {
+  const words = text.replace(/\*\*/g, "").trim().split(/\s+/);
+  return (
+    words.length <= 7 &&
+    !/[.:;!?]$/.test(text.trim()) &&
+    words.every((word) => smallWord.test(word) || /^[^\p{L}]*\p{Lu}/u.test(word) || !/\p{L}/u.test(word))
+  );
+};
+const hideHeadings = (items: { id: string; text: string; hidden: boolean }[]) =>
+  items.map((bullet) => (headingLine(bullet.text) ? { ...bullet, hidden: true } : bullet));
+
 // Words that only name a link ("Verify", "Live") aren't content once the URL is attached.
 const linkWord = /^(verify|verified|link|code|live|demo|pdf|github|website|certificate|credential|view|here)$/i;
 
@@ -176,7 +201,7 @@ function normalizeSection(section: Extraction["sections"][number]): ResumeSectio
             role: bareRole(plain(x.role) ?? "", plain(x.organization) ?? ""),
             location: plain(x.location),
             ...range(x),
-            bullets: withLeftovers(x, ["title", "subtitle", "name"], [x.organization, x.role]),
+            bullets: hideHeadings(withLeftovers(x, ["title", "subtitle", "name"], [x.organization, x.role, x.location])),
           })),
       };
     case "education":
@@ -194,7 +219,7 @@ function normalizeSection(section: Extraction["sections"][number]): ResumeSectio
             score: plain(x.score)?.slice(0, 20),
             location: plain(x.location),
             ...range(x),
-            bullets: withLeftovers(x, ["title", "subtitle"], [x.institution, x.degree, x.field]),
+            bullets: withLeftovers(x, ["title", "subtitle"], [x.institution, x.degree, x.field, x.location]),
           })),
       };
     case "projects":
@@ -204,7 +229,13 @@ function normalizeSection(section: Extraction["sections"][number]): ResumeSectio
         entries: e
           .filter((x) => plain(x.name))
           .map((x) => {
-            const technologies = projectTech(x);
+            const lines = withLeftovers(x, ["title", "subtitle"], [x.name]);
+            const stack = lines.find((b) => !techLine.test(b.text) && stackList(b.text));
+            const technologies = [
+              ...new Set([...projectTech(x), ...(stack ? stackParts(stack.text).map((t) => plain(t) ?? "") : [])]),
+            ]
+              .filter(Boolean)
+              .slice(0, 20);
             return {
               id: shortId(),
               hidden: false,
@@ -213,8 +244,8 @@ function normalizeSection(section: Extraction["sections"][number]): ResumeSectio
               links: projectLinks(x),
               technologies,
               ...range(x),
-              bullets: withLeftovers(x, ["title", "subtitle"], [x.name]).filter(
-                (b) => !techLine.test(b.text) && !stackOnly(b.text, technologies),
+              bullets: hideHeadings(
+                lines.filter((b) => b !== stack && !techLine.test(b.text) && !stackOnly(b.text, technologies)),
               ),
             };
           }),

@@ -67,7 +67,7 @@ ${businessMacros}
 {\centering
   {\fontsize{26pt}{30pt}\selectfont\scshape\addfontfeatures{LetterSpace=6}${tex(basics.name)}}${nameGap(layout)}\par\vspace{4pt}
   ${basics.headline ? String.raw`{\large\itshape\color{accent} ${tex(basics.headline)}}\par\vspace{3pt}` : ""}
-  {\small ${contactParts(basics).join(String.raw`\linksep `)}}\par
+  {\small ${contactParts(basics, layout?.links).join(String.raw`\linksep `)}}\par
 }
 \vspace{5pt}{\color{accent}\hrule height 1.4pt\vspace{1.5pt}\hrule height 0.4pt}
 \vspace{2pt}

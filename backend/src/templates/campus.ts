@@ -79,7 +79,7 @@ export function renderCampus(input: ResumeContent, layout?: ResumeLayout) {
     ...sections.filter((s) => s.type !== "education"),
   ];
   const body = renderBody(ordered, (s) => (s.type === "education" ? education(s) : undefined));
-  const contacts = contactParts(basics);
+  const contacts = contactParts(basics, layout?.links);
   const contactLines = [contacts.slice(0, 2), contacts.slice(2, 4), contacts.slice(4)]
     .map((line) => line.join(" \\textbar{} "))
     .filter(Boolean);

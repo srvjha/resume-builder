@@ -1,4 +1,5 @@
 import type { ResumeContent } from "../schemas/resume-content.js";
+import type { ResumeLayout } from "./layout.js";
 
 const latexSpecials: Record<string, string> = {
   "\\": "\\textbackslash{}",
@@ -138,19 +139,26 @@ export const displayUrl = (url: string) =>
 // Contact details with an icon each; email and links are underlined and clickable. Templates load fontawesome5
 // and accsupp. Links show their address, not a label like "LinkedIn": an ATS keeps only the visible text, so a
 // label alone leaves the recruiter without the address.
-export function contactParts(basics: ResumeContent["basics"]) {
+// "icon" shows profile links as a clickable icon alone, so an ATS and a printed copy lose the address (the
+// editor says so); "text" drops every icon. Email and phone always stay readable.
+export function contactParts(basics: ResumeContent["basics"], links?: ResumeLayout["links"]) {
+  const mark = (name: string) => (links === "text" ? "" : icon(name));
   return (
     [
-      basics.phone ? `${icon("\\faPhone")}${tex(basics.phone)}` : undefined,
-      basics.email ? iconLink(`mailto:${basics.email}`, "\\faEnvelope", basics.email) : undefined,
-      basics.location ? `${icon("\\faMapMarker")}${tex(basics.location)}` : undefined,
+      basics.phone ? `${mark("\\faPhone")}${tex(basics.phone)}` : undefined,
+      basics.email
+        ? links === "text"
+          ? `\\href{${texUrl(`mailto:${basics.email}`)}}{\\underline{${tex(basics.email)}}}`
+          : iconLink(`mailto:${basics.email}`, "\\faEnvelope", basics.email)
+        : undefined,
+      basics.location ? `${mark("\\faMapMarker")}${tex(basics.location)}` : undefined,
       ...basics.links.map((link) => {
         const target = `${link.label} ${link.url}`.toLowerCase();
-        return iconLink(
-          link.url,
-          linkIcons.find(([pattern]) => pattern.test(target))?.[1] ?? "\\faGlobe",
-          displayUrl(link.url),
-        );
+        const name = linkIcons.find(([pattern]) => pattern.test(target))?.[1] ?? "\\faGlobe";
+        const address = displayUrl(link.url);
+        if (links === "icon") return `\\href{${texUrl(link.url)}}{${icon(name).replace(/\\,$/, "")}}`;
+        if (links === "text") return `\\href{${texUrl(link.url)}}{\\underline{${tex(address)}}}`;
+        return iconLink(link.url, name, address);
       }),
     ]
       .filter((part): part is string => Boolean(part))

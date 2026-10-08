@@ -70,8 +70,8 @@ const preamble = String.raw`\documentclass[letterpaper,10pt]{article}
 \newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-5pt}}
 `;
 
-function header(basics: ResumeContent["basics"]) {
-  return contactParts(basics).join(" ~\n  ");
+function header(basics: ResumeContent["basics"], layout?: ResumeLayout) {
+  return contactParts(basics, layout?.links).join(" ~\n  ");
 }
 
 // `lead` lines go first without a bullet, like a project's tech list.
@@ -182,7 +182,7 @@ export function renderDeveloper(input: ResumeContent, layout?: ResumeLayout) {
   // \leavevmode starts the line even when the name is empty, so the line break after it has a line to end.
   const lines = [`\\leavevmode{\\Huge \\scshape ${tex(basics.name)}}${nameGap(layout)}`];
   if (basics.headline) lines.push(`\\small ${tex(basics.headline)}`);
-  const contacts = header(basics);
+  const contacts = header(basics, layout);
   if (contacts) lines.push(contacts);
   return applyLayout(
     `${preamble}

@@ -64,7 +64,7 @@ export function renderDataAnalyst(input: ResumeContent, layout?: ResumeLayout) {
     String.raw`${preamble}
 \begin{document}
 {\fontsize{22pt}{26pt}\selectfont\bfseries ${tex(basics.name)}}${headline}${nameGap(layout)}\par\vspace{4pt}
-{\small\color{muted} ${contactParts(basics).join("\\hspace{4pt}{\\color{hairline}|}\\hspace{4pt}")}}\par
+{\small\color{muted} ${contactParts(basics, layout?.links).join("\\hspace{4pt}{\\color{hairline}|}\\hspace{4pt}")}}\par
 
 ${body}
 \end{document}

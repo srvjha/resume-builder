@@ -66,7 +66,7 @@ export function renderMlResearch(input: ResumeContent, layout?: ResumeLayout) {
 \begin{document}
 {\fontsize{24pt}{28pt}\selectfont\scshape\color{accent} ${tex(basics.name)}}${nameGap(layout)}\par\vspace{3pt}
 ${basics.headline ? String.raw`{\itshape ${tex(basics.headline)}}\par\vspace{2pt}` : ""}
-{\small ${contactParts(basics).join("\\enspace\\textperiodcentered\\enspace ")}}\par
+{\small ${contactParts(basics, layout?.links).join("\\enspace\\textperiodcentered\\enspace ")}}\par
 \vspace{4pt}{\color{accent}\rule{\linewidth}{0.8pt}}
 
 ${body}

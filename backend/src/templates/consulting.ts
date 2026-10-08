@@ -52,7 +52,7 @@ ${businessMacros}
 {\centering
   {\fontsize{20pt}{24pt}\selectfont\bfseries\addfontfeatures{LetterSpace=12}\MakeUppercase{${tex(basics.name)}}}${nameGap(layout)}\par\vspace{4pt}
   ${basics.headline ? String.raw`{${tex(basics.headline)}}\par\vspace{1pt}` : ""}
-  {\small\color{muted} ${contactParts(basics).join(String.raw`\linksep `)}}\par
+  {\small\color{muted} ${contactParts(basics, layout?.links).join(String.raw`\linksep `)}}\par
 }
 \vspace{2pt}
 

@@ -50,7 +50,7 @@ ${businessMacros}
 {\centering
   {\LARGE\bfseries ${tex(basics.name)}}${nameGap(layout)}\par\vspace{2pt}
   ${basics.headline ? String.raw`{\small ${tex(basics.headline)}}\par\vspace{1pt}` : ""}
-  {\small ${contactParts(basics).join(String.raw`\linksep `)}}\par
+  {\small ${contactParts(basics, layout?.links).join(String.raw`\linksep `)}}\par
 }
 
 ${renderBusinessSections(ordered)}

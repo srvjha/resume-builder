@@ -45,7 +45,7 @@ ${businessMacros}
 \begin{document}
 {\fontsize{28pt}{32pt}\selectfont\bfseries ${tex(basics.name)}}${nameGap(layout)}\par\vspace{5pt}
 ${basics.headline ? String.raw`{\large\color{accent} ${tex(basics.headline)}}\par\vspace{4pt}` : ""}
-{\small\color{muted} ${contactParts(basics).join(String.raw`\linksep `)}}\par
+{\small\color{muted} ${contactParts(basics, layout?.links).join(String.raw`\linksep `)}}\par
 \vspace{4pt}
 
 ${renderBusinessSections(ordered)}

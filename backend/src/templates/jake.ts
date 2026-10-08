@@ -39,7 +39,7 @@ ${sharedMacros}
 \begin{center}
   \textbf{\Huge \scshape ${tex(basics.name)}}${nameGap(layout)} \\ \vspace{1pt}
   ${basics.headline ? String.raw`\small ${tex(basics.headline)} \\ \vspace{1pt}` : ""}
-  \small ${contactParts(basics).join(" $|$ ")}
+  \small ${contactParts(basics, layout?.links).join(" $|$ ")}
 \end{center}
 
 ${renderSections(sections)}

@@ -7,7 +7,7 @@ import { sharedMacros } from "./macros.js";
 // Denser layout in the style of sb2nov/resume (MIT): name left, contact details right.
 export function renderSb2nov(input: ResumeContent, layout?: ResumeLayout) {
   const { basics, sections } = visibleContent(input);
-  const contacts = contactParts(basics);
+  const contacts = contactParts(basics, layout?.links);
   const gap = nameGapPt(layout);
   return applyLayout(
     String.raw`\documentclass[a4paper,10pt]{article}

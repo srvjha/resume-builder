@@ -120,15 +120,15 @@ function sidebarSection(s: ResumeSection): string {
   return `\\section{${tex(s.title)}}\n${entries.map((e) => `\\sideEntry{${e}}`).join("\n")}`;
 }
 
-function contact(basics: ResumeContent["basics"]) {
-  const parts = contactParts(basics);
+function contact(basics: ResumeContent["basics"], layout?: ResumeLayout) {
+  const parts = contactParts(basics, layout?.links);
   if (parts.length === 0) return "";
   return `\\section{Contact}\n${parts.map((p) => `\\sideEntry{${p}}`).join("\n")}`;
 }
 
 export function renderDesigner(input: ResumeContent, layout?: ResumeLayout) {
   const { basics, sections } = visibleContent(input);
-  const side = [contact(basics), ...sections.filter(inSidebar).map((s) => withGap(sidebarSection(s), s))].filter(
+  const side = [contact(basics, layout), ...sections.filter(inSidebar).map((s) => withGap(sidebarSection(s), s))].filter(
     Boolean,
   );
   const main = renderSections(sections.filter((s) => !inSidebar(s)));

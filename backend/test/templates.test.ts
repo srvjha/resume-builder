@@ -61,6 +61,13 @@ describe.skipIf(!hasTectonic)("templates compile", () => {
       expect(result.ok, JSON.stringify(result)).toBe(true);
     });
 
+    it(`${template.id} with links as icons only and as text only`, async () => {
+      for (const links of ["icon", "text"] as const) {
+        const result = await compile(template.render(sampleResume, { spacing: "normal", links }));
+        expect(result.ok, JSON.stringify(result)).toBe(true);
+      }
+    });
+
     it(`${template.id} with every spacing preset and font size`, async () => {
       for (const layout of [
         { spacing: "compact", fontSize: 10 },
@@ -86,6 +93,29 @@ describe("templates hide content", () => {
       const texSource = template.render(content);
       expect(texSource).not.toContain("payouts API");
       expect(texSource).not.toContain("Technical Skills");
+    }
+  });
+});
+
+describe("contact link styles", () => {
+  const withLinks = structuredClone(sampleResume);
+  withLinks.basics.links = [{ label: "GitHub", url: "https://github.com/srvjha" }];
+
+  it("shows a clickable icon without the address, and keeps the email readable", () => {
+    for (const template of templates) {
+      const texSource = template.render(withLinks, { spacing: "normal", links: "icon" });
+      expect(texSource).toContain("\\href{https://github.com/srvjha}");
+      expect(texSource).toContain("\\faGithub");
+      expect(texSource).not.toContain("github.com/srvjha}}");
+      expect(texSource).toContain(withLinks.basics.email!);
+    }
+  });
+
+  it("drops every contact icon in text mode", () => {
+    for (const template of templates) {
+      const texSource = template.render(withLinks, { spacing: "normal", links: "text" });
+      for (const icon of ["\\faGithub", "\\faEnvelope", "\\faPhone"]) expect(texSource).not.toContain(icon);
+      expect(texSource).toContain("github.com/srvjha");
     }
   });
 });

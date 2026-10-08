@@ -38,7 +38,7 @@ ${sharedMacros}
 \begin{center}
   \leavevmode{\fontsize{26pt}{30pt}\selectfont\bfseries ${tex(basics.name)}}${nameGap(layout)} \\ \vspace{4pt}
   ${basics.headline ? String.raw`{\color{accent}\small ${tex(basics.headline)}} \\ \vspace{2pt}` : ""}
-  {\color{muted}\small ${contactParts(basics).join(" \\textbullet{} ")}}
+  {\color{muted}\small ${contactParts(basics, layout?.links).join(" \\textbullet{} ")}}
 \end{center}
 
 ${renderSections(sections)}

@@ -7240,6 +7240,14 @@
                                     "const": 12
                                   }
                                 ]
+                              },
+                              "links": {
+                                "type": "string",
+                                "enum": [
+                                  "icon-and-link",
+                                  "icon",
+                                  "text"
+                                ]
                               }
                             },
                             "required": [
@@ -8291,6 +8299,14 @@
                                   "const": 12
                                 }
                               ]
+                            },
+                            "links": {
+                              "type": "string",
+                              "enum": [
+                                "icon-and-link",
+                                "icon",
+                                "text"
+                              ]
                             }
                           },
                           "required": [
@@ -9333,6 +9349,14 @@
                                   "const": 12
                                 }
                               ]
+                            },
+                            "links": {
+                              "type": "string",
+                              "enum": [
+                                "icon-and-link",
+                                "icon",
+                                "text"
+                              ]
                             }
                           },
                           "required": [
@@ -10331,6 +10355,14 @@
                             "const": 12
                           }
                         ]
+                      },
+                      "links": {
+                        "type": "string",
+                        "enum": [
+                          "icon-and-link",
+                          "icon",
+                          "text"
+                        ]
                       }
                     }
                   },
@@ -10448,6 +10480,14 @@
                                   "type": "number",
                                   "const": 12
                                 }
+                              ]
+                            },
+                            "links": {
+                              "type": "string",
+                              "enum": [
+                                "icon-and-link",
+                                "icon",
+                                "text"
                               ]
                             }
                           },
@@ -15238,6 +15278,14 @@
                                 "type": "number",
                                 "const": 12
                               }
+                            ]
+                          },
+                          "links": {
+                            "type": "string",
+                            "enum": [
+                              "icon-and-link",
+                              "icon",
+                              "text"
                             ]
                           }
                         }

@@ -58,7 +58,7 @@ export function renderProductManager(input: ResumeContent, layout?: ResumeLayout
 \begin{document}
 {\fontsize{26pt}{30pt}\selectfont\bfseries ${tex(basics.name)}}${nameGap(layout)}\par\vspace{4pt}
 ${basics.headline ? String.raw`{\large\semibold\color{accent} ${tex(basics.headline)}}\par\vspace{3pt}` : ""}
-{\small\color{muted} ${contactParts(basics).join("\\hspace{10pt}")}}\par
+{\small\color{muted} ${contactParts(basics, layout?.links).join("\\hspace{10pt}")}}\par
 \vspace{6pt}{\color{accent}\rule{\linewidth}{2.5pt}}
 
 ${renderBody(sections)}

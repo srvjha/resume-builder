@@ -2322,7 +2322,7 @@ export interface paths {
                                     spacing: "compact" | "normal" | "relaxed";
                                     fontSize?: 10 | 11 | 12;
                                     /** @enum {string} */
-                                    links?: "icon-and-link" | "icon" | "text";
+                                    links?: "icon-and-link" | "icon-and-name" | "link";
                                 };
                                 archivedAt: string | null;
                                 createdAt: string;
@@ -2598,7 +2598,7 @@ export interface paths {
                                     spacing: "compact" | "normal" | "relaxed";
                                     fontSize?: 10 | 11 | 12;
                                     /** @enum {string} */
-                                    links?: "icon-and-link" | "icon" | "text";
+                                    links?: "icon-and-link" | "icon-and-name" | "link";
                                 };
                                 archivedAt: string | null;
                                 createdAt: string;
@@ -2852,7 +2852,7 @@ export interface paths {
                                     spacing: "compact" | "normal" | "relaxed";
                                     fontSize?: 10 | 11 | 12;
                                     /** @enum {string} */
-                                    links?: "icon-and-link" | "icon" | "text";
+                                    links?: "icon-and-link" | "icon-and-name" | "link";
                                 };
                                 archivedAt: string | null;
                                 createdAt: string;
@@ -3114,7 +3114,7 @@ export interface paths {
                             spacing?: "compact" | "normal" | "relaxed";
                             fontSize?: 10 | 11 | 12;
                             /** @enum {string} */
-                            links?: "icon-and-link" | "icon" | "text";
+                            links?: "icon-and-link" | "icon-and-name" | "link";
                         };
                         archived?: boolean;
                         /** @enum {string} */
@@ -3149,7 +3149,7 @@ export interface paths {
                                     spacing: "compact" | "normal" | "relaxed";
                                     fontSize?: 10 | 11 | 12;
                                     /** @enum {string} */
-                                    links?: "icon-and-link" | "icon" | "text";
+                                    links?: "icon-and-link" | "icon-and-name" | "link";
                                 };
                                 archivedAt: string | null;
                                 createdAt: string;
@@ -4449,7 +4449,7 @@ export interface paths {
                             spacing?: "compact" | "normal" | "relaxed";
                             fontSize?: 10 | 11 | 12;
                             /** @enum {string} */
-                            links?: "icon-and-link" | "icon" | "text";
+                            links?: "icon-and-link" | "icon-and-name" | "link";
                         };
                     } | {
                         texSource: string;

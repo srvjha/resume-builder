@@ -25,8 +25,8 @@ const spacings = [
 
 const linkStyles = [
   { value: 'icon-and-link', label: 'Icon + link' },
-  { value: 'icon', label: 'Icon only' },
-  { value: 'text', label: 'Text only' },
+  { value: 'icon-and-name', label: 'Icon + name' },
+  { value: 'link', label: 'Link only' },
 ] as const
 
 export function LayoutMenu({
@@ -151,13 +151,13 @@ export function LayoutMenu({
           <p
             className={cn(
               'text-xs',
-              value.links === 'icon'
+              value.links === 'icon-and-name'
                 ? 'text-destructive'
                 : 'text-muted-foreground',
             )}
           >
-            {value.links === 'icon'
-              ? "ATS software and printed copies can't read icon-only links. Use it for resumes you send as a PDF to click."
+            {value.links === 'icon-and-name'
+              ? 'Shows the link\'s name, like "LinkedIn", instead of its address. ATS software and printed copies only see that name, so use it for resumes you send as a PDF to click.'
               : 'LinkedIn, GitHub, Instagram and website links in your header. Email and phone always stay as text.'}
           </p>
         </div>

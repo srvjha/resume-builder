@@ -2,7 +2,8 @@ import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 
 type Run = { str: string; x: number; y: number; width: number; bold: boolean };
 
-const boldFont = /bold|black|heavy|semibold|demi/i;
+// CMBX and SFBX are Computer Modern bold as pdflatex (Overleaf's default) embeds it, with no "Bold" in the name.
+const boldFont = /bold|black|heavy|semibold|demi|cmbx|sfbx/i;
 
 // What the model can't see in a PDF's text: links hidden behind words or icons, and which words are bold.
 // Each link comes with the words under it, or its whole line when it sits on an icon.
@@ -31,22 +32,35 @@ export async function pdfHints(pdf: Uint8Array, maxPages = 4) {
         return [{ str: item.str, x: x!, y: y!, width: item.width, bold: fonts.get(item.fontName)! }];
       });
 
-      // Bold runs on the same line join into one phrase.
+      // Bold runs on the same line join into one phrase. Only bold with something before it on its line counts:
+      // a word stressed inside a sentence or bullet. Bold that starts a line is a heading, a company or a project
+      // name, and bolding those everywhere they're mentioned would be wrong.
+      // A phrase that wraps onto the next line continues there, so it stays inline.
       let phrase: Run[] = [];
+      let inline = false;
+      let wasInline = false;
+      let previous: Run | undefined;
       const flush = () => {
         const text = phrase
           .map((run) => run.str.trim())
           .join(" ")
           .trim();
-        if (text.length > 1 && text.length <= 80) bold.add(text);
+        if (inline && text.length > 1 && text.length <= 80) bold.add(text);
+        wasInline = phrase.length > 0 && inline;
         phrase = [];
       };
       for (const run of runs) {
-        if (run.bold && (!phrase.length || Math.abs(phrase.at(-1)!.y - run.y) < 2)) phrase.push(run);
+        const sameLine = previous !== undefined && Math.abs(previous.y - run.y) < 2;
+        if (run.bold && phrase.length && sameLine) phrase.push(run);
         else {
+          const continues = !sameLine && previous?.bold === true;
           flush();
-          if (run.bold) phrase.push(run);
+          if (run.bold) {
+            phrase.push(run);
+            inline = sameLine || (continues && wasInline);
+          }
         }
+        previous = run;
       }
       flush();
 

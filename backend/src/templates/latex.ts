@@ -76,10 +76,11 @@ export function visibleContent(content: ResumeContent): ResumeContent {
   };
 }
 
-// A project heading is one unwrapped line; past this many characters it runs off the page,
-// so the tech list moves to its own line under the heading.
+// A project heading is one unwrapped line; past this many characters it runs off the page, so the tech list moves
+// to its own line under the heading. A date on the right takes room; without one, about 90 fit even at 12pt.
 // ponytail: counts characters, not rendered width; a font-aware measure would be exact.
-export const fitsOneLine = (parts: (string | undefined)[]) => parts.filter(Boolean).join(" | ").length <= 75;
+export const fitsOneLine = (parts: (string | undefined)[], dated: boolean) =>
+  parts.filter(Boolean).join(" | ").length <= (dated ? 75 : 90);
 
 type ListEntry = Extract<ResumeContent["sections"][number], { type: "list" }>["entries"][number];
 

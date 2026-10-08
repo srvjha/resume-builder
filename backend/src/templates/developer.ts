@@ -148,7 +148,7 @@ function renderSection(s: ResumeSection): string {
       const entries = s.entries.map((e) => {
         const title = e.url ? `\\href{${texUrl(e.url)}}{\\textbf{${tex(e.name)}}}` : `\\textbf{${tex(e.name)}}`;
         const techs = e.technologies.join(", ");
-        const inline = fitsOneLine([e.name, techs, ...e.links.map((l) => l.label)]);
+        const inline = fitsOneLine([e.name, techs, ...e.links.map((l) => l.label)], Boolean(e.start || e.end));
         const tech =
           techs && inline ? ` $|$ \\emph{${e.technologies.map((t) => `\\textbf{${tex(t)}}`).join(", ")}}` : "";
         const links = e.links.map((l) => ` $|$ ${link(l.url, l.label)}`).join("");

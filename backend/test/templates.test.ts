@@ -97,6 +97,41 @@ describe("templates hide content", () => {
   });
 });
 
+describe("project heading", () => {
+  const yugati = (dated: boolean) =>
+    resumeContentSchema.parse({
+      basics: { name: "A" },
+      sections: [
+        {
+          id: "p",
+          type: "projects",
+          title: "Projects",
+          entries: [
+            {
+              id: "e",
+              name: "Yugati",
+              technologies: ["OpenAI Agents SDK", "GPT-4.1", "Next.js", "TypeScript", "Redis"],
+              links: [
+                { label: "Live", url: "https://yugati.in" },
+                { label: "GitHub", url: "https://github.com/srvjha/yugati" },
+              ],
+              ...(dated && { start: "2025-01", end: "2025-04" }),
+            },
+          ],
+        },
+      ],
+    });
+  const jake = templates.find((t) => t.id === "jake")!;
+
+  it("keeps a 79-character stack on the heading line when no date needs the room", () => {
+    expect(jake.render(yugati(false))).toContain(String.raw`$|$ \emph{OpenAI Agents SDK`);
+  });
+
+  it("moves the same stack under the heading when a date sits on the right", () => {
+    expect(jake.render(yugati(true))).not.toContain(String.raw`$|$ \emph{OpenAI Agents SDK`);
+  });
+});
+
 describe("contact link styles", () => {
   const withLinks = structuredClone(sampleResume);
   withLinks.basics.links = [{ label: "GitHub", url: "https://github.com/srvjha" }];

@@ -54,7 +54,7 @@ function renderSectionBody(section: ResumeSection): string {
         .map((e) => {
           const name = e.url ? `\\href{${texUrl(e.url)}}{\\textbf{${tex(e.name)}}}` : `\\textbf{${tex(e.name)}}`;
           const techs = e.technologies.join(", ");
-          const inline = fitsOneLine([e.name, techs, ...e.links.map((l) => l.label)]);
+          const inline = fitsOneLine([e.name, techs, ...e.links.map((l) => l.label)], Boolean(e.start || e.end));
           const tech = techs && inline ? ` $|$ \\emph{${tex(techs)}}` : "";
           const links = e.links
             .map((link) => ` $|$ \\href{${texUrl(link.url)}}{\\underline{${tex(link.label)}}}`)

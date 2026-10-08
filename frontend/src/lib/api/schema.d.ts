@@ -2321,6 +2321,8 @@ export interface paths {
                                      */
                                     spacing: "compact" | "normal" | "relaxed";
                                     fontSize?: 10 | 11 | 12;
+                                    /** @enum {string} */
+                                    links?: "icon-and-link" | "icon" | "text";
                                 };
                                 archivedAt: string | null;
                                 createdAt: string;
@@ -2595,6 +2597,8 @@ export interface paths {
                                      */
                                     spacing: "compact" | "normal" | "relaxed";
                                     fontSize?: 10 | 11 | 12;
+                                    /** @enum {string} */
+                                    links?: "icon-and-link" | "icon" | "text";
                                 };
                                 archivedAt: string | null;
                                 createdAt: string;
@@ -2847,6 +2851,8 @@ export interface paths {
                                      */
                                     spacing: "compact" | "normal" | "relaxed";
                                     fontSize?: 10 | 11 | 12;
+                                    /** @enum {string} */
+                                    links?: "icon-and-link" | "icon" | "text";
                                 };
                                 archivedAt: string | null;
                                 createdAt: string;
@@ -3107,6 +3113,8 @@ export interface paths {
                              */
                             spacing?: "compact" | "normal" | "relaxed";
                             fontSize?: 10 | 11 | 12;
+                            /** @enum {string} */
+                            links?: "icon-and-link" | "icon" | "text";
                         };
                         archived?: boolean;
                         /** @enum {string} */
@@ -3140,6 +3148,8 @@ export interface paths {
                                      */
                                     spacing: "compact" | "normal" | "relaxed";
                                     fontSize?: 10 | 11 | 12;
+                                    /** @enum {string} */
+                                    links?: "icon-and-link" | "icon" | "text";
                                 };
                                 archivedAt: string | null;
                                 createdAt: string;
@@ -4438,6 +4448,8 @@ export interface paths {
                              */
                             spacing?: "compact" | "normal" | "relaxed";
                             fontSize?: 10 | 11 | 12;
+                            /** @enum {string} */
+                            links?: "icon-and-link" | "icon" | "text";
                         };
                     } | {
                         texSource: string;

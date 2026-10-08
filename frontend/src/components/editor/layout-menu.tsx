@@ -13,6 +13,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import type { ResumeDetail } from '@/lib/api/types'
+import { cn } from '@/lib/utils'
 
 export type ResumeLayout = ResumeDetail['layout']
 
@@ -20,6 +21,12 @@ const spacings = [
   { value: 'compact', label: 'Compact' },
   { value: 'normal', label: 'Normal' },
   { value: 'relaxed', label: 'Relaxed' },
+] as const
+
+const linkStyles = [
+  { value: 'icon-and-link', label: 'Icon + link' },
+  { value: 'icon', label: 'Icon only' },
+  { value: 'text', label: 'Text only' },
 ] as const
 
 export function LayoutMenu({
@@ -43,7 +50,9 @@ export function LayoutMenu({
             </Button>
           </PopoverTrigger>
         </TooltipTrigger>
-        <TooltipContent>Spacing and font size of this resume</TooltipContent>
+        <TooltipContent>
+          Spacing, font size and links of this resume
+        </TooltipContent>
       </Tooltip>
       <PopoverContent align="end" className="flex w-72 flex-col gap-4">
         <div className="flex flex-col gap-2">
@@ -111,6 +120,45 @@ export function LayoutMenu({
           <p className="text-xs text-muted-foreground">
             This template uses {templateFontSize}pt unless you pick another
             size.
+          </p>
+        </div>
+        <div className="flex flex-col gap-2">
+          <span id={`${id}-links`} className="text-sm font-medium">
+            Profile links
+          </span>
+          <ToggleGroup
+            type="single"
+            variant="outline"
+            spacing={0}
+            value={value.links ?? 'icon-and-link'}
+            onValueChange={(links) =>
+              links &&
+              onChange({ ...value, links: links as ResumeLayout['links'] })
+            }
+            aria-labelledby={`${id}-links`}
+            className="w-full"
+          >
+            {linkStyles.map((option) => (
+              <ToggleGroupItem
+                key={option.value}
+                value={option.value}
+                className="flex-1 px-1.5 text-xs"
+              >
+                {option.label}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+          <p
+            className={cn(
+              'text-xs',
+              value.links === 'icon'
+                ? 'text-destructive'
+                : 'text-muted-foreground',
+            )}
+          >
+            {value.links === 'icon'
+              ? "ATS software and printed copies can't read icon-only links. Use it for resumes you send as a PDF to click."
+              : 'LinkedIn, GitHub, Instagram and website links in your header. Email and phone always stay as text.'}
           </p>
         </div>
       </PopoverContent>

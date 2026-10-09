@@ -84,3 +84,19 @@ export async function pdfHints(pdf: Uint8Array, maxPages = 4) {
   }
   return { links, bold: [...bold].slice(0, 80) };
 }
+
+// A header that names its links ("LinkedIn", "Github") instead of printing their addresses was made in the icon
+// and name style; the imported resume keeps it. Only the header's profile links count: projects name their links
+// ("Live", "GitHub") in every style.
+export function linkStyleOf(links: { text: string; url: string }[], profileUrls: string[]) {
+  const bare = (url: string) => url.toLowerCase().replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
+  const profile = new Set(profileUrls.map(bare));
+  const header = links.filter((link) => profile.has(bare(link.url)));
+  if (header.length === 0) return undefined;
+  // Icon fonts leave a stray glyph or two in front of the words; only letters, spaces and dashes are a name.
+  const named = header.filter((link) => {
+    const words = link.text.replace(/^\S{1,2}\s+/, "").trim();
+    return /\p{L}/u.test(words) && !/[./@]/.test(words) && words.length <= 30;
+  });
+  return named.length * 2 > header.length ? ("icon-and-name" as const) : undefined;
+}

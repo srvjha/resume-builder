@@ -193,6 +193,7 @@ export async function createResume(userId: string, input: z.infer<typeof createR
         jobId: input.jobId ?? null,
         sourceResumeId,
         pageLimit: input.pageLimit,
+        ...(input.mode === "structured" && input.layout && { layout: input.layout }),
       })
       .returning();
     const head = await appendVersion(tx, resume!, kind, payload);

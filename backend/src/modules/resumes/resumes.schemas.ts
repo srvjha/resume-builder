@@ -26,6 +26,8 @@ export const createResumeBody = z.object({
   templateId: z.string().optional(),
   jobId: idParam.optional(),
   pageLimit: z.number().int().min(1).max(3).default(1),
+  // An import can carry the source's look, such as links shown as icon and name.
+  layout: resumeLayoutSchema.optional(),
   source: resumeSource.default({ type: "blank" }),
 });
 

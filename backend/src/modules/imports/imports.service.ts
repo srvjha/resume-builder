@@ -6,7 +6,7 @@ import { generateStructured } from "../../lib/ai/generate.js";
 import { readUpload } from "../uploads/uploads.service.js";
 import { assertAiQuota } from "../usage/quotas.js";
 import { applyBold, extractionSchema, normalizeExtraction } from "./extraction.js";
-import { pdfHints } from "./pdf-hints.js";
+import { linkStyleOf, pdfHints } from "./pdf-hints.js";
 import { track } from "../../lib/analytics.js";
 import { logger } from "../../lib/logger.js";
 import type { ResumeContent } from "../../schemas/resume-content.js";
@@ -109,7 +109,8 @@ export async function createImport(
   extracted.basics.phone ||= behind("tel:")?.slice(0, 30) || undefined;
   const { content, missed } = await checkCoverage(extracted, pdf);
   track(userId, "resume_imported", { from: "uploadId" in input ? "file" : "text", missed_lines: missed.length });
-  return { content, aiRunId: runId, missed };
+  const linkStyle = linkStyleOf(hidden, content.basics.links.map((link) => link.url));
+  return { content, aiRunId: runId, missed, ...(linkStyle && { linkStyle }) };
 }
 
 const draftSystem = `You write a resume from a person's own rough notes, as structured JSON.

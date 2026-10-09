@@ -106,11 +106,11 @@ export function SuggestionReview({
     return (
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
-          <p className="font-medium">No changes it could use</p>
+          <p className="font-medium">Nothing to change</p>
           <p className="text-sm text-muted-foreground">
             {usage?.ownAiKey
-              ? 'The AI came back without any changes that fit your resume. Try again, or pick a stronger model in your AI provider settings.'
-              : 'The AI came back without any changes that fit your resume. Try again, or ask for something more specific.'}
+              ? "The AI didn't suggest any changes for this request. If you expected some, try again or pick a stronger model in your AI provider settings."
+              : "The AI didn't suggest any changes for this request, so it didn't use one of your AI edits. If you expected some, ask for something more specific."}
           </p>
         </div>
         {suggestion.summary && (

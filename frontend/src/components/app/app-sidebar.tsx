@@ -117,6 +117,10 @@ function UsageCard() {
         value={(left / usage.tailor.limit) * 100}
         aria-label="AI-tailored resumes left this month"
       />
+      <p className="tabular-nums">
+        {Math.max(0, usage.edit.limit - usage.edit.used)} of {usage.edit.limit}{' '}
+        AI edits left
+      </p>
       <p className="text-xs text-muted-foreground">
         Resumes you write yourself are always free and unlimited.
       </p>

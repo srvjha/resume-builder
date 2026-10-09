@@ -47,6 +47,7 @@ import {
   queryKeys,
   resumeQuery,
   suggestionsQuery,
+  usageQuery,
 } from '@/lib/api/queries'
 import type { ResumeContent, Suggestion } from '@/lib/api/types'
 import { fixInstruction } from '@/lib/ats'
@@ -278,6 +279,8 @@ export function AiPanel({
     ...suggestionsQuery(resumeId),
     enabled: open,
   })
+  const { data: usage } = useQuery(usageQuery)
+  const queryClient = useQueryClient()
   const latest = suggestions?.[0]
   const ready =
     latest &&
@@ -310,6 +313,7 @@ export function AiPanel({
         }),
       ),
     onSuccess: (next, body) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.usage })
       markSeen(next.id)
       setSuggestion(next)
       if (body.type === 'edit') setRequest('')
@@ -657,8 +661,11 @@ export function AiPanel({
               className="min-h-0 resize-none border-0 bg-transparent p-1 shadow-none focus-visible:ring-0"
             />
             <div className="flex items-center justify-between gap-2">
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-muted-foreground tabular-nums">
                 Nothing changes until you apply it
+                {usage?.plan === 'free' &&
+                  !usage.ownAiKey &&
+                  ` · ${Math.max(0, usage.edit.limit - usage.edit.used)} of ${usage.edit.limit} AI edits left`}
               </span>
               <Button
                 type="submit"

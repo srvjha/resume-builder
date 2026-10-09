@@ -1,5 +1,6 @@
 import { Link, createFileRoute, notFound } from '@tanstack/react-router'
 import { CheckIcon } from 'lucide-react'
+import { FaqList } from '@/components/site/faq-list'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { site } from '@/lib/site'
@@ -88,10 +89,14 @@ function TemplatePage() {
             </Button>
           </div>
 
-          <section
-            aria-labelledby="includes"
-            className="mt-4 flex flex-col gap-3"
-          >
+          <section aria-labelledby="who" className="mt-4 flex flex-col gap-3">
+            <h2 id="who" className="font-sans text-xl font-semibold">
+              Who it's for
+            </h2>
+            <p>{page.whoFor}</p>
+          </section>
+
+          <section aria-labelledby="includes" className="flex flex-col gap-3">
             <h2 id="includes" className="font-sans text-xl font-semibold">
               What's in the {template.name} template
             </h2>
@@ -119,6 +124,29 @@ function TemplatePage() {
             </ul>
           </section>
 
+          <section aria-labelledby="example" className="flex flex-col gap-3">
+            <h2 id="example" className="font-sans text-xl font-semibold">
+              From a weak bullet to a strong one
+            </h2>
+            <dl className="flex flex-col gap-3 rounded-lg border bg-card p-4">
+              <div className="flex flex-col gap-1">
+                <dt className="text-sm font-medium text-muted-foreground">
+                  Before
+                </dt>
+                <dd className="text-muted-foreground line-through decoration-muted-foreground/40">
+                  {page.example.before}
+                </dd>
+              </div>
+              <div className="flex flex-col gap-1">
+                <dt className="text-sm font-medium text-primary">After</dt>
+                <dd>{page.example.after}</dd>
+              </div>
+            </dl>
+            <p className="text-sm text-muted-foreground">
+              A strong bullet says what you did, with what, and what changed.
+            </p>
+          </section>
+
           <section aria-labelledby="how" className="flex flex-col gap-3">
             <h2 id="how" className="font-sans text-xl font-semibold">
               How it works
@@ -141,6 +169,13 @@ function TemplatePage() {
           className="aspect-17/22 w-full rounded-sm bg-sheet object-cover object-top shadow-sm ring-1 ring-black/5"
         />
       </div>
+
+      <section aria-labelledby="faq" className="mt-24 max-w-3xl">
+        <h2 id="faq" className="text-2xl font-semibold tracking-tight">
+          {template.name} template FAQ
+        </h2>
+        <FaqList faqs={page.faqs} className="mt-4" />
+      </section>
 
       {related.length > 0 && (
         <section aria-labelledby="related" className="mt-24">

@@ -794,9 +794,10 @@ function NewResumePage() {
           </form>
         )}
         {previewInput && (
+          // Fits below the page heading (8rem) so the whole preview is on screen and scrolls inside itself.
           <aside
             aria-label="Preview"
-            className="sticky top-4 mt-8 h-[75svh] overflow-hidden rounded-xl border bg-card lg:mt-0 lg:h-[calc(100svh-2rem)]"
+            className="sticky top-4 mt-8 h-[75svh] overflow-hidden rounded-xl border bg-card lg:mt-0 lg:h-[calc(100svh-9rem)]"
           >
             <PdfPreview {...preview} pageLimit={1} />
           </aside>

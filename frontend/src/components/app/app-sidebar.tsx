@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link, useLocation, useNavigate } from '@tanstack/react-router'
 import {
+  BookOpenIcon,
   BriefcaseBusinessIcon,
   ChartColumnIcon,
   ChevronsUpDownIcon,
@@ -89,6 +90,12 @@ const nav = [
     label: 'Analytics',
     icon: ChartColumnIcon,
     match: ['/analytics'],
+  },
+  {
+    to: '/guides',
+    label: 'Resume guides',
+    icon: BookOpenIcon,
+    match: ['/guides'],
   },
   {
     to: '/billing',

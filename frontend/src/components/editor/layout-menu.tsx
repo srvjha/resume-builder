@@ -1,5 +1,5 @@
 import { SlidersHorizontalIcon } from 'lucide-react'
-import { useId } from 'react'
+import { useId, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Popover,
@@ -39,8 +39,14 @@ export function LayoutMenu({
   onChange: (layout: ResumeLayout) => void
 }) {
   const id = useId()
+  const [open, setOpen] = useState(false)
+  // One pick closes the menu, so the preview behind it shows the change.
+  const pick = (layout: ResumeLayout) => {
+    onChange(layout)
+    setOpen(false)
+  }
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <Tooltip>
         <TooltipTrigger asChild>
           <PopoverTrigger asChild>
@@ -66,7 +72,7 @@ export function LayoutMenu({
             value={value.spacing}
             onValueChange={(spacing) =>
               spacing &&
-              onChange({
+              pick({
                 ...value,
                 spacing: spacing as ResumeLayout['spacing'],
               })
@@ -99,7 +105,7 @@ export function LayoutMenu({
             value={String(value.fontSize ?? templateFontSize)}
             onValueChange={(size) =>
               size &&
-              onChange({
+              pick({
                 ...value,
                 fontSize: Number(size) as ResumeLayout['fontSize'],
               })
@@ -132,8 +138,7 @@ export function LayoutMenu({
             spacing={0}
             value={value.links ?? 'icon-and-link'}
             onValueChange={(links) =>
-              links &&
-              onChange({ ...value, links: links as ResumeLayout['links'] })
+              links && pick({ ...value, links: links as ResumeLayout['links'] })
             }
             aria-labelledby={`${id}-links`}
             className="w-full"

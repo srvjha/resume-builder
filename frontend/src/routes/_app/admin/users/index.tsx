@@ -8,6 +8,7 @@ import {
   PlanBadge,
   QueryView,
   providerLabel,
+  CopyEmail,
   displayName,
 } from '@/components/admin/admin-ui'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -225,9 +226,10 @@ function UsersTable({
                       >
                         {displayName(user)}
                       </Link>
-                      <span className="truncate text-xs text-muted-foreground">
-                        {user.email}
-                      </span>
+                      <CopyEmail
+                        email={user.email}
+                        className="text-xs text-muted-foreground"
+                      />
                     </span>
                   </div>
                 </TableCell>

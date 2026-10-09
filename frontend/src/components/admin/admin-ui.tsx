@@ -1,4 +1,7 @@
 import type { UseQueryResult } from '@tanstack/react-query'
+import { CheckIcon, CopyIcon } from 'lucide-react'
+import { useState } from 'react'
+import { toast } from 'sonner'
 import { Change } from '@/components/analytics/change'
 import {
   Alert,
@@ -214,5 +217,38 @@ export function EmptyNote({ children }: { children: React.ReactNode }) {
     <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
       {children}
     </p>
+  )
+}
+
+// An email with a copy button. relative z-10 lifts the button above a row-wide link overlay.
+export function CopyEmail({
+  email,
+  className,
+}: {
+  email: string
+  className?: string
+}) {
+  const [copied, setCopied] = useState(false)
+  return (
+    <span className={cn('flex min-w-0 items-center gap-1', className)}>
+      <span className="truncate">{email}</span>
+      <Button
+        variant="ghost"
+        size="icon-xs"
+        className="relative z-10 shrink-0"
+        aria-label={`Copy ${email}`}
+        onClick={async () => {
+          try {
+            await navigator.clipboard.writeText(email)
+            setCopied(true)
+            setTimeout(() => setCopied(false), 1500)
+          } catch {
+            toast.error('Could not copy. Select the email instead.')
+          }
+        }}
+      >
+        {copied ? <CheckIcon /> : <CopyIcon />}
+      </Button>
+    </span>
   )
 }

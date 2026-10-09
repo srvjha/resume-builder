@@ -12,6 +12,7 @@ import {
   StatGrid,
   providerLabel,
   stepLabel,
+  CopyEmail,
   displayName,
   templateName,
 } from '@/components/admin/admin-ui'
@@ -182,9 +183,11 @@ function UserReport({ data }: { data: AdminUser }) {
           <h2 className="truncate text-2xl font-semibold tracking-tight">
             {displayName(user)}
           </h2>
-          <p className="truncate text-muted-foreground">
-            {user.email}
-            {!user.emailVerified && ' (not verified)'}
+          <p className="flex min-w-0 items-center gap-1 text-muted-foreground">
+            <CopyEmail email={user.email} />
+            {!user.emailVerified && (
+              <span className="shrink-0">(not verified)</span>
+            )}
           </p>
           <div className="flex flex-wrap items-center gap-1.5 text-sm">
             <PlanBadge plan={user.plan} />

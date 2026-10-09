@@ -54,3 +54,11 @@ describe("API rate limit", () => {
     expect(mocks.lookups).toBe(1);
   });
 });
+
+describe("search engines", () => {
+  it("are told to stay out of the API", async () => {
+    const robots = await fetch(`${base}/robots.txt`);
+    expect(await robots.text()).toContain("Disallow: /");
+    expect((await fetch(`${base}/health`)).headers.get("x-robots-tag")).toBe("noindex, nofollow");
+  });
+});

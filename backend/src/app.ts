@@ -34,6 +34,15 @@ app.all("/api/auth/*splat", toNodeHandler(auth));
 app.use(razorpayWebhookRouter);
 app.use(express.json({ limit: "1mb" }));
 
+// The API is not a website: keep every response (shared PDFs included) out of search results.
+app.use((_req, res, next) => {
+  res.setHeader("X-Robots-Tag", "noindex, nofollow");
+  next();
+});
+app.get("/robots.txt", (_req, res) => {
+  res.type("text/plain").send("User-agent: *\nDisallow: /\n");
+});
+
 app.get("/health", (_req, res) => {
   res.json({ status: "ok" });
 });

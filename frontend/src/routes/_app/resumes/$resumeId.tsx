@@ -574,7 +574,9 @@ function ResumeEditor({
           <ResizablePanel
             id="edit"
             minSize={320}
-            className="overflow-y-auto overscroll-contain"
+            // relative: the form's screen-reader-only labels are absolutely positioned and would otherwise
+            // hang below the window and make the whole page scroll.
+            className="relative overflow-y-auto overscroll-contain"
           >
             {editorPane}
           </ResizablePanel>
@@ -601,7 +603,7 @@ function ResumeEditor({
         <div className="min-h-0 flex-1">
           <div
             className={cn(
-              'h-full overflow-y-auto overscroll-contain',
+              'relative h-full overflow-y-auto overscroll-contain',
               pane === 'preview' && 'hidden',
             )}
           >

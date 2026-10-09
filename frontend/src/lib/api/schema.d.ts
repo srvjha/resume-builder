@@ -2365,6 +2365,16 @@ export interface paths {
                         jobId?: string;
                         /** @default 1 */
                         pageLimit?: number;
+                        layout?: {
+                            /**
+                             * @default normal
+                             * @enum {string}
+                             */
+                            spacing?: "compact" | "normal" | "relaxed";
+                            fontSize?: 10 | 11 | 12;
+                            /** @enum {string} */
+                            links?: "icon-and-link" | "icon-and-name" | "link";
+                        };
                         /**
                          * @default {
                          *       "type": "blank"
@@ -4846,6 +4856,8 @@ export interface paths {
                                     text: string;
                                     placed: boolean;
                                 }[];
+                                /** @enum {string} */
+                                linkStyle?: "icon-and-link" | "icon-and-name" | "link";
                             };
                         };
                     };
@@ -5082,6 +5094,8 @@ export interface paths {
                                     text: string;
                                     placed: boolean;
                                 }[];
+                                /** @enum {string} */
+                                linkStyle?: "icon-and-link" | "icon-and-name" | "link";
                             };
                         };
                     };

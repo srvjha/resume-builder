@@ -44,7 +44,11 @@ import {
   profileQuery,
   usageQuery,
 } from '@/lib/api/queries'
-import type { CreateResumeBody, ResumeContent } from '@/lib/api/types'
+import type {
+  CreateResumeBody,
+  ResumeContent,
+  ResumeDetail,
+} from '@/lib/api/types'
 import { usePdfPreview } from '@/hooks/use-pdf-preview'
 import { apiUrl } from '@/lib/env'
 import { site } from '@/lib/site'
@@ -145,6 +149,8 @@ function NewResumePage() {
   const [imported, setImported] = useState<ResumeContent | null>(null)
   // PDF lines the AI skipped. Placed ones are already in the import as hidden bullets.
   const [missed, setMissed] = useState<Missed>([])
+  // The source PDF's link style, so an import that named its links ("LinkedIn") keeps doing so.
+  const [linkStyle, setLinkStyle] = useState<ResumeDetail['layout']['links']>()
   const [choosingTemplate, setChoosingTemplate] = useState(false)
 
   const isTexFile = file ? /\.tex$/i.test(file.name) : false
@@ -158,7 +164,13 @@ function NewResumePage() {
 
   const previewInput =
     (source === 'upload' || source === 'ai') && imported
-      ? { content: imported, templateId }
+      ? {
+          content: imported,
+          templateId,
+          ...(linkStyle && {
+            layout: { spacing: 'normal' as const, links: linkStyle },
+          }),
+        }
       : source === 'upload' && makesCodeResume && fileTex
         ? { texSource: fileTex }
         : source === 'tex' && texSource.trim()
@@ -171,6 +183,7 @@ function NewResumePage() {
   async function importContent(): Promise<{
     content: ResumeContent
     missed: Missed
+    linkStyle?: ResumeDetail['layout']['links']
   }> {
     if (file) {
       const form = new FormData()
@@ -205,9 +218,10 @@ function NewResumePage() {
 
   const read = useMutation({
     mutationFn: importContent,
-    onSuccess: ({ content, missed: skipped }) => {
+    onSuccess: ({ content, missed: skipped, linkStyle: style }) => {
       setImported(content)
       setMissed(skipped)
+      setLinkStyle(style)
       setChoosingTemplate(false)
       if (!title && content.basics.name) setTitle(content.basics.name)
     },
@@ -242,6 +256,7 @@ function NewResumePage() {
           title: name,
           mode: 'structured',
           templateId,
+          ...(linkStyle && { layout: { spacing: 'normal', links: linkStyle } }),
           source: { type: 'content', content },
         }
       } else if (source === 'blank' && blankStart === 'blank-page') {

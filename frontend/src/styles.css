@@ -258,3 +258,11 @@
     white-space: nowrap;
   }
 }
+
+/* Still scrolls with a trackpad, wheel or keyboard; only the bar is hidden. */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

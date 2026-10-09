@@ -183,7 +183,7 @@ export function PdfPreview({
 
       <div className="relative min-h-0 flex-1 bg-muted/60">
         {url ? (
-          <div className="size-full overflow-y-auto overscroll-contain">
+          <div className="no-scrollbar size-full overflow-y-auto overscroll-contain">
             <div className="mx-auto max-w-[760px] px-4 py-6 sm:px-8">
               <PdfPages url={url} onFill={setFill} />
             </div>

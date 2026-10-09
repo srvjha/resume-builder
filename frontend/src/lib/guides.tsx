@@ -428,6 +428,461 @@ export const guides: Guide[] = [
       },
     ],
   },
+  {
+    slug: 'tailor-resume-to-job-description',
+    title: 'How to tailor your resume to a job description',
+    seoTitle: 'How to Tailor Your Resume to a Job Description (With Examples)',
+    summary:
+      'A step-by-step way to fit one resume to each job you apply for: read the job description, match its words honestly, reorder what matters and cut the rest.',
+    updated: '2026-10-09',
+    sections: [
+      {
+        id: 'why',
+        title: 'Why one resume for every job does not work',
+        body: (
+          <>
+            <p>
+              Most students send the same resume to every opening. It feels
+              efficient, but each job is looking for something slightly
+              different, and a recruiter reading 200 applications decides in
+              seconds whether yours fits. Applicant tracking systems (ATS) make
+              this stricter: recruiters search them for the skills in the job
+              post, and a resume that never uses those words does not come up.
+            </p>
+            <p>
+              Tailoring means making the parts of your experience that match{' '}
+              <em>this</em> job easy to find. It never means adding things you
+              have not done.
+            </p>
+          </>
+        ),
+      },
+      {
+        id: 'read',
+        title: 'Step 1: Read the job description like a checklist',
+        body: (
+          <>
+            <p>
+              Copy the job description and split it into three lists before you
+              touch your resume:
+            </p>
+            <ul>
+              <li>
+                <strong>Must-haves:</strong> skills and qualifications the post
+                says are required.
+              </li>
+              <li>
+                <strong>Nice-to-haves:</strong> anything marked preferred, a
+                plus or good to have.
+              </li>
+              <li>
+                <strong>The work itself:</strong> what you would actually do
+                every day.
+              </li>
+            </ul>
+            <p>
+              For example, a backend developer opening in Bengaluru might list
+              Java, Spring Boot, MySQL and REST APIs as must-haves, Docker and
+              AWS as nice-to-haves, and "build and maintain APIs for our
+              payments team" as the work. Those three lists tell you what to
+              lead with.
+            </p>
+          </>
+        ),
+      },
+      {
+        id: 'match',
+        title: 'Step 2: Use their words, where they are true',
+        body: (
+          <>
+            <p>
+              If the post says <strong>REST APIs</strong> and your resume says
+              "backend services", a recruiter searching for REST APIs will miss
+              you. For every must-have you genuinely have, use the job's exact
+              wording at least once:
+            </p>
+            <ul>
+              <li>
+                In your <strong>skills</strong> section, so it is found in a
+                search.
+              </li>
+              <li>
+                In a <strong>bullet</strong>, so it is backed by something you
+                did. A skill that appears only in a list is easy to doubt.
+              </li>
+            </ul>
+            <p>
+              Do not paste keywords in white text or repeat them ten times.
+              Recruiters read the resume after the search, and keyword stuffing
+              is obvious to a person.
+            </p>
+          </>
+        ),
+      },
+      {
+        id: 'reorder',
+        title: 'Step 3: Move the most relevant things up',
+        body: (
+          <>
+            <p>
+              Recruiters read top to bottom and stop early. Put what matches the
+              job where they will see it first:
+            </p>
+            <ul>
+              <li>
+                Reorder your <strong>projects</strong> so the one closest to the
+                job comes first.
+              </li>
+              <li>
+                Reorder <strong>skills</strong> so the must-haves lead each
+                group.
+              </li>
+              <li>Inside each entry, put the most relevant bullet first.</li>
+              <li>
+                If you use a headline, make it match the role: "Backend
+                Developer (Java, Spring Boot)" rather than "Software Engineer".
+              </li>
+            </ul>
+          </>
+        ),
+      },
+      {
+        id: 'rewrite',
+        title: 'Step 4: Rewrite bullets to show what the job needs',
+        body: (
+          <>
+            <p>
+              The same work can be described in a way that fits the job better.
+              For the backend role above:
+            </p>
+            <ul>
+              <li>
+                <strong>Before:</strong> "Made a college event website with a
+                login system."
+              </li>
+              <li>
+                <strong>After:</strong> "Built REST APIs in Spring Boot and
+                MySQL for a college event site with login and registrations,
+                used by 1,200 students during the fest."
+              </li>
+            </ul>
+            <p>
+              Nothing new was invented. The rewrite names the tools the job asks
+              for, says what you built and adds a result.
+            </p>
+          </>
+        ),
+      },
+      {
+        id: 'cut',
+        title: 'Step 5: Cut what does not help',
+        body: (
+          <p>
+            Space on one page is limited, so every line should earn its place
+            for this job. Hide the project that has nothing to do with the role,
+            drop skills the job will never use, and shorten old or unrelated
+            bullets. Keep the resume to one page; for a fresher, a second page
+            almost always means weaker points diluting strong ones.
+          </p>
+        ),
+      },
+      {
+        id: 'honest',
+        title: 'Stay honest',
+        body: (
+          <p>
+            Tailoring only works with things you can talk about. If a skill from
+            the job description is missing, do not add it; interviewers ask
+            about every line. Instead, mention related work you have done, or
+            learn the basics and build a small project with it before you apply.
+          </p>
+        ),
+      },
+      {
+        id: 'checklist',
+        title: 'A quick checklist before you apply',
+        body: (
+          <ul>
+            <li>Every must-have you have appears in skills and in a bullet.</li>
+            <li>The most relevant project or internship is at the top.</li>
+            <li>Your headline, if you use one, names this role.</li>
+            <li>No line on the page is there only for other jobs.</li>
+            <li>It still fits on one page and reads well as a PDF.</li>
+            <li>Every claim is something you can explain in an interview.</li>
+          </ul>
+        ),
+      },
+      {
+        id: 'shortlist',
+        title: 'Tailor a resume in Shortlist',
+        body: (
+          <>
+            <p>
+              Doing this by hand for every application takes time, which is why
+              most people skip it. In Shortlist you keep one main resume and
+              tailor a copy for each job:
+            </p>
+            <ol>
+              <li>
+                Open your resume, choose <strong>Improve with AI</strong> and
+                add the job by pasting the description or a link to the post.
+              </li>
+              <li>
+                Choose <strong>Tailor resume</strong>. It reorders, trims and
+                rewrites bullets for that job, using only what is already in
+                your resume and profile.
+              </li>
+              <li>
+                Review every change side by side and apply the ones you agree
+                with. Nothing changes until you apply, and you can undo from
+                History.
+              </li>
+            </ol>
+            <p>
+              Then run the free{' '}
+              <Link to="/ats-checker">ATS resume checker</Link> with the same
+              job to see which of its keywords your resume covers. The free plan
+              includes one tailored resume a month to try it.
+            </p>
+          </>
+        ),
+      },
+    ],
+  },
+  {
+    slug: 'resume-for-internship-no-experience',
+    title: 'Resume for an internship with no experience',
+    seoTitle:
+      'Resume for an Internship With No Experience: What to Write (2026)',
+    summary:
+      'What to put on your first resume when you have never had an internship: the right order, how to turn projects and college work into experience, and the mistakes to avoid.',
+    updated: '2026-10-09',
+    sections: [
+      {
+        id: 'what-they-want',
+        title: 'What recruiters look for in a first-time intern',
+        body: (
+          <>
+            <p>
+              Nobody expects an internship applicant to have work experience;
+              that is what the internship is for. A recruiter hiring an intern
+              is looking for three things:
+            </p>
+            <ul>
+              <li>
+                <strong>Proof you can build or do something</strong> in the
+                field, even on a small scale.
+              </li>
+              <li>
+                <strong>Signs you learn quickly</strong>: things you picked up
+                on your own, and how far you took them.
+              </li>
+              <li>
+                <strong>The basics</strong>: your degree, year, college and the
+                skills the role needs.
+              </li>
+            </ul>
+            <p>
+              Everything on your resume should support one of these. That is why
+              projects and achievements matter more than a long list of
+              certificates.
+            </p>
+          </>
+        ),
+      },
+      {
+        id: 'order',
+        title: 'The section order that works',
+        body: (
+          <ol>
+            <li>
+              <strong>Education:</strong> degree, college, year of graduation
+              and your CGPA or percentage. Add Class XII and Class X if you are
+              applying through campus.
+            </li>
+            <li>
+              <strong>Skills:</strong> grouped, such as languages, frameworks
+              and tools.
+            </li>
+            <li>
+              <strong>Projects:</strong> your main section. Two or three good
+              ones.
+            </li>
+            <li>
+              <strong>Achievements:</strong> hackathons, contests, ranks,
+              scholarships.
+            </li>
+            <li>
+              <strong>Positions of responsibility:</strong> clubs, fests,
+              societies.
+            </li>
+            <li>
+              <strong>Certifications:</strong> only those relevant to the role.
+            </li>
+          </ol>
+        ),
+      },
+      {
+        id: 'projects',
+        title: 'Projects are your experience',
+        body: (
+          <>
+            <p>
+              Without an internship, projects do the job that work experience
+              does on other resumes. Pick two or three, with the one closest to
+              the internship first, and write each like a job:
+            </p>
+            <ul>
+              <li>
+                <strong>The problem:</strong> what it does and for whom.
+              </li>
+              <li>
+                <strong>How:</strong> the tools you used, named specifically.
+              </li>
+              <li>
+                <strong>The result:</strong> users, speed, accuracy, or simply
+                that it is live and in use.
+              </li>
+              <li>
+                <strong>A link:</strong> GitHub or a live demo, so they can see
+                it.
+              </li>
+            </ul>
+            <p>For example:</p>
+            <ul>
+              <li>
+                <strong>Weak:</strong> "Made a weather app using React."
+              </li>
+              <li>
+                <strong>Strong:</strong> "Built a weather app in React using the
+                OpenWeather API with 5-day forecasts and saved cities; deployed
+                on Vercel and used by 60 classmates."
+              </li>
+            </ul>
+            <p>
+              Academic projects count too. A semester project you built properly
+              is better than a copied tutorial with a fancier name.
+            </p>
+          </>
+        ),
+      },
+      {
+        id: 'other-proof',
+        title: 'Other things that count',
+        body: (
+          <ul>
+            <li>
+              <strong>Hackathons</strong>, including ones you did not win: what
+              you built in 36 hours says a lot.
+            </li>
+            <li>
+              <strong>Coding contests:</strong> a Codeforces, CodeChef or
+              LeetCode rating, or a rank in a contest.
+            </li>
+            <li>
+              <strong>Open source:</strong> even a few merged pull requests.
+            </li>
+            <li>
+              <strong>College clubs and fests:</strong> running an event,
+              managing sponsors or leading a team.
+            </li>
+            <li>
+              <strong>Freelance or family business work:</strong> a website for
+              a local shop, social media for a small brand.
+            </li>
+            <li>
+              <strong>Teaching:</strong> tutoring, teaching assistant roles,
+              running workshops.
+            </li>
+          </ul>
+        ),
+      },
+      {
+        id: 'skills',
+        title: 'Skills: only what you can be asked about',
+        body: (
+          <p>
+            List the skills you have used in a project or could answer questions
+            on in an interview. Group them, so a recruiter can scan them in a
+            second: languages, frameworks, tools. Leave out percentage bars and
+            star ratings; they mean nothing to a reader and often break ATS
+            software.
+          </p>
+        ),
+      },
+      {
+        id: 'summary',
+        title: 'Do you need a summary or objective?',
+        body: (
+          <>
+            <p>
+              Not usually. If you add one, keep it to two lines and make it
+              specific, or it wastes the best space on the page.
+            </p>
+            <ul>
+              <li>
+                <strong>Weak:</strong> "Hardworking and passionate student
+                seeking a challenging role to grow my skills."
+              </li>
+              <li>
+                <strong>Better:</strong> "Third-year B.Tech CSE student looking
+                for a backend internship; built two Node.js APIs used by college
+                clubs."
+              </li>
+            </ul>
+          </>
+        ),
+      },
+      {
+        id: 'mistakes',
+        title: 'Common mistakes',
+        body: (
+          <ul>
+            <li>Adding a photo, date of birth or a declaration at the end.</li>
+            <li>Going onto a second page.</li>
+            <li>
+              Listing every online course you started instead of the two that
+              matter.
+            </li>
+            <li>Skills you have only watched a video about.</li>
+            <li>Words like hardworking, passionate and team player.</li>
+            <li>
+              A design with columns, tables or images that ATS software cannot
+              read.
+            </li>
+          </ul>
+        ),
+      },
+      {
+        id: 'non-tech',
+        title: 'Not in tech?',
+        body: (
+          <p>
+            The same rules apply for commerce, marketing, design and other
+            fields; only the proof changes. Case competitions, fest
+            sponsorships, a social media page you grew, a market research
+            project or a portfolio of designs all play the part that coding
+            projects play for engineers.
+          </p>
+        ),
+      },
+      {
+        id: 'shortlist',
+        title: 'Build it in Shortlist',
+        body: (
+          <p>
+            The <T id="campus">Campus template</T> follows the education-first
+            order placement cells expect, and{' '}
+            <T id="jake">Jake&apos;s Resume</T> is the classic one-page layout
+            for tech roles. If you are starting from nothing, Write with AI
+            turns a few notes about your projects and college into a first draft
+            you can edit. When you are done, run it through the free{' '}
+            <Link to="/ats-checker">ATS resume checker</Link>.
+          </p>
+        ),
+      },
+    ],
+  },
 ]
 
 export const findGuide = (slug: string) => guides.find((g) => g.slug === slug)

@@ -1,4 +1,4 @@
-import { and, count, eq, gte, inArray, isNull } from "drizzle-orm";
+import { and, count, eq, gte, inArray, isNull, sql } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { aiRuns, resumes, users } from "../../db/schema/index.js";
 import { AppError, NotFoundError } from "../../lib/errors.js";
@@ -53,6 +53,8 @@ async function usedThisPeriod(userId: string, kind: QuotaKind, allTime = false) 
         eq(aiRuns.byok, false),
         inArray(aiRuns.step, stepsFor[kind]),
         gte(aiRuns.createdAt, since),
+        // A suggestion with no changes gave the user nothing to apply, so it isn't charged.
+        sql`coalesce(jsonb_array_length(${aiRuns.patchOps}->'operations'), 1) > 0`,
       ),
     );
   return row?.value ?? 0;

@@ -1,4 +1,4 @@
-import { and, count, eq, gte, inArray, isNull, sql } from "drizzle-orm";
+import { and, count, eq, gt, gte, inArray, isNull, lt, or, sql } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { aiRuns, resumes, users } from "../../db/schema/index.js";
 import { AppError, NotFoundError } from "../../lib/errors.js";
@@ -32,24 +32,31 @@ function periodEnd(now = new Date()) {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
 }
 
-async function planOf(userId: string): Promise<Plan> {
-  const [user] = await db.select({ plan: users.plan }).from(users).where(eq(users.id, userId)).limit(1);
+type Executor = Pick<typeof db, "select">;
+type Step = (typeof aiRuns.$inferInsert)["step"];
+
+// A reserved run whose request crashed before recording a result stops counting after this long.
+const PENDING_TTL = sql`now() - interval '10 minutes'`;
+
+async function planOf(userId: string, executor: Executor = db): Promise<Plan> {
+  const [user] = await executor.select({ plan: users.plan }).from(users).where(eq(users.id, userId)).limit(1);
   if (!user) throw new NotFoundError("User");
   return user.plan;
 }
 
 // `allTime` counts every run, for allowances given once per account rather than per month.
-async function usedThisPeriod(userId: string, kind: QuotaKind, allTime = false) {
-  const [user] = await db.select({ resetAt: users.usageResetAt }).from(users).where(eq(users.id, userId));
+async function usedThisPeriod(userId: string, kind: QuotaKind, allTime = false, executor: Executor = db) {
+  const [user] = await executor.select({ resetAt: users.usageResetAt }).from(users).where(eq(users.id, userId));
   const start = allTime ? new Date(0) : periodStart();
   const since = user?.resetAt && user.resetAt > start ? user.resetAt : start;
-  const [row] = await db
+  const [row] = await executor
     .select({ value: count() })
     .from(aiRuns)
     .where(
       and(
         eq(aiRuns.userId, userId),
-        eq(aiRuns.status, "succeeded"),
+        // A run still waiting on the model counts, so parallel requests can't all slip under the limit.
+        or(eq(aiRuns.status, "succeeded"), and(eq(aiRuns.status, "pending"), gt(aiRuns.createdAt, PENDING_TTL))),
         eq(aiRuns.byok, false),
         inArray(aiRuns.step, stepsFor[kind]),
         gte(aiRuns.createdAt, since),
@@ -75,10 +82,32 @@ function quotaError(message: string, limit: number, used: number, resetsAt?: Dat
 export async function assertAiQuota(userId: string, kind: QuotaKind) {
   // Requests on the user's own key cost us nothing, so plan limits don't apply.
   if (await hasUserAiKey(userId)) return;
-  const plan = await planOf(userId);
+  await checkQuota(userId, kind);
+}
+
+// Checks the quota and records a pending run in one step, under a per-user lock: a parallel request waits, then
+// counts this run. The early assertAiQuota only fails fast; this is the check that holds.
+export async function reserveAiRun(userId: string, kind: QuotaKind, step: Step) {
+  return db.transaction(async (tx) => {
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${`ai-quota:${userId}`}))`);
+    await tx
+      .update(aiRuns)
+      .set({ status: "failed", error: "abandoned before the model answered" })
+      .where(and(eq(aiRuns.userId, userId), eq(aiRuns.status, "pending"), lt(aiRuns.createdAt, PENDING_TTL)));
+    await checkQuota(userId, kind, tx);
+    const [run] = await tx
+      .insert(aiRuns)
+      .values({ userId, step, status: "pending", model: "pending" })
+      .returning({ id: aiRuns.id });
+    return run!.id;
+  });
+}
+
+async function checkQuota(userId: string, kind: QuotaKind, executor: Executor = db) {
+  const plan = await planOf(userId, executor);
   const limit = planLimits[plan][kind];
   const once = kind === "draft" && plan === "free";
-  const used = await usedThisPeriod(userId, kind, once);
+  const used = await usedThisPeriod(userId, kind, once, executor);
   if (used >= limit && once) {
     throw quotaError(
       "You've used your free AI-written resume. Season Pass and Pro include more, or add your own AI key.",

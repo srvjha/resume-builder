@@ -1,0 +1,1 @@
+ALTER TYPE "public"."ai_run_status" ADD VALUE 'pending' BEFORE 'succeeded';

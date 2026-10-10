@@ -88,6 +88,7 @@ export async function createImport(
   const { data, runId } = await generateStructured({
     userId,
     step: "import",
+    quota: "import",
     tier: "fast",
     schema: extractionSchema,
     system,
@@ -138,6 +139,7 @@ export async function createDraft(userId: string, input: { role: string; notes: 
   const { data, runId } = await generateStructured({
     userId,
     step: "draft",
+    quota: "draft",
     tier: "smart",
     schema: extractionSchema,
     system: draftSystem,

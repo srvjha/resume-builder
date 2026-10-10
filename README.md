@@ -102,3 +102,7 @@ PostHog receives page views, product events (ids, counts and choices, never resu
 timings. Links tagged with `utm_source` and `utm_campaign` show up per campaign, with sign-ups, on the admin
 Traffic page. Session recordings mask all text and inputs. The admin dashboard reads PostHog back through the API, so
 the personal API key never reaches a browser.
+
+## License
+
+[MIT](LICENSE)

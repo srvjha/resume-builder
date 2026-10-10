@@ -256,11 +256,14 @@ function ResumeEditor({
   useEffect(() => {
     if (draft !== lastSaved.current) setSaveState('unsaved')
   }, [draft])
+  // Re-armed when a save settles, so edits made while it was in flight still save; a draft that just failed waits for the next edit.
   useDebouncedEffect(
     () => {
-      if (draft !== lastSaved.current && !save.isPending) save.mutate(draft)
+      const failed = save.isError && save.variables === draft
+      if (draft !== lastSaved.current && !save.isPending && !failed)
+        save.mutate(draft)
     },
-    [draft],
+    [draft, save.isPending],
     1500,
   )
 
@@ -615,9 +618,7 @@ function ResumeEditor({
         </div>
       )}
       {!showAi && aiPanel}
-      <UnsavedChangesGuard
-        when={saveState === 'unsaved' || saveState === 'saving'}
-      />
+      <UnsavedChangesGuard when={saveState !== 'saved'} />
       <SaveTemplateDialog
         open={offerTemplate}
         onOpenChange={setOfferTemplate}

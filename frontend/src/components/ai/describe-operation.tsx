@@ -75,6 +75,8 @@ export function OperationTitle({
   switch (op.type) {
     case 'update_bullet':
       return <>Rewrite bullet</>
+    case 'add_bullet':
+      return <>Add bullet</>
     case 'update_headline':
       return <>Change headline</>
     case 'set_hidden':
@@ -132,6 +134,9 @@ export function OperationBody({
     const before =
       content && op.bulletId ? findBulletText(content, op.bulletId) : undefined
     return <WordDiff before={before ?? ''} after={op.text} />
+  }
+  if (op.type === 'add_bullet' && op.text) {
+    return <WordDiff before="" after={op.text} />
   }
   if (op.type === 'update_headline' && op.text) {
     return <WordDiff before={content?.basics.headline ?? ''} after={op.text} />

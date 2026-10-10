@@ -681,6 +681,12 @@ export async function getRevenue(days: number, timeZone: string) {
 
 export async function getContent(days: number) {
   const { since } = range(days);
+  const recentViews = db
+    .select({ shareLinkId: linkViews.shareLinkId, views: count().as("views") })
+    .from(linkViews)
+    .where(gte(linkViews.viewedAt, since))
+    .groupBy(linkViews.shareLinkId)
+    .as("recent_views");
 
   const [[resumeTotals], byTemplate, versionKinds, [sharing], topLinks, [other], [uploadTotals]] = await Promise.all([
     db
@@ -723,15 +729,13 @@ export async function getContent(days: number) {
         slug: shareLinks.slug,
         username: users.username,
         resumeTitle: resumes.title,
-        views:
-          sql<number>`(select count(*) from ${linkViews} where ${linkViews.shareLinkId} = ${outer("share_links", "id")} and ${linkViews.viewedAt} >= ${since})`.mapWith(
-            Number,
-          ),
+        views: sql<number>`coalesce(${recentViews.views}, 0)`.mapWith(Number),
         totalViews: shareLinks.viewCount,
       })
       .from(shareLinks)
       .innerJoin(users, eq(users.id, shareLinks.userId))
       .innerJoin(resumes, eq(resumes.id, shareLinks.resumeId))
+      .leftJoin(recentViews, eq(recentViews.shareLinkId, shareLinks.id))
       .where(isNull(shareLinks.deletedAt))
       .orderBy(sql`5 desc`, desc(shareLinks.viewCount))
       .limit(10),

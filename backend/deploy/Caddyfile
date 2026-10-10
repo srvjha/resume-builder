@@ -2,6 +2,9 @@
 # then reload it. Caddy issues and renews the HTTPS certificate automatically.
 api.shortlist.co.in {
 	encode zstd gzip
-	reverse_proxy shortlist-api:4000
+	# Holds requests for up to 30s while a deploy restarts the API, instead of answering 502.
+	reverse_proxy shortlist-api:4000 {
+		lb_try_duration 30s
+	}
 	header -Server
 }

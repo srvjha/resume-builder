@@ -164,7 +164,7 @@ const headingKinds: [SectionKind, RegExp][] = [
   ["summary", /^((professional|career) )?(summary|profile|objective)$|^about( me)?$/],
   [
     "other",
-    /^((awards|honou?rs|achievements|certifications?|publications|courses|coursework|languages|interests|hobbies|activities|leadership|references|training|volunteering|links)( and \w+)?|profile links|relevant coursework|volunteer experience|extra ?curricular( activities)?|positions? of responsibility)$/,
+    /^((awards|honou?rs|achievements|certifications?|publications|courses|coursework|languages|interests|hobbies|activities|leadership|references|training|volunteering|links)( and \w+)?|profile links|relevant coursework|volunteer experience|extra ?curricular( activities)?|positions? of responsibility|open source( contributions| projects)?)$/,
   ],
 ];
 

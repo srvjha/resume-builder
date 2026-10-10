@@ -80,6 +80,21 @@ describe("parseQuality on hand-built items", () => {
     expect(issue(report([...body.slice(0, 2), ...left, ...right]), "columns").status).not.toBe("pass");
   });
 
+  it("counts a company read without the city typed after it as read correctly", () => {
+    const expected = { jobs: [{ title: "SDE Intern", company: "Razorpay, Bengaluru" }] };
+    const result = parseQuality(parseItems(body, page), { items: body, page, expected });
+    expect(result.fields.find((f) => f.id === "job1.company")?.ok).toBe(true);
+  });
+
+  it("knows Open-Source Contributions as a standard heading", () => {
+    const items = [
+      ...body,
+      item("Open-Source Contributions", 40, 200, { height: 12, bold: true }),
+      item("• Fixed a bug in a Rails gem used by thousands of apps", 50, 220),
+    ];
+    expect(issue(report(items), "sections").status).toBe("pass");
+  });
+
   it("treats an empty PDF as scanned", () => {
     const result = report([]);
     expect(issue(result, "density").status).toBe("fail");

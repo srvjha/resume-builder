@@ -15,6 +15,24 @@ type Outcome<T> =
 
 const VISITOR_COOKIE = 'kz_visitor'
 
+// These pages call the API from this server, so it would see one IP and no session for everyone. The session cookie
+// lets it skip the owner's own views; the visitor's IP, vouched for by the shared secret, gives each visitor their
+// own rate limit.
+function forwardedHeaders() {
+  const headers: Record<string, string> = {}
+  const cookie = getRequestHeader('cookie')
+  if (cookie) headers.cookie = cookie
+  const secret = process.env.PROXY_SECRET
+  const ip =
+    getRequestHeader('x-real-ip') ??
+    getRequestHeader('x-forwarded-for')?.split(',')[0]?.trim()
+  if (secret && ip) {
+    headers['x-shortlist-proxy'] = secret
+    headers['x-shortlist-client-ip'] = ip
+  }
+  return headers
+}
+
 // Share pages render on our server, so pass the visitor's own details to the API for view stats.
 function visitorHeaders() {
   let visitor = getCookie(VISITOR_COOKIE)
@@ -27,7 +45,10 @@ function visitorHeaders() {
       path: '/',
     })
   }
-  const headers: Record<string, string> = { 'x-share-visitor': visitor }
+  const headers: Record<string, string> = {
+    ...forwardedHeaders(),
+    'x-share-visitor': visitor,
+  }
   const userAgent = getRequestHeader('user-agent')
   const referrer = getRequestHeader('referer')
   const country =
@@ -95,6 +116,6 @@ export const fetchPublicProfile = createServerFn({ method: 'GET' })
   .handler(({ data }) =>
     call<PublicProfile>(
       `/v1/public/users/${encodeURIComponent(data.username)}`,
-      {},
+      forwardedHeaders(),
     ),
   )

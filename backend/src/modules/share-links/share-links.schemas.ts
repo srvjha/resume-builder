@@ -9,7 +9,7 @@ const slugSchema = z
   .toLowerCase()
   .regex(USERNAME_PATTERN, "Use 3-30 lowercase letters, digits or hyphens");
 
-const linkPassword = z.string().min(4).max(100);
+const linkPassword = z.string().min(8).max(100);
 const contactChoice = (body: { showContact?: boolean | undefined; contactPassword?: string | null | undefined }) =>
   !(body.showContact && body.contactPassword);
 const contactChoiceError = "Contacts are either shown or locked with a password, not both";

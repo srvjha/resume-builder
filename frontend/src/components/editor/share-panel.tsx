@@ -407,7 +407,7 @@ function LinkCard({
             />
             <Button
               type="submit"
-              disabled={contactPassword.length < 4 || update.isPending}
+              disabled={contactPassword.length < 8 || update.isPending}
             >
               {update.isPending && <Spinner data-icon="inline-start" />}
               Save
@@ -492,7 +492,7 @@ function CreateLinkForm({
   const [contactMode, setContactMode] = useState<ContactMode>('hidden')
   const [contactPassword, setContactPassword] = useState('')
   const contactPasswordShort =
-    contactMode === 'password' && contactPassword.length < 4
+    contactMode === 'password' && contactPassword.length < 8
   const [isListed, setIsListed] = useState(false)
   const [pin, setPin] = useState(false)
   const [password, setPassword] = useState('')
@@ -593,7 +593,7 @@ function CreateLinkForm({
               onChange={(e) => setContactPassword(e.target.value)}
             />
             {contactPassword.length > 0 && contactPasswordShort && (
-              <FieldError>Use at least 4 characters.</FieldError>
+              <FieldError>Use at least 8 characters.</FieldError>
             )}
           </Field>
         )}
@@ -612,18 +612,18 @@ function CreateLinkForm({
           onChange={setPin}
         />
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field data-invalid={password.length > 0 && password.length < 4}>
+          <Field data-invalid={password.length > 0 && password.length < 8}>
             <FieldLabel htmlFor="link-password">Password (optional)</FieldLabel>
             <Input
               id="link-password"
               type="password"
               autoComplete="new-password"
               value={password}
-              aria-invalid={password.length > 0 && password.length < 4}
+              aria-invalid={password.length > 0 && password.length < 8}
               onChange={(e) => setPassword(e.target.value)}
             />
-            {password.length > 0 && password.length < 4 && (
-              <FieldError>Use at least 4 characters.</FieldError>
+            {password.length > 0 && password.length < 8 && (
+              <FieldError>Use at least 8 characters.</FieldError>
             )}
           </Field>
           <Field>
@@ -644,7 +644,7 @@ function CreateLinkForm({
             create.isPending ||
             slugTooShort ||
             contactPasswordShort ||
-            (password.length > 0 && password.length < 4)
+            (password.length > 0 && password.length < 8)
           }
         >
           {create.isPending && <Spinner data-icon="inline-start" />}

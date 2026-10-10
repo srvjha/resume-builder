@@ -2,7 +2,7 @@ import type { Request } from "express";
 import { Router } from "express";
 import { sendData } from "../../lib/http.js";
 import { optionalAuth } from "../../middleware/optional-auth.js";
-import { publicLimiter } from "../../middleware/rate-limit.js";
+import { publicLimiter, sharePasswordLimiter } from "../../middleware/rate-limit.js";
 import { validated } from "../../middleware/validate.js";
 import { compileOrThrow, pdfFileName, sendPdf, texForVersion } from "../pdfs/pdfs.service.js";
 import { publicProfileResponse, publicResumeParams, publicResumeResponse, publicUserParams } from "./public.schemas.js";
@@ -42,6 +42,7 @@ publicRouter.get(
 
 publicRouter.get(
   "/public/users/:username/resumes/:slug",
+  sharePasswordLimiter,
   optionalAuth,
   ...validated({ params: publicResumeParams }, async (req, res) => {
     const { username, slug } = req.params;
@@ -59,6 +60,7 @@ publicRouter.get(
 
 publicRouter.get(
   "/public/users/:username/resumes/:slug/pdf",
+  sharePasswordLimiter,
   ...validated({ params: publicResumeParams }, async (req, res) => {
     const { username, slug } = req.params;
     const { resume, version, isListed } = await service.getPublicResumeForPdf(

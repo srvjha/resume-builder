@@ -1255,7 +1255,7 @@ export interface paths {
                                     /** @enum {string} */
                                     step: "import" | "jd_parse" | "plan" | "rewrite" | "verify" | "inline_edit" | "chat_edit" | "fix_compile" | "draft";
                                     /** @enum {string} */
-                                    status: "succeeded" | "failed";
+                                    status: "pending" | "succeeded" | "failed";
                                     model: string;
                                     byok: boolean;
                                     inputTokens: number;

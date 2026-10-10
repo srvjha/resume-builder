@@ -3553,6 +3553,7 @@
                               "status": {
                                 "type": "string",
                                 "enum": [
+                                  "pending",
                                   "succeeded",
                                   "failed"
                                 ]
@@ -19147,12 +19148,12 @@
                   },
                   "password": {
                     "type": "string",
-                    "minLength": 4,
+                    "minLength": 8,
                     "maxLength": 100
                   },
                   "contactPassword": {
                     "type": "string",
-                    "minLength": 4,
+                    "minLength": 8,
                     "maxLength": 100
                   },
                   "expiresAt": {
@@ -19463,7 +19464,7 @@
                     "anyOf": [
                       {
                         "type": "string",
-                        "minLength": 4,
+                        "minLength": 8,
                         "maxLength": 100
                       },
                       {
@@ -19475,7 +19476,7 @@
                     "anyOf": [
                       {
                         "type": "string",
-                        "minLength": 4,
+                        "minLength": 8,
                         "maxLength": 100
                       },
                       {

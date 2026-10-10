@@ -43,3 +43,18 @@ export const aiLimiter = limiter(minute, 10);
 export const atsLimiter = limiter(10 * minute, 10);
 // Slows anyone guessing promo codes.
 export const redeemLimiter = limiter(10 * minute, 10);
+// Counts only wrong share-link passwords, per link, so a crowd of visitors cannot brute-force one link.
+export const sharePasswordLimiter = rateLimit({
+  windowMs: 15 * minute,
+  limit: 10,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  skipSuccessfulRequests: true,
+  skip: (req: Request) => !req.get("x-share-password"),
+  keyGenerator: (req: Request) => `${req.params.username}/${req.params.slug}`.toLowerCase(),
+  handler: (_req, res) => {
+    res
+      .status(429)
+      .json({ error: { code: "RATE_LIMITED", message: "Too many wrong passwords. Try again in 15 minutes." } });
+  },
+});

@@ -51,6 +51,7 @@ export async function createJob(userId: string, input: { rawText: string } | { s
           userId,
           step: "jd_parse",
           tier: "fast",
+          quota: "job",
           schema: parsedJobSchema,
           system,
           prompt: `Extract the requirements from this job description:\n\n<job>\n${rawText}\n</job>`,

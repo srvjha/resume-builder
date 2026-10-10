@@ -5,15 +5,15 @@ import { AppError, NotFoundError } from "../../lib/errors.js";
 import { hasUserAiKey } from "../ai-keys/ai-keys.service.js";
 
 export type Plan = (typeof users.$inferSelect)["plan"];
-export type QuotaKind = "tailor" | "edit" | "import" | "draft";
+export type QuotaKind = "tailor" | "edit" | "import" | "draft" | "job";
 
 // Monthly AI limits per plan; resumes are unlimited on every plan (1000 = unlimited). Paid limits are fair-use caps.
-// Imports are free on every plan; the cap only stops abuse.
+// Imports are free on every plan; the cap only stops abuse. Job descriptions are parsed once per posting, then reused.
 // Free gets one resume written from notes per account (counted for all time), to see it work once.
 export const planLimits: Record<Plan, Record<QuotaKind | "resumes", number>> = {
-  free: { resumes: 1000, tailor: 1, edit: 50, import: 20, draft: 1 },
-  season_pass: { resumes: 1000, tailor: 40, edit: 1000, import: 20, draft: 30 },
-  pro: { resumes: 1000, tailor: 60, edit: 1000, import: 20, draft: 30 },
+  free: { resumes: 1000, tailor: 1, edit: 50, import: 20, draft: 1, job: 10 },
+  season_pass: { resumes: 1000, tailor: 40, edit: 1000, import: 20, draft: 30, job: 100 },
+  pro: { resumes: 1000, tailor: 60, edit: 1000, import: 20, draft: 30, job: 100 },
 };
 
 const stepsFor: Record<QuotaKind, (typeof aiRuns.$inferSelect)["step"][]> = {
@@ -21,6 +21,7 @@ const stepsFor: Record<QuotaKind, (typeof aiRuns.$inferSelect)["step"][]> = {
   edit: ["chat_edit", "inline_edit", "fix_compile"],
   import: ["import"],
   draft: ["draft"],
+  job: ["jd_parse"],
 };
 
 // Calendar month in UTC.

@@ -10,21 +10,29 @@ with a link that tells you who opened it.
   control. Both render through the same 14 LaTeX templates, grouped by field (software, data, banking, finance,
   consulting, marketing, design, students and more), with spacing and font size presets and per-section or
   per-entry "space below".
-- **Import.** Upload a PDF, LaTeX file or pasted text; AI reads it into an editable resume. A rule-based read of
-  the same PDF then checks no line was dropped, and adds back anything missed as a hidden bullet.
+- **Import.** Upload a PDF, LaTeX file or pasted text; AI reads it into an editable resume. Rule-based checks on
+  the same PDF then put back anything the model got wrong: dropped lines come back as hidden bullets, sections
+  follow the PDF's order, bold words stay bold, a bare tech list moves into the project's technologies, and a
+  header that names its links ("LinkedIn") keeps that style.
 - **Write with AI.** No resume yet: write rough notes and AI drafts a first version from them.
 - **Tailoring.** Paste a job post or its URL. AI suggests changes drawn only from the person's own profile, and
   every change is shown for review before it is applied.
 - **ATS checker.** A rule-based score out of 100 for how applicant tracking systems read a resume, with the exact
   fixes, in the editor or on a free public page that needs no account.
-- **Versions.** Every save is a version, so any earlier state can be restored.
-- **Share links.** Public links at `shortlist.co.in/<username>/<slug>`, optionally password protected, with
-  view analytics (when, how often, where from).
+- **Editing details.** Ctrl+B or Cmd+B bolds selected words, links reorder with arrows, and the Layout menu
+  sets spacing, font size and how profile links show: icon and address, icon and name, or the address alone.
+- **Versions.** Every save is a version, so any earlier state can be restored. Two tabs editing the same resume
+  can't silently overwrite each other: the second save is rejected and the editor asks which version to keep.
+- **Share links.** Public links at `shortlist.co.in/<username>/<slug>`, one per company if you like, each with
+  its own view analytics (when, how often, which city, where from). A link can hide contact details, ask for a
+  password, expire, or stay pinned to the version you sent.
 - **Custom templates.** Save any resume or LaTeX file as a starting point.
 - **Bring your own key.** People can add their own OpenAI, Anthropic or OpenRouter key; AI limits then don't apply.
-- **Plans.** Free: unlimited resumes you write yourself, 1 AI-tailored resume a month and 1 AI draft. Season Pass
-  (₹499 for 6 months, 40 tailored a month) and Pro (₹129 a month, 60) raise the AI limits. Plans and billing has
-  its own page in the app, and every plan button opens Razorpay checkout directly.
+- **Plans.** Free: unlimited resumes you write yourself, 1 AI-tailored resume a month, 50 AI edits a month and
+  1 AI draft. An AI request that suggests no changes is not counted. Season Pass (₹499 for 6 months, 40 tailored
+  a month) and Pro (₹129 a month, 60) raise the AI limits. The app shows what is left in the sidebar and the AI
+  panel, and every plan button opens Razorpay checkout directly.
+- **Public site.** A page per template, resume guides and docs, all in the sitemap for search engines.
 - **Admin dashboard** at `/admin` for the emails in `ADMIN_EMAILS`: product numbers, users (with suspend, sign
   out and free plans), AI cost, revenue, content, PostHog traffic and system health.
 
@@ -71,7 +79,7 @@ error and everything else works.
 ```
 shortlist.co.in  ->  Vercel (frontend)
                         |  fetch with the session cookie (shared on .shortlist.co.in)
-api.shortlist.co.in  ->  VPS: existing Caddy (HTTPS)  ->  api  ->  Postgres
+api.shortlist.co.in  ->  VPS: shared Caddy (HTTPS)  ->  shortlist-api  ->  Postgres
                                                            |-> compiler (isolated, no internet)
                                                            |-> Cloudflare R2 (PDFs, uploads, backups)
                                                            |-> OpenAI, PostHog, Razorpay
@@ -79,7 +87,9 @@ api.shortlist.co.in  ->  VPS: existing Caddy (HTTPS)  ->  api  ->  Postgres
 ```
 
 - DNS is on Cloudflare, with every record set to DNS only.
-- The API shares the VPS and its Caddy with another app; see [backend/README.md](backend/README.md#deploy-to-the-vps).
+- The API shares the VPS and its Caddy with another app, over the `caddy-edge` network; Postgres and the
+  compiler sit on private networks. See [backend/README.md](backend/README.md#deploy-to-the-vps).
+- The API tells search engines to stay out (`robots.txt` and a `noindex` header), so only the website is indexed.
 - There is no Redis. Rate limits count in memory, scheduled jobs take Postgres advisory locks, and webhook
   de-duplication is a Postgres table.
 
@@ -87,8 +97,9 @@ api.shortlist.co.in  ->  VPS: existing Caddy (HTTPS)  ->  api  ->  Postgres
 
 - **Frontend:** Vercel builds every push to `main` (project root `frontend`).
 - **Backend:** `.github/workflows/deploy-backend.yml` runs on pushes to `main` that change `backend/`. It runs
-  typecheck, lint and tests, then connects to the VPS over SSH (pinned host key), pulls, rebuilds with Docker
-  Compose and checks `https://api.shortlist.co.in/health`. Frontend-only pushes never touch the VPS.
+  typecheck, lint and tests, then connects to the VPS over SSH (pinned host key), checks out the exact commit
+  that passed, rebuilds with Docker Compose and checks `https://api.shortlist.co.in/health`. Migrations run when
+  the API starts. Frontend-only pushes never touch the VPS.
 - **CI:** `.github/workflows/ci.yml` checks both apps on every push and pull request.
 - **Uptime:** `.github/workflows/uptime.yml` calls `https://api.shortlist.co.in/health/deep` (which also checks
   Postgres and the compiler) and the website every 5 minutes, and GitHub emails on a failed run.
@@ -103,6 +114,14 @@ timings. Links tagged with `utm_source` and `utm_campaign` show up per campaign,
 Traffic page. Session recordings mask all text and inputs. The admin dashboard reads PostHog back through the API, so
 the personal API key never reaches a browser.
 
+## Contributing
+
+Shortlist is open source and contributions are welcome: bug fixes, new templates, guides, accessibility and
+performance work. Start with [CONTRIBUTING.md](CONTRIBUTING.md), and look for issues labelled
+[`good first issue`](https://github.com/srvjha/shortlist/labels/good%20first%20issue).
+
+Found a security problem? Email support@shortlist.co.in instead of opening an issue.
+
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE). You can use, change and share the code; keep the copyright notice.

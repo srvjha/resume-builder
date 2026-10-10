@@ -15,7 +15,7 @@ import { ConflictError, NotFoundError } from "../../lib/errors.js";
 import { logger } from "../../lib/logger.js";
 import { razorpay } from "../../lib/razorpay.js";
 import { storage } from "../../lib/storage.js";
-import { isReservedUsername, isUsernameTaken } from "./usernames.js";
+import { isReservedUsername, isUsernameTaken, usernameCooldownEnd } from "./usernames.js";
 
 const meColumns = {
   id: users.id,
@@ -45,6 +45,16 @@ export async function updateMe(userId: string, changes: { name?: string | undefi
 
     if (changes.username && changes.username !== current.username) {
       const next = changes.username;
+      const [cooldown] = await tx
+        .select({ usernameChangedAt: users.usernameChangedAt })
+        .from(users)
+        .where(eq(users.id, userId));
+      const coolingDown = usernameCooldownEnd(cooldown!.usernameChangedAt);
+      if (coolingDown) {
+        throw new ConflictError(
+          `You can change your username again after ${coolingDown.toLocaleDateString("en-IN", { dateStyle: "long" })}.`,
+        );
+      }
       if (isReservedUsername(next)) throw new ConflictError("This username is reserved");
 
       // A user may take back one of their own old usernames.

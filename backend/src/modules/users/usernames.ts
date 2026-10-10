@@ -6,6 +6,15 @@ import { usernameRedirects, users } from "../../db/schema/index.js";
 // Must match the users_username_format check constraint.
 export const USERNAME_PATTERN = /^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])$/;
 
+const USERNAME_COOLDOWN_MS = 30 * 24 * 60 * 60 * 1000;
+
+// Renames reserve the old name, so renaming often would park many names. Null means the user may rename now.
+export function usernameCooldownEnd(changedAt: Date | null, now = new Date()) {
+  if (!changedAt) return null;
+  const end = new Date(changedAt.getTime() + USERNAME_COOLDOWN_MS);
+  return end > now ? end : null;
+}
+
 // Names that would clash with app routes on the frontend domain.
 // Every top-level frontend route must be listed, or that user's public page at /<username> is hidden.
 const RESERVED = new Set([

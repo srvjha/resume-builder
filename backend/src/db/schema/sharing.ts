@@ -54,5 +54,5 @@ export const linkViews = pgTable(
     city: text(),
     device: text(),
   },
-  (t) => [index().on(t.shareLinkId, t.viewedAt)],
+  (t) => [index().on(t.shareLinkId, t.viewedAt), index().on(t.viewedAt)],
 );

@@ -29,13 +29,17 @@ export const users = pgTable(
 
 // Old usernames keep redirecting to their owner so shared links don't break,
 // and stay reserved so nobody else can take them.
-export const usernameRedirects = pgTable("username_redirects", {
-  oldUsername: text().primaryKey(),
-  userId: uuid()
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  createdAt: createdAt(),
-});
+export const usernameRedirects = pgTable(
+  "username_redirects",
+  {
+    oldUsername: text().primaryKey(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: createdAt(),
+  },
+  (t) => [index().on(t.userId)],
+);
 
 export const sessions = pgTable(
   "sessions",

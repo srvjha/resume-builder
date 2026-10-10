@@ -32,7 +32,7 @@ export const shareLinks = pgTable(
     deletedAt: timestamp({ withTimezone: true }),
     ...timestamps,
   },
-  (t) => [uniqueIndex().on(t.userId, t.slug), index().on(t.resumeId)],
+  (t) => [uniqueIndex().on(t.userId, t.slug), index().on(t.resumeId), index().on(t.pinnedVersionId)],
 );
 
 // One row per view of a share link.

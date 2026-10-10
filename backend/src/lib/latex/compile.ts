@@ -21,6 +21,8 @@ const localCompile = env.COMPILER_URL
       concurrency: env.COMPILE_CONCURRENCY,
     });
 
+const unavailable = () => new AppError(502, "COMPILER_UNAVAILABLE", "The LaTeX compiler is unavailable. Try again.");
+
 async function remoteCompile(tex: string, signal?: AbortSignal) {
   const timeout = AbortSignal.timeout(env.COMPILE_TIMEOUT_MS + 5_000);
   const response = await fetch(`${env.COMPILER_URL}/compile`, {
@@ -28,6 +30,8 @@ async function remoteCompile(tex: string, signal?: AbortSignal) {
     headers: { "content-type": "text/plain; charset=utf-8" },
     body: tex,
     signal: signal ? AbortSignal.any([timeout, signal]) : timeout,
+  }).catch(() => {
+    throw unavailable();
   });
   if (response.status === 200) return { ok: true as const, pdf: Buffer.from(await response.arrayBuffer()) };
   if (response.status === 422) {
@@ -35,7 +39,7 @@ async function remoteCompile(tex: string, signal?: AbortSignal) {
     return { ok: false as const, errors: body.errors };
   }
   if (response.status === 413) throw new AppError(413, "PAYLOAD_TOO_LARGE", "The LaTeX source is too large");
-  throw new AppError(502, "COMPILER_UNAVAILABLE", "The LaTeX compiler is unavailable. Try again.");
+  throw unavailable();
 }
 
 async function pageCount(pdf: Buffer) {

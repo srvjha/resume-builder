@@ -43,9 +43,18 @@ async function pageCount(pdf: Buffer) {
   return doc.getPageCount();
 }
 
+// ponytail: failures are remembered in this process's memory only, so a restart or a second API process compiles
+// a bad source once more. Capped at 500 entries; oldest dropped first.
+const failures = new Map<string, { result: Extract<CompileResult, { ok: false }>; until: number }>();
+const failureTtlMs = 5 * 60_000;
+
 export async function compileTex(source: string, signal?: AbortSignal): Promise<CompileResult> {
   const tex = makeXetexCompatible(source);
-  const cacheKey = `compiled/${createHash("sha256").update(tex).digest("hex")}.pdf`;
+  const hash = createHash("sha256").update(tex).digest("hex");
+  const cacheKey = `compiled/${hash}.pdf`;
+
+  const failed = failures.get(hash);
+  if (failed && failed.until > Date.now()) return failed.result;
 
   const cachedPdf = await timed("cache_lookup_ms", () => storage.get(cacheKey));
   recordStep("compile_cached", Boolean(cachedPdf));
@@ -54,7 +63,11 @@ export async function compileTex(source: string, signal?: AbortSignal): Promise<
   const result = await timed("compile_ms", () =>
     localCompile ? localCompile(tex, signal) : remoteCompile(tex, signal),
   );
-  if (!result.ok) return result;
+  if (!result.ok) {
+    if (failures.size >= 500) failures.delete(failures.keys().next().value!);
+    failures.set(hash, { result, until: Date.now() + failureTtlMs });
+    return result;
+  }
 
   // Caching is for next time, so the response doesn't wait for the upload.
   storage.put(cacheKey, result.pdf, "application/pdf").catch((err: unknown) => {

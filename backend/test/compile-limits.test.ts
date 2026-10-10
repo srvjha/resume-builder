@@ -1,0 +1,55 @@
+import { readFile } from "node:fs/promises";
+import { describe, expect, it, vi } from "vitest";
+
+// A fake tectonic: counts runs in a file and fails on markers in the source, so no TeX install is needed.
+const fake = await vi.hoisted(async () => {
+  const { mkdtempSync, writeFileSync, chmodSync } = await import("node:fs");
+  const { join } = await import("node:path");
+  const { tmpdir } = await import("node:os");
+  const dir = mkdtempSync(join(tmpdir(), "rb-fake-tectonic-"));
+  const bin = join(dir, "tectonic");
+  const count = join(dir, "runs");
+  writeFileSync(
+    bin,
+    `#!/bin/sh
+echo x >> "${count}"
+if grep -q BIGLOG main.tex; then head -c 2000000 /dev/zero | tr '\\0' 'x'; echo; echo "error: main.tex:3: Boom"; exit 1; fi
+if grep -q BIGPDF main.tex; then head -c 11000000 /dev/zero > main.pdf; exit 0; fi
+echo "error: main.tex:3: Boom"
+exit 1
+`,
+  );
+  chmodSync(bin, 0o755);
+  return { bin, count };
+});
+
+vi.mock("../src/config/env.js", async (importOriginal) => ({
+  env: {
+    ...(await importOriginal<typeof import("../src/config/env.js")>()).env,
+    COMPILER_URL: undefined,
+    TECTONIC_BIN: fake.bin,
+    TECTONIC_ONLY_CACHED: false,
+    COMPILE_TIMEOUT_MS: 20_000,
+    COMPILE_CONCURRENCY: 2,
+  },
+}));
+vi.mock("../src/lib/storage.js", () => ({ storage: { get: async () => undefined, put: async () => {} } }));
+
+const { compileTex } = await import("../src/lib/latex/compile.js");
+const runs = () =>
+  readFile(fake.count, "utf8").then(
+    (s) => s.split("\n").length - 1,
+    () => 0,
+  );
+const doc = (text: string) => `\\documentclass{article}\\begin{document}${text}\\end{document}`;
+
+describe("compile failures", () => {
+  it("returns a repeat of a failing source from memory without running the compiler again", async () => {
+    const before = await runs();
+    const first = await compileTex(doc("BOOM"));
+    const second = await compileTex(doc("BOOM"));
+    expect(first.ok).toBe(false);
+    expect(second).toEqual(first);
+    expect((await runs()) - before).toBe(1);
+  });
+});

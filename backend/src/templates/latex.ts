@@ -27,8 +27,9 @@ export function texRich(value: string | undefined | null): string {
     .join("");
 }
 
+// TeX reads ^^5c as a backslash, so ^ is percent-encoded first (same meaning in a URL).
 export function texUrl(url: string): string {
-  return url.replace(/[\\%#{}]/g, (char) => `\\${char}`);
+  return url.replace(/\^/g, "%5E").replace(/[\\%#{}]/g, (char) => `\\${char}`);
 }
 
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];

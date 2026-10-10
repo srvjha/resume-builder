@@ -44,14 +44,16 @@ export const atsLimiter = limiter(10 * minute, 10);
 // Slows anyone guessing promo codes.
 export const redeemLimiter = limiter(10 * minute, 10);
 export const uploadLimiter = limiter(10 * minute, 20);
-// Counts only wrong share-link passwords, per link, so a crowd of visitors cannot brute-force one link.
+// Counts only wrong share-link and contact passwords, per link, so a crowd of visitors cannot brute-force one link.
+// A wrong contact password still answers 200 with the contacts locked, so the route flags it in res.locals.
 export const sharePasswordLimiter = rateLimit({
   windowMs: 15 * minute,
   limit: 10,
   standardHeaders: "draft-8",
   legacyHeaders: false,
   skipSuccessfulRequests: true,
-  skip: (req: Request) => !req.get("x-share-password"),
+  requestWasSuccessful: (_req, res) => res.statusCode < 400 && !res.locals.wrongPassword,
+  skip: (req: Request) => !req.get("x-share-password") && !req.get("x-share-contact-password"),
   keyGenerator: (req: Request) => `${req.params.username}/${req.params.slug}`.toLowerCase(),
   handler: (_req, res) => {
     res

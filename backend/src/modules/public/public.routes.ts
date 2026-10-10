@@ -53,6 +53,7 @@ publicRouter.get(
       req.get("x-share-contact-password"),
       viewerFrom(req),
     );
+    if (req.get("x-share-contact-password") && data.contactLocked) res.locals.wrongPassword = true;
     if (!isListed) res.set("X-Robots-Tag", "noindex, nofollow");
     sendData(res, publicResumeResponse, data);
   }),
@@ -63,12 +64,13 @@ publicRouter.get(
   sharePasswordLimiter,
   ...validated({ params: publicResumeParams }, async (req, res) => {
     const { username, slug } = req.params;
-    const { resume, version, isListed } = await service.getPublicResumeForPdf(
+    const { resume, version, isListed, contact } = await service.getPublicResumeForPdf(
       username,
       slug,
       req.get("x-share-password"),
       req.get("x-share-contact-password"),
     );
+    if (req.get("x-share-contact-password") && contact === "locked") res.locals.wrongPassword = true;
     const { pdf, pageCount } = await compileOrThrow(texForVersion(resume, version));
     if (!isListed) res.set("X-Robots-Tag", "noindex, nofollow");
     sendPdf(res, pdf, pdfFileName(version.content?.basics.name, resume.title), pageCount);

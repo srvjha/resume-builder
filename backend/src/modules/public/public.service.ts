@@ -185,6 +185,6 @@ export async function getPublicResumeForPdf(
   password: string | undefined,
   contactPassword: string | undefined,
 ) {
-  const { resume, version, link } = await resolveLink(username, slug, password, contactPassword);
-  return { resume, version, isListed: link.isListed };
+  const { resume, version, link, contact } = await resolveLink(username, slug, password, contactPassword);
+  return { resume, version, isListed: link.isListed, contact };
 }

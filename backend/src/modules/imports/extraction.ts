@@ -350,21 +350,23 @@ export function applyBold(content: ResumeContent, phrases: string[]): ResumeCont
   const usable = phrases.filter((p) => p.length > 1 && !p.includes("*")).sort((a, b) => b.length - a.length);
   if (usable.length === 0) return content;
   const pattern = new RegExp(`(?<![\\p{L}\\p{N}])(${usable.map(escapeRegex).join("|")})(?![\\p{L}\\p{N}])`, "gu");
-  const bold = (text: string) =>
-    text
+  const bold = (text: string, max: number) => {
+    const bolded = text
       .split(/(\*\*[^*]+\*\*)/)
       .map((part) => (part.startsWith("**") ? part : part.replace(pattern, "**$1**")))
       .join("");
+    return bolded.length > max ? text : bolded;
+  };
   return {
     ...content,
     sections: content.sections.map((section) => {
-      if (section.type === "summary") return { ...section, text: bold(section.text) };
+      if (section.type === "summary") return { ...section, text: bold(section.text, 1000) };
       if (!("entries" in section)) return section;
       return {
         ...section,
         entries: section.entries.map((entry) => ({
           ...entry,
-          bullets: entry.bullets.map((bullet) => ({ ...bullet, text: bold(bullet.text) })),
+          bullets: entry.bullets.map((bullet) => ({ ...bullet, text: bold(bullet.text, 600) })),
         })),
       } as typeof section;
     }),

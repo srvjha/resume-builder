@@ -36,4 +36,12 @@ describe("bold from the PDF", () => {
       "Shipped on **Apache Kafka**",
     );
   });
+
+  it("leaves a bullet unchanged when bolding would push it past 600 characters", () => {
+    const text = `Redis ${"x".repeat(592)}`;
+    expect(text).toHaveLength(598);
+    const result = bullet(applyBold(content(text), ["Redis"]));
+    expect(result).toBe(text);
+    expect(result.length).toBeLessThanOrEqual(600);
+  });
 });

@@ -131,7 +131,7 @@ First setup:
 2. Point DNS for `api.shortlist.co.in` at the server (an `A` record, DNS only if the domain is on Cloudflare).
 3. Clone only the backend:
    ```sh
-   git clone --filter=blob:none --sparse https://github.com/srvjha/resume-builder.git ~/shortlist
+   git clone --filter=blob:none --sparse https://github.com/srvjha/shortlist.git ~/shortlist
    cd ~/shortlist && git sparse-checkout set backend && cd backend
    ```
 4. Create `.env.production` from `.env.example` with production values (`NODE_ENV=production`,

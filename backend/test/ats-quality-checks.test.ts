@@ -71,9 +71,21 @@ describe("file checks", () => {
     expect(checkOf(scoreResume(file("a.pdf", 3_000_000)), "file-size")!.status).toBe("fail");
     expect(checkOf(scoreResume(file("a.pdf", 100_000, 4)), "word-count")!.status).toBe("fail");
     expect(checkOf(scoreResume(file("a.pdf", 100_000, 4)), "word-count")!.detail).toMatch(/^4 pages/);
-    const links = checkOf(scoreResume(file("a.pdf", 100_000, 1, ["https://aarav.dev"])), "hidden-links")!;
-    expect(links.status).toBe("warn");
-    expect(links.lines).toEqual([{ text: "https://aarav.dev" }]);
+  });
+
+  it("counts a link behind a word or icon as present, like the editor does", () => {
+    const report = scoreResume({
+      text: `${resume(roles)}\nLinkedIn | GitHub`,
+      file: {
+        name: "Aarav-Sharma-Resume.pdf",
+        sizeBytes: 100_000,
+        pages: 1,
+        hiddenLinks: ["https://linkedin.com/in/aarav", "https://github.com/aarav"],
+      },
+    });
+    expect(checkOf(report, "hidden-links")).toBeUndefined();
+    expect(checkOf(report, "linkedin")!.status).toBe("pass");
+    expect(checkOf(report, "links")!.status).toBe("pass");
   });
 
   it("finds text too small to see or outside the page", () => {

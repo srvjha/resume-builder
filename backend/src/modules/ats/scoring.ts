@@ -208,6 +208,8 @@ function factsFromText(raw: string): Facts {
   };
 }
 
+const isLinkedInUrl = (url: string) => /(^|\.)linkedin\.com$/i.test(URL.parse(url)?.hostname ?? "");
+
 function factsFromContent(full: ResumeContent): Facts {
   const content = visibleContent(full);
   const strip = (value: string) => value.replace(/\*\*/g, "");
@@ -279,7 +281,7 @@ function factsFromContent(full: ResumeContent): Facts {
   }
 
   const text = lines.join("\n").trim();
-  const isLinkedIn = (url: string) => /(^|\.)linkedin\.com$/i.test(URL.parse(url)?.hostname ?? "");
+  const isLinkedIn = isLinkedInUrl;
   return {
     text,
     structured: true,
@@ -493,19 +495,6 @@ function fileChecks(file: PdfFile): Check[] {
       `${mb < 0.1 ? `${Math.max(1, Math.round(file.sizeBytes / 1024))} KB` : `${mb.toFixed(1)} MB`}.`,
       "Keep the PDF under 1 MB. Some ATS reject files over 2 MB, and large files usually mean images or embedded fonts a parser can't read anyway. Export again without photos or background images.",
     ),
-    ...(file.hiddenLinks.length > 0
-      ? [
-          check(
-            "hidden-links",
-            "Links written out",
-            2,
-            "warn",
-            `${plural(file.hiddenLinks.length, "link")} sit behind a word or icon, so a parser that reads only text never sees ${file.hiddenLinks.length === 1 ? "it" : "them"}.`,
-            'Write links out where they can be read, like linkedin.com/in/your-name or github.com/you, instead of hiding them behind an icon or a word like "Portfolio".',
-            file.hiddenLinks.map((url) => lineOf(url)),
-          ),
-        ]
-      : [check("hidden-links", "Links written out", 2, "pass", "Every link is written out as text.", "")]),
   ];
 }
 
@@ -1039,6 +1028,11 @@ export function scoreResume(input: {
   pdf?: { items: TextItem[]; page: { width: number; height: number } } | null;
 }): AtsReport {
   const facts = input.content ? factsFromContent(input.content) : factsFromText(input.text ?? "");
+  // A link behind a word or icon ("LinkedIn", a GitHub logo) counts as present, as it does for resumes made here:
+  // recruiters click it in the PDF.
+  const behind = (input.file?.hiddenLinks ?? []).filter((url) => /^https?:/i.test(url));
+  if (behind.some(isLinkedInUrl)) facts.contact.linkedin = true;
+  if (behind.some((url) => !isLinkedInUrl(url))) facts.contact.otherLink = true;
   const { parse } = input;
   const match = input.jobText ? jobMatch(facts, input.jobText) : null;
   // A job with no skills found is scored as if there were none, so it can't drag the score down.

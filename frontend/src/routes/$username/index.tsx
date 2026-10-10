@@ -1,9 +1,15 @@
-import { Link, createFileRoute, notFound } from '@tanstack/react-router'
+import {
+  Link,
+  createFileRoute,
+  notFound,
+  redirect,
+} from '@tanstack/react-router'
 import { FileTextIcon, LockIcon } from 'lucide-react'
 import { PublicMessage, PublicShell } from '@/components/public/public-shell'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { fetchPublicProfile } from '@/lib/public-api'
 import { formatDate } from '@/lib/format'
+import { site } from '@/lib/site'
 
 export const Route = createFileRoute('/$username/')({
   loader: async ({ params }) => {
@@ -11,6 +17,16 @@ export const Route = createFileRoute('/$username/')({
       data: { username: params.username },
     })
     if (outcome.status === 'not_found') throw notFound()
+    // Old usernames still work; move the visitor to the current address.
+    if (
+      outcome.status === 'ok' &&
+      outcome.data.username !== params.username.toLowerCase()
+    )
+      throw redirect({
+        to: '/$username',
+        params: { username: outcome.data.username },
+        statusCode: 301,
+      })
     return outcome
   },
   head: ({ loaderData }) => {
@@ -28,6 +44,14 @@ export const Route = createFileRoute('/$username/')({
           ? []
           : [{ name: 'robots', content: 'noindex, nofollow' }]),
       ],
+      links: ok
+        ? [
+            {
+              rel: 'canonical',
+              href: `${site.url}/${loaderData.data.username}`,
+            },
+          ]
+        : [],
     }
   },
   component: ProfilePage,

@@ -10,6 +10,8 @@ const redacted = [
   '["x-share-contact-password"]',
   '["x-razorpay-signature"]',
   '["x-share-visitor"]',
+  '["x-shortlist-proxy"]',
+  '["x-shortlist-client-ip"]',
   '["x-forwarded-for"]',
   '["x-real-ip"]',
   '["cf-connecting-ip"]',

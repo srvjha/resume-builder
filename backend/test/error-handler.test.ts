@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { describe, expect, it } from "vitest";
+import multer from "multer";
 import { errorHandler } from "../src/middleware/error-handler.js";
 
 function run(err: unknown) {
@@ -36,5 +37,12 @@ describe("errorHandler", () => {
   it("still answers other errors with 500", () => {
     const result = run(new Error("boom"));
     expect(result.status).toBe(500);
+  });
+
+  it("answers every multer error with 400", () => {
+    const tooBig = run(new multer.MulterError("LIMIT_FILE_SIZE"));
+    expect(tooBig.status).toBe(400);
+    expect(tooBig.body).toEqual({ error: { code: "UPLOAD_ERROR", message: "Files can be at most 5 MB" } });
+    expect(run(new multer.MulterError("LIMIT_UNEXPECTED_FILE")).status).toBe(400);
   });
 });

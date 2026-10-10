@@ -43,6 +43,7 @@ export const aiLimiter = limiter(minute, 10);
 export const atsLimiter = limiter(10 * minute, 10);
 // Slows anyone guessing promo codes.
 export const redeemLimiter = limiter(10 * minute, 10);
+export const uploadLimiter = limiter(10 * minute, 20);
 // Counts only wrong share-link passwords, per link, so a crowd of visitors cannot brute-force one link.
 export const sharePasswordLimiter = rateLimit({
   windowMs: 15 * minute,

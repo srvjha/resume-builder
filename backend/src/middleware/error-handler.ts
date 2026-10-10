@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
+import multer from "multer";
 import { AppError } from "../lib/errors.js";
 
 function hasType(err: unknown): err is { type: string } {
@@ -29,6 +30,13 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
   }
   if (hasType(err) && err.type === "entity.too.large") {
     res.status(413).json({ error: { code: "PAYLOAD_TOO_LARGE", message: "Request body is too large" } });
+    return;
+  }
+
+  // Upload problems, such as a file over the size limit or a wrong field name.
+  if (err instanceof multer.MulterError) {
+    const message = err.code === "LIMIT_FILE_SIZE" ? "Files can be at most 5 MB" : err.message;
+    res.status(400).json({ error: { code: "UPLOAD_ERROR", message } });
     return;
   }
 

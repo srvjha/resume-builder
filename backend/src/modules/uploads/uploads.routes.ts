@@ -2,6 +2,7 @@ import { Router } from "express";
 import multer from "multer";
 import { AppError } from "../../lib/errors.js";
 import { sendData } from "../../lib/http.js";
+import { uploadLimiter } from "../../middleware/rate-limit.js";
 import { currentUser, requireAuth } from "../../middleware/require-auth.js";
 import { validated } from "../../middleware/validate.js";
 import { uploadParams, uploadResponse } from "./uploads.schemas.js";
@@ -11,22 +12,10 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: MAX
 
 export const uploadsRouter = Router();
 
-uploadsRouter.post(
-  "/uploads",
-  requireAuth,
-  (req, res, next) => {
-    upload.single("file")(req, res, (err) => {
-      if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") {
-        return next(new AppError(413, "PAYLOAD_TOO_LARGE", "Files can be at most 5 MB"));
-      }
-      next(err);
-    });
-  },
-  async (req, res) => {
-    if (!req.file) throw new AppError(400, "FILE_REQUIRED", 'Send the file in a multipart field named "file"');
-    sendData(res, uploadResponse, await createUpload(currentUser(req).id, req.file), 201);
-  },
-);
+uploadsRouter.post("/uploads", requireAuth, uploadLimiter, upload.single("file"), async (req, res) => {
+  if (!req.file) throw new AppError(400, "FILE_REQUIRED", 'Send the file in a multipart field named "file"');
+  sendData(res, uploadResponse, await createUpload(currentUser(req).id, req.file), 201);
+});
 
 uploadsRouter.get(
   "/uploads/:uploadId",

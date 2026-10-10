@@ -9,6 +9,7 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 import { env } from "../config/env.js";
+import { logger } from "./logger.js";
 
 export interface Storage {
   put(key: string, body: Buffer, contentType: string): Promise<void>;
@@ -85,6 +86,30 @@ function r2Storage(): Storage {
     endpoint: `https://${env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
     credentials: { accessKeyId: env.R2_ACCESS_KEY_ID!, secretAccessKey: env.R2_SECRET_ACCESS_KEY! },
   });
+  // DeleteObjects reports per-key failures in its response instead of throwing, so each one is logged here.
+  // Returns how many keys failed.
+  async function deleteKeys(keys: string[]) {
+    if (keys.length === 0) return 0;
+    const { Errors = [] } = await client.send(
+      new DeleteObjectsCommand({ Bucket: bucket, Delete: { Objects: keys.map((Key) => ({ Key })) } }),
+    );
+    for (const error of Errors) {
+      logger.error({ key: error.Key, code: error.Code, message: error.Message }, "Could not delete storage object");
+    }
+    return Errors.length;
+  }
+  async function listPages(prefix: string, visit: (objects: { key: string; modifiedAt: Date }[]) => Promise<void>) {
+    let token: string | undefined;
+    do {
+      const page = await client.send(
+        new ListObjectsV2Command({ Bucket: bucket, Prefix: prefix, ContinuationToken: token }),
+      );
+      await visit(
+        (page.Contents ?? []).map((object) => ({ key: object.Key!, modifiedAt: object.LastModified ?? new Date(0) })),
+      );
+      token = page.IsTruncated ? page.NextContinuationToken : undefined;
+    } while (token);
+  }
   return {
     async put(key, body, contentType) {
       await client.send(new PutObjectCommand({ Bucket: bucket, Key: key, Body: body, ContentType: contentType }));
@@ -100,37 +125,23 @@ function r2Storage(): Storage {
     },
     async deletePrefix(prefix) {
       assertDeletablePrefix(prefix);
-      let token: string | undefined;
-      do {
-        const page = await client.send(
-          new ListObjectsV2Command({ Bucket: bucket, Prefix: prefix, ContinuationToken: token }),
-        );
-        const keys = (page.Contents ?? []).map((object) => ({ Key: object.Key! }));
-        if (keys.length > 0) {
-          await client.send(new DeleteObjectsCommand({ Bucket: bucket, Delete: { Objects: keys } }));
-        }
-        token = page.IsTruncated ? page.NextContinuationToken : undefined;
-      } while (token);
+      let failed = 0;
+      await listPages(prefix, async (objects) => {
+        failed += await deleteKeys(objects.map((object) => object.key));
+      });
+      if (failed > 0) throw new Error(`${failed} storage objects under ${prefix} could not be deleted`);
     },
     async deleteOlder(prefix, cutoff) {
       assertDeletablePrefix(prefix);
       let deleted = 0;
-      let token: string | undefined;
-      do {
-        const page = await client.send(
-          new ListObjectsV2Command({ Bucket: bucket, Prefix: prefix, ContinuationToken: token }),
-        );
-        const objects = (page.Contents ?? []).map((object) => ({
-          key: object.Key!,
-          modifiedAt: object.LastModified ?? new Date(0),
-        }));
-        const stale = staleKeys(objects, cutoff).map((key) => ({ Key: key }));
-        if (stale.length > 0) {
-          await client.send(new DeleteObjectsCommand({ Bucket: bucket, Delete: { Objects: stale } }));
-          deleted += stale.length;
-        }
-        token = page.IsTruncated ? page.NextContinuationToken : undefined;
-      } while (token);
+      let failed = 0;
+      await listPages(prefix, async (objects) => {
+        const stale = staleKeys(objects, cutoff);
+        const failedNow = await deleteKeys(stale);
+        deleted += stale.length - failedNow;
+        failed += failedNow;
+      });
+      if (failed > 0) throw new Error(`${failed} stale storage objects under ${prefix} could not be deleted`);
       return deleted;
     },
     async latest(prefix) {

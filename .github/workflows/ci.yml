@@ -26,6 +26,12 @@ jobs:
           cache: pnpm
           cache-dependency-path: backend/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
+      # Same Tectonic version as backend/Dockerfile, so the LaTeX tests run the compiler production uses.
+      - name: Install Tectonic
+        run: |
+          curl -fsSL "https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%400.17.0/tectonic-0.17.0-x86_64-unknown-linux-musl.tar.gz" \
+            | sudo tar -xz -C /usr/local/bin tectonic
+          tectonic --version
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm test

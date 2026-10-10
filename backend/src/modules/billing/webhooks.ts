@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq, ne } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { payments, subscriptions, webhookEvents } from "../../db/schema/index.js";
 import { logger } from "../../lib/logger.js";
@@ -51,7 +51,7 @@ async function onPaymentCaptured(
     .where(eq(payments.id, row.id));
 
   if (row.subscriptionId) {
-    // A new Season Pass extends any time left on a current one.
+    // A new Season Pass extends the latest-ending current one.
     const [current] = await tx
       .select({ end: subscriptions.currentPeriodEnd })
       .from(subscriptions)
@@ -62,7 +62,8 @@ async function onPaymentCaptured(
           eq(subscriptions.status, "active"),
         ),
       )
-      .orderBy(subscriptions.currentPeriodEnd);
+      .orderBy(desc(subscriptions.currentPeriodEnd))
+      .limit(1);
     const start = current?.end && current.end > new Date() ? current.end : new Date();
     const end = new Date(start);
     end.setMonth(end.getMonth() + SEASON_PASS_MONTHS);
@@ -144,7 +145,10 @@ async function applyEvent(tx: Tx, event: RazorpayEvent) {
         await tx
           .update(payments)
           .set({ status: "failed", raw: event })
-          .where(eq(payments.razorpayOrderId, event.payload.payment.entity.order_id));
+          // Retries share an order, and Razorpay may deliver an earlier failure after the capture.
+          .where(
+            and(eq(payments.razorpayOrderId, event.payload.payment.entity.order_id), ne(payments.status, "captured")),
+          );
       }
       return null;
     case "refund.processed": {

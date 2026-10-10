@@ -34,6 +34,7 @@ jobs:
           tectonic --version
       - run: pnpm typecheck
       - run: pnpm lint
+      - run: pnpm format:check
       - run: pnpm test
 
   frontend:
@@ -54,4 +55,5 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec tsc --noEmit
       - run: pnpm lint
+      - run: pnpm check
       - run: pnpm build

@@ -594,7 +594,9 @@ function jobSentences(jobText: string) {
       continue;
     }
     if (kind === "blurb") continue;
-    for (const text of line.split(/(?<=[.!?;])\s+(?=[A-Z0-9])/)) out.push({ text: text.trim(), kind });
+    // Long run-ons are cut into 400-character pieces: the rules' [^.]* patterns backtrack badly on huge sentences.
+    for (const text of line.split(/(?<=[.!?;])\s+(?=[A-Z0-9])/))
+      for (const piece of text.match(/[^]{1,400}/g) ?? []) out.push({ text: piece.trim(), kind });
   }
   // With requirement headings, their sentences win over the same requirement mentioned elsewhere.
   return sectioned ? [...out.filter((s) => s.kind !== "other"), ...out.filter((s) => s.kind === "other")] : out;

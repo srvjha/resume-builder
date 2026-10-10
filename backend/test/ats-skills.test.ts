@@ -104,3 +104,13 @@ describe("title match", () => {
     expect(titleMatch(["Designer"], "About us").jobTitle).toBeNull();
   });
 });
+
+describe("long skill lists", () => {
+  it("vouches through a whole list in linear time", () => {
+    const text = "C, ".repeat(16_600) + "C programming";
+    const started = performance.now();
+    expect(skills(text)).toEqual(["C"]);
+    expect(skills("Plan C, Go, R and C programming")).toEqual(["C", "Go", "R"]);
+    expect(performance.now() - started).toBeLessThan(1000);
+  });
+});

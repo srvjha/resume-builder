@@ -14,9 +14,12 @@ export const bulletSchema = z.object({
   hidden: z.boolean().default(false),
 });
 
+// Links render as <a href> on share pages and \href in PDFs, so only web and mail links are allowed.
+const webUrl = z.url({ protocol: /^(https?|mailto)$/ });
+
 const linkSchema = z.object({
   label: z.string().trim().max(40),
-  url: z.url(),
+  url: webUrl,
   // Masked before the URL is sent to an AI model.
   sensitive: z.boolean().optional(),
 });
@@ -55,7 +58,7 @@ const educationEntry = z.object({
 const projectEntry = z.object({
   ...entryBase,
   name: shortText,
-  url: z.url().optional(),
+  url: webUrl.optional(),
   // Extra labelled links shown after the title, e.g. "Live" and "Github".
   links: z.array(linkSchema).max(5).default([]),
   technologies: z.array(z.string().trim().max(40)).max(20).default([]),
@@ -69,7 +72,7 @@ const genericEntry = z.object({
   title: shortText,
   subtitle: shortText.optional(),
   date: z.string().trim().max(40).optional(),
-  url: z.url().optional(),
+  url: webUrl.optional(),
 });
 
 const skillGroup = z.object({

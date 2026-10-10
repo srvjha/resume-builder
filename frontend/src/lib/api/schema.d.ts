@@ -3250,6 +3250,8 @@ export interface paths {
                     "application/json": {
                         /** @constant */
                         kind: "manual";
+                        /** Format: uuid */
+                        baseVersionId?: string;
                         content?: {
                             basics: {
                                 name: string;

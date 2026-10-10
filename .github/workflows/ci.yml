@@ -26,6 +26,14 @@ jobs:
           cache: pnpm
           cache-dependency-path: backend/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
+      # Dummy values: the spec generator loads the env schema but never connects to either.
+      - name: Check openapi.json is up to date
+        env:
+          DATABASE_URL: postgres://ci:ci@localhost:5432/ci
+          BETTER_AUTH_SECRET: ci-only-dummy-secret-not-used-at-runtime-0000
+        run: |
+          pnpm openapi
+          git diff --exit-code openapi.json
       # Same Tectonic version as backend/Dockerfile, so the LaTeX tests run the compiler production uses.
       - name: Install Tectonic
         run: |
@@ -53,6 +61,10 @@ jobs:
           cache: pnpm
           cache-dependency-path: frontend/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
+      - name: Check schema.d.ts is up to date
+        run: |
+          pnpm api:types
+          git diff --exit-code src/lib/api/schema.d.ts
       - run: pnpm exec tsc --noEmit
       - run: pnpm lint
       - run: pnpm check

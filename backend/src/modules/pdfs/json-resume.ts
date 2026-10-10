@@ -15,56 +15,68 @@ export function toJsonResume(content: ResumeContent) {
   };
   const bullets = (items: { text: string; hidden: boolean }[]) =>
     items.filter((b) => !b.hidden).map((b) => b.text.replace(/\*\*/g, ""));
+  // A resume can have several sections of one type ("Experience" and "Internships"), so each one appends.
+  const add = (key: string, items: unknown[]) => (out[key] = [...((out[key] as unknown[]) ?? []), ...items]);
 
   for (const section of content.sections) {
     if (section.hidden) continue;
     switch (section.type) {
       case "experience":
-        out.work = section.entries
-          .filter((e) => !e.hidden)
-          .map((e) => ({
-            name: e.organization,
-            position: e.role,
-            location: e.location,
-            startDate: e.start,
-            endDate: e.end === "present" ? undefined : e.end,
-            highlights: bullets(e.bullets),
-          }));
+        add(
+          "work",
+          section.entries
+            .filter((e) => !e.hidden)
+            .map((e) => ({
+              name: e.organization,
+              position: e.role,
+              location: e.location,
+              startDate: e.start,
+              endDate: e.end === "present" ? undefined : e.end,
+              highlights: bullets(e.bullets),
+            })),
+        );
         break;
       case "education":
-        out.education = section.entries
-          .filter((e) => !e.hidden)
-          .map((e) => ({
-            institution: e.institution,
-            studyType: e.degree,
-            area: e.field,
-            score: e.score,
-            startDate: e.start,
-            endDate: e.end === "present" ? undefined : e.end,
-          }));
+        add(
+          "education",
+          section.entries
+            .filter((e) => !e.hidden)
+            .map((e) => ({
+              institution: e.institution,
+              studyType: e.degree,
+              area: e.field,
+              score: e.score,
+              startDate: e.start,
+              endDate: e.end === "present" ? undefined : e.end,
+            })),
+        );
         break;
       case "projects":
-        out.projects = section.entries
-          .filter((e) => !e.hidden)
-          .map((e) => ({
-            name: e.name,
-            url: e.url ?? e.links[0]?.url,
-            keywords: e.technologies,
-            startDate: e.start,
-            endDate: e.end === "present" ? undefined : e.end,
-            highlights: bullets(e.bullets),
-          }));
+        add(
+          "projects",
+          section.entries
+            .filter((e) => !e.hidden)
+            .map((e) => ({
+              name: e.name,
+              url: e.url ?? e.links[0]?.url,
+              keywords: e.technologies,
+              startDate: e.start,
+              endDate: e.end === "present" ? undefined : e.end,
+              highlights: bullets(e.bullets),
+            })),
+        );
         break;
       case "skills":
-        out.skills = section.groups.map((group) => ({ name: group.name, keywords: group.items }));
+        add(
+          "skills",
+          section.groups.map((group) => ({ name: group.name, keywords: group.items })),
+        );
         break;
       case "list":
-        out.awards = [
-          ...((out.awards as unknown[]) ?? []),
-          ...section.entries
-            .filter((e) => !e.hidden)
-            .map((e) => ({ title: e.title, summary: e.subtitle, date: e.date })),
-        ];
+        add(
+          "awards",
+          section.entries.filter((e) => !e.hidden).map((e) => ({ title: e.title, summary: e.subtitle, date: e.date })),
+        );
         break;
       case "summary":
         (out.basics as { summary?: string | undefined }).summary = section.text || undefined;

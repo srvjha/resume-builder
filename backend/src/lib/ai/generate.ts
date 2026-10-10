@@ -90,7 +90,13 @@ export async function generateStructured<S extends z.ZodType>(
         "AI generation failed on user key",
       );
     } else {
-      logger.error({ err, step: input.step, model: base.model }, "AI generation failed");
+      // Not the whole error: APICallError carries the request body (resume, profile, PDF) as a field.
+      const { name, message, stack } = err instanceof Error ? err : new Error(String(err));
+      const status = APICallError.isInstance(err) ? err.statusCode : undefined;
+      logger.error(
+        { err: { name, message, stack }, status, step: input.step, model: base.model },
+        "AI generation failed",
+      );
     }
     await db.insert(aiRuns).values({
       ...base,

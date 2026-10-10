@@ -8,6 +8,7 @@ import { db } from "../db/index.js";
 import * as schema from "../db/schema/index.js";
 import { generateUsername } from "../modules/users/usernames.js";
 import { track } from "./analytics.js";
+import { withoutIp } from "./session-ip.js";
 
 const socialProviders = {
   ...(env.GOOGLE_CLIENT_ID &&
@@ -73,6 +74,7 @@ export const auth = betterAuth({
             .from(schema.users)
             .where(eq(schema.users.id, session.userId));
           if (user?.suspendedAt) throw new APIError("FORBIDDEN", { message: "This account is suspended" });
+          return { data: withoutIp(session) };
         },
       },
     },

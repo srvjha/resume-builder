@@ -5,6 +5,15 @@ function hasType(err: unknown): err is { type: string } {
   return typeof err === "object" && err !== null && "type" in err;
 }
 
+function hasCode(err: unknown, code: string): boolean {
+  return typeof err === "object" && err !== null && "code" in err && err.code === code;
+}
+
+function isUniqueViolation(err: unknown): boolean {
+  const cause = typeof err === "object" && err !== null && "cause" in err ? err.cause : undefined;
+  return hasCode(err, "23505") || hasCode(cause, "23505");
+}
+
 export function errorHandler(err: unknown, req: Request, res: Response, _next: NextFunction) {
   if (err instanceof AppError) {
     res.status(err.status).json({
@@ -20,6 +29,14 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
   }
   if (hasType(err) && err.type === "entity.too.large") {
     res.status(413).json({ error: { code: "PAYLOAD_TOO_LARGE", message: "Request body is too large" } });
+    return;
+  }
+
+  // A unique constraint lost a race, such as two requests taking the same username or slug (Postgres 23505).
+  if (isUniqueViolation(err)) {
+    res.status(409).json({
+      error: { code: "CONFLICT", message: "That already exists. Try a different name, or refresh and try again." },
+    });
     return;
   }
 

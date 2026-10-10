@@ -30,6 +30,7 @@ import {
 import { track } from "../../lib/analytics.js";
 
 type CreateInput = z.infer<typeof createSuggestionBody>;
+type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 const rules = `Rules you must follow:
 - Never invent facts. Don't add employers, titles, dates, numbers, metrics, tools or skills that don't appear in
@@ -208,8 +209,14 @@ export async function createSuggestion(userId: string, resumeId: string, input: 
   return toResponse(run!);
 }
 
-async function getOwnedSuggestionRun(userId: string, resumeId: string, suggestionId: string) {
-  const [run] = await db
+async function getOwnedSuggestionRun(
+  userId: string,
+  resumeId: string,
+  suggestionId: string,
+  executor: Tx | typeof db = db,
+  lock = false,
+) {
+  const query = executor
     .select()
     .from(aiRuns)
     .where(
@@ -221,6 +228,8 @@ async function getOwnedSuggestionRun(userId: string, resumeId: string, suggestio
       ),
     )
     .limit(1);
+  // Row lock: a concurrent apply waits here until this transaction commits, then sees versionId set.
+  const [run] = lock ? await query.for("update") : await query;
   if (!run) throw new NotFoundError("Suggestion");
   return run;
 }
@@ -249,7 +258,7 @@ export async function listSuggestions(userId: string, resumeId: string) {
 export async function applySuggestion(userId: string, resumeId: string, suggestionId: string, acceptedIds: string[]) {
   const version = await db.transaction(async (tx) => {
     const resume = await getOwnedResume(userId, resumeId, tx);
-    const run = await getOwnedSuggestionRun(userId, resumeId, suggestionId);
+    const run = await getOwnedSuggestionRun(userId, resumeId, suggestionId, tx, true);
     if (run.versionId) throw new ConflictError("This suggestion was already applied");
 
     const suggestion = toResponse(run);

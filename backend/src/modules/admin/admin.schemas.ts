@@ -147,7 +147,6 @@ export const adminUserResponse = z.object({
       updatedAt: z.date(),
       expiresAt: z.date(),
       userAgent: z.string().nullable(),
-      ipAddress: z.string().nullable(),
     }),
   ),
   shareLinks: int,

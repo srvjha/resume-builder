@@ -115,7 +115,9 @@ export async function exportMyData(userId: string) {
     profile: profile?.data ?? null,
     resumes: resumeRows.map((resume) => ({ ...resume, versions: versions.filter((v) => v.resumeId === resume.id) })),
     jobs: jobRows,
-    shareLinks: links.map(({ passwordHash: _passwordHash, ...link }) => link),
+    shareLinks: links.map(
+      ({ passwordHash: _passwordHash, contactPasswordHash: _contactPasswordHash, ...link }) => link,
+    ),
     uploads: uploadRows,
     subscriptions: subscriptionRows,
   };

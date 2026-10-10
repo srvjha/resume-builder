@@ -18,6 +18,14 @@ export interface Storage {
   latest(prefix: string): Promise<{ key: string; sizeBytes: number; modifiedAt: Date } | null>;
 }
 
+// An empty prefix matches every key, and the database backups live in the same bucket.
+export function assertDeletablePrefix(prefix: string): void {
+  const trimmed = prefix.trim();
+  if (trimmed === "" || /^\/+$/.test(trimmed)) {
+    throw new Error("Refusing to delete with an empty storage prefix");
+  }
+}
+
 function localStorage(root: string): Storage {
   const pathFor = (key: string) => {
     const path = resolve(root, key);
@@ -39,6 +47,7 @@ function localStorage(root: string): Storage {
       }
     },
     async deletePrefix(prefix) {
+      assertDeletablePrefix(prefix);
       await rm(pathFor(prefix), { recursive: true, force: true });
     },
     async latest(prefix) {
@@ -73,6 +82,7 @@ function r2Storage(): Storage {
       }
     },
     async deletePrefix(prefix) {
+      assertDeletablePrefix(prefix);
       let token: string | undefined;
       do {
         const page = await client.send(

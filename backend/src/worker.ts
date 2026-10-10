@@ -29,7 +29,11 @@ function isDue(schedule: Schedule, now: Date) {
 
 // A Postgres advisory lock per task, so two workers never run the same task at once.
 async function run(task: MaintenanceTask) {
-  const client = await pool.connect();
+  // A failed connect is logged like a failed task, so a database blip never kills the worker.
+  const client = await pool.connect().catch((err: unknown) => {
+    logger.error({ err, task }, "Maintenance task failed");
+  });
+  if (!client) return;
   try {
     const { rows } = await client.query<{ locked: boolean }>("select pg_try_advisory_lock(hashtext($1)) as locked", [
       `maintenance:${task}`,

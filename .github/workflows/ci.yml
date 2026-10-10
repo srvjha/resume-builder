@@ -56,4 +56,5 @@ jobs:
       - run: pnpm exec tsc --noEmit
       - run: pnpm lint
       - run: pnpm check
+      - run: for f in src/lib/*.check.ts; do node $f || exit 1; done
       - run: pnpm build

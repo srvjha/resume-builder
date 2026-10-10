@@ -6,15 +6,16 @@ import { generateStructured } from "../../lib/ai/generate.js";
 import { readUpload } from "../uploads/uploads.service.js";
 import { assertAiQuota } from "../usage/quotas.js";
 import { applyBold, extractionSchema, normalizeExtraction } from "./extraction.js";
-import { linkStyleOf, pdfHints } from "./pdf-hints.js";
+import { linkStyleOf, type pdfHints } from "./pdf-hints.js";
 import { track } from "../../lib/analytics.js";
 import { logger } from "../../lib/logger.js";
 import type { ResumeContent } from "../../schemas/resume-content.js";
-import { extractTextItems } from "../ats/parser/extract.js";
+import type { extractTextItems } from "../ats/parser/extract.js";
 import { parseItems } from "../ats/parser/parse.js";
 import { restoreMissedLines } from "./coverage.js";
 import { MAX_IMPORT_TEXT } from "./imports.schemas.js";
 import { AppError } from "../../lib/errors.js";
+import { inWorker } from "../../lib/in-worker.js";
 
 // Resumes run 1 to 3 pages; anything longer is not a resume.
 const MAX_IMPORT_PAGES = 4;
@@ -45,7 +46,11 @@ Rules:
 async function checkCoverage(content: ResumeContent, pdf: Uint8Array | undefined) {
   if (!pdf) return { content, missed: [] };
   try {
-    const { items, pageWidth, pageHeight } = await extractTextItems(pdf);
+    const { items, pageWidth, pageHeight } = await inWorker<Awaited<ReturnType<typeof extractTextItems>>>(
+      import.meta.resolve("../ats/parser/extract.js"),
+      "extractTextItems",
+      pdf,
+    );
     return restoreMissedLines(content, parseItems(items, { width: pageWidth, height: pageHeight }));
   } catch (err) {
     logger.warn({ err }, "Coverage check failed");
@@ -71,7 +76,13 @@ export async function createImport(
     if (upload.kind === "pdf") {
       files.push({ data: body, mediaType: "application/pdf", filename: upload.fileName });
       pdf = new Uint8Array(body);
-      const { links, bold, pages } = await pdfHints(new Uint8Array(body));
+      const { links, bold, pages } = await inWorker<Awaited<ReturnType<typeof pdfHints>>>(
+        import.meta.resolve("./pdf-hints.js"),
+        "pdfHints",
+        new Uint8Array(body),
+      ).catch(() => {
+        throw new AppError(422, "PDF_UNREADABLE", "This PDF couldn't be read. Export it again, or paste its text.");
+      });
       // The whole PDF goes to the model, so a long document would cost far more than a resume.
       if (pages > MAX_IMPORT_PAGES)
         throw new AppError(
@@ -129,7 +140,10 @@ export async function createImport(
   extracted.basics.phone ||= behind("tel:")?.slice(0, 30) || undefined;
   const { content, missed } = await checkCoverage(extracted, pdf);
   track(userId, "resume_imported", { from: "uploadId" in input ? "file" : "text", missed_lines: missed.length });
-  const linkStyle = linkStyleOf(hidden, content.basics.links.map((link) => link.url));
+  const linkStyle = linkStyleOf(
+    hidden,
+    content.basics.links.map((link) => link.url),
+  );
   return { content, aiRunId: runId, missed, ...(linkStyle && { linkStyle }) };
 }
 

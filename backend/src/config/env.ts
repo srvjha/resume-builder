@@ -16,6 +16,8 @@ const envSchema = z.object({
   BETTER_AUTH_URL: z.url().default("http://localhost:4000"),
   // Set in production (e.g. ".example.com") so app. and api. subdomains share the session cookie.
   COOKIE_DOMAIN: optionalString,
+  // Shared with the frontend's server, so it can pass a share-page visitor's own IP for rate limiting.
+  PROXY_SECRET: z.preprocess(emptyAsUnset, z.string().trim().min(32).optional()),
   // One-click guest accounts. Defaults to on in development and off in production.
   ENABLE_GUEST_LOGIN: z.preprocess(emptyAsUnset, z.stringbool().optional()),
   GOOGLE_CLIENT_ID: optionalString,

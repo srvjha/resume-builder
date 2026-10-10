@@ -12,6 +12,9 @@ export type Expected = {
 const norm = (text: string) => text.toLowerCase().replace(/[^a-z0-9@]/g, "");
 const same = (found: string | null, expected: string) =>
   !!found && norm(found).includes(norm(expected)) && norm(found).length <= norm(expected).length * 2;
+// "Acme, Pune" typed as the company is read as company Acme in Pune, which is right.
+const sameCompany = (found: string | null, expected: string) =>
+  same(found, expected) || same(found, expected.replace(/,[^,]*$/, ""));
 const samePhone = (found: string | null, expected: string) =>
   !!found && found.replace(/\D/g, "").slice(-10) === expected.replace(/\D/g, "").slice(-10);
 const unreadable = /[-�]/g;
@@ -36,7 +39,8 @@ function compare(parsed: ParsedResume, expected: Expected) {
   }
   (expected.jobs ?? []).forEach((job, index) => {
     const score = (found: ParsedResume["jobs"][number]) =>
-      Number(!!job.title && same(found.title, job.title)) + Number(!!job.company && same(found.company, job.company));
+      Number(!!job.title && same(found.title, job.title)) +
+      Number(!!job.company && sameCompany(found.company, job.company));
     const best = parsed.jobs.reduce<ParsedResume["jobs"][number] | null>(
       (top, found) => (!top || score(found) > score(top) ? found : top),
       null,
@@ -50,7 +54,7 @@ function compare(parsed: ParsedResume, expected: Expected) {
         `Job ${n} company`,
         best?.company ?? null,
         job.company,
-        same(best?.company ?? null, job.company),
+        sameCompany(best?.company ?? null, job.company),
       );
   });
   return fields;

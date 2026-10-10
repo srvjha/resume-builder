@@ -54,13 +54,13 @@ export async function getAnalytics(userId: string, days: number, timeZone: strin
         slug: shareLinks.slug,
         resumeId: shareLinks.resumeId,
         resumeTitle: resumes.title,
-        views: sql<number>`count(${linkViews.id}) filter (where ${linkViews.viewedAt} >= ${since})`.mapWith(Number),
+        views: sql<number>`count(${linkViews.id})`.mapWith(Number),
         totalViews: shareLinks.viewCount,
         lastViewedAt: shareLinks.lastViewedAt,
       })
       .from(shareLinks)
       .innerJoin(resumes, eq(shareLinks.resumeId, resumes.id))
-      .leftJoin(linkViews, eq(linkViews.shareLinkId, shareLinks.id))
+      .leftJoin(linkViews, and(eq(linkViews.shareLinkId, shareLinks.id), gte(linkViews.viewedAt, since)))
       .where(ownLinks)
       .groupBy(shareLinks.id, resumes.title)
       .orderBy(sql`5 desc`, desc(shareLinks.lastViewedAt)),

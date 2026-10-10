@@ -64,7 +64,7 @@ jobs:
             compose="docker compose -f docker-compose.prod.yml --env-file .env.production"
             # Build and migrate while the old API still serves; a failed migration stops here and leaves it running.
             $compose build
-            $compose run --rm shortlist-api node dist/scripts/migrate.js
+            $compose run --rm --no-deps shortlist-api node dist/scripts/migrate.js
             $compose up -d --wait --remove-orphans
             docker image prune -f
       - name: Check the API answers

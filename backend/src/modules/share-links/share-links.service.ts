@@ -22,8 +22,12 @@ function assertContactLockAllowed(mode: string) {
   }
 }
 
-async function toResponse(link: ShareLinkRow) {
-  const [owner] = await db.select({ username: users.username }).from(users).where(eq(users.id, link.userId));
+async function ownerUsername(userId: string) {
+  const [owner] = await db.select({ username: users.username }).from(users).where(eq(users.id, userId));
+  return owner!.username;
+}
+
+function toResponse(link: ShareLinkRow, username: string) {
   const {
     passwordHash,
     contactPasswordHash,
@@ -36,7 +40,7 @@ async function toResponse(link: ShareLinkRow) {
     ...rest,
     hasPassword: Boolean(passwordHash),
     hasContactPassword: Boolean(contactPasswordHash),
-    url: `${env.FRONTEND_URL}/${owner!.username}/${link.slug}`,
+    url: `${env.FRONTEND_URL}/${username}/${link.slug}`,
   };
 }
 
@@ -120,7 +124,7 @@ export async function createShareLink(
     shows_contact: input.showContact,
     contact_password: Boolean(input.contactPassword),
   });
-  return toResponse(link!);
+  return toResponse(link!, await ownerUsername(userId));
 }
 
 export async function listShareLinks(userId: string, resumeId: string) {
@@ -130,11 +134,13 @@ export async function listShareLinks(userId: string, resumeId: string) {
     .from(shareLinks)
     .where(and(eq(shareLinks.resumeId, resume.id), isNull(shareLinks.deletedAt)))
     .orderBy(desc(shareLinks.createdAt));
-  return Promise.all(links.map(toResponse));
+  const username = await ownerUsername(userId);
+  return links.map((link) => toResponse(link, username));
 }
 
 export async function getShareLink(userId: string, shareLinkId: string) {
-  return toResponse(await getOwnedShareLink(userId, shareLinkId));
+  const link = await getOwnedShareLink(userId, shareLinkId);
+  return toResponse(link, await ownerUsername(userId));
 }
 
 export async function updateShareLink(
@@ -178,7 +184,7 @@ export async function updateShareLink(
     })
     .where(eq(shareLinks.id, link.id))
     .returning();
-  return toResponse(updated!);
+  return toResponse(updated!, await ownerUsername(userId));
 }
 
 export async function deleteShareLink(userId: string, shareLinkId: string) {

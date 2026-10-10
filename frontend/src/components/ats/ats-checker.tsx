@@ -31,6 +31,29 @@ type TextItem = NonNullable<
 
 const maxParsedPages = 4
 const boldFont = /bold|black|heavy|semibold|demi/i
+const iconFont =
+  /awesome|icon|glyph|material|dingbat|marvosym|wasy|academicons/i
+
+// Same as withoutReplacedIcons in backend parser/extract.ts: an icon inside a marked-content Span with no MCID
+// carries replacement text (ActualText) that extractors like pdftotext use instead, so its glyph is skipped.
+function withoutReplacedIcons<T>(items: T[], fontOf: (item: T) => string) {
+  const spans: boolean[] = []
+  return items.filter((item) => {
+    const mark = item as { type?: string; tag?: string; id?: string | null }
+    if (
+      mark.type === 'beginMarkedContent' ||
+      mark.type === 'beginMarkedContentProps'
+    ) {
+      spans.push(mark.tag === 'Span' && !mark.id)
+      return false
+    }
+    if (mark.type === 'endMarkedContent') {
+      spans.pop()
+      return false
+    }
+    return !(spans.includes(true) && iconFont.test(fontOf(item)))
+  })
+}
 
 // Profile links (LinkedIn, a GitHub profile, an email, a portfolio's home page) are what a recruiter needs
 // to read. A project's "Live" or "Code" link behind its label is normal, so deeper links aren't checked.
@@ -83,9 +106,20 @@ async function readPdf(file: File) {
       const { width, height } = page.getViewport({ scale: 1 })
       if (number === 1) size = { width, height }
       if (number <= maxParsedPages) await page.getOperatorList()
-      const content = await page.getTextContent()
+      const content = await page.getTextContent({ includeMarkedContent: true })
+      const fontOf = (run: (typeof content.items)[number]) => {
+        try {
+          return 'fontName' in run
+            ? ((page.commonObjs.get(run.fontName) as { name?: string }).name ??
+                '')
+            : ''
+        } catch {
+          return ''
+        }
+      }
+      const runs = withoutReplacedIcons(content.items, fontOf)
       pages.push(
-        content.items
+        runs
           .map((item) =>
             'str' in item ? item.str + (item.hasEOL ? '\n' : ' ') : '',
           )
@@ -97,7 +131,7 @@ async function readPdf(file: File) {
       }
       if (number > maxParsedPages) continue
       const fontNames = new Map<string, string>()
-      for (const run of content.items) {
+      for (const run of runs) {
         if (!('str' in run) || !run.str.trim()) continue
         if (!fontNames.has(run.fontName)) {
           let real = ''

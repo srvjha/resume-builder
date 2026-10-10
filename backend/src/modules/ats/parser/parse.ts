@@ -1,10 +1,11 @@
+import { iconFont } from "./extract.js";
 import type { ParsedResume, SectionKind, TextItem } from "./types.js";
+
+export { iconFont };
 
 type Page = { width: number; height: number };
 type Segment = { x: number; end: number; text: string; bold: boolean; height: number };
 type Line = { page: number; y: number; height: number; x: number; text: string; bullet: boolean; segments: Segment[] };
-
-export const iconFont = /awesome|icon|glyph|material|dingbat|marvosym|wasy|academicons/i;
 const separators = new Set(["|", "•", "·", "◦", "▪", "●", "■", "♦", "⋄", "∙"]);
 const bulletStart = /^[•◦▪●■♦⋄∙*\-\u2013]/;
 

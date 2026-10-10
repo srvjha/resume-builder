@@ -115,6 +115,8 @@ describe.skipIf(!hasTectonic)("templates round-trip through the parser", () => {
     it(`${template.id} ${template.atsSafe ? "parses back" : "is flagged for columns"}`, () => {
       const result = reports.get(template.id)!;
       const columns = issue(result, "columns").status;
+      // Every template hides its icons behind empty ActualText, which extractors like pdftotext honour.
+      expect(issue(result, "glyphs").status, issue(result, "glyphs").detail).toBe("pass");
       if (template.atsSafe) {
         expect(result.parseRate, JSON.stringify(result.fields.filter((f) => !f.ok))).toBeGreaterThanOrEqual(0.9);
         expect(columns).toBe("pass");

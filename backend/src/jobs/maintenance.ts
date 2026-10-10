@@ -52,13 +52,24 @@ export async function purgeDeletedResumes() {
 }
 
 // Uploads only matter during import; the extracted content lives in resumes.
+// Files go before their rows: if a file can't be deleted, its row stays and the next run retries it.
 export async function purgeOldUploads() {
   const old = await db
-    .delete(uploads)
-    .where(lt(uploads.createdAt, new Date(Date.now() - 30 * DAY)))
-    .returning({ storageKey: uploads.storageKey });
-  for (const { storageKey } of old) await storage.deletePrefix(storageKey);
-  logger.info({ purged: old.length }, "Purged old uploads");
+    .select({ id: uploads.id, storageKey: uploads.storageKey })
+    .from(uploads)
+    .where(lt(uploads.createdAt, new Date(Date.now() - 30 * DAY)));
+  let purged = 0;
+  for (const { id, storageKey } of old) {
+    try {
+      await storage.deletePrefix(storageKey);
+    } catch (err) {
+      logger.error({ err, storageKey }, "Could not delete upload file; will retry");
+      continue;
+    }
+    await db.delete(uploads).where(eq(uploads.id, id));
+    purged++;
+  }
+  logger.info({ purged, failed: old.length - purged }, "Purged old uploads");
 }
 
 // Compiled PDFs are cached by a hash of their LaTeX, shared across users, so they can't be tied to an account.
@@ -68,14 +79,24 @@ export async function purgeCompiledPdfs() {
   logger.info({ removed }, "Purged cached PDFs");
 }
 
-// Guest accounts are for trying the app; they and their data go after 7 days.
+// Guest accounts are for trying the app; they and their data go after 7 days. Files go before the account, as in uploads.
 export async function purgeGuestUsers() {
   const guests = await db
-    .delete(users)
-    .where(and(eq(users.isAnonymous, true), lt(users.createdAt, new Date(Date.now() - 7 * DAY))))
-    .returning({ id: users.id });
-  for (const { id } of guests) await storage.deletePrefix(`users/${id}/`);
-  logger.info({ purged: guests.length }, "Purged guest users");
+    .select({ id: users.id })
+    .from(users)
+    .where(and(eq(users.isAnonymous, true), lt(users.createdAt, new Date(Date.now() - 7 * DAY))));
+  let purged = 0;
+  for (const { id } of guests) {
+    try {
+      await storage.deletePrefix(`users/${id}/`);
+    } catch (err) {
+      logger.error({ err, userId: id }, "Could not delete guest files; will retry");
+      continue;
+    }
+    await db.delete(users).where(eq(users.id, id));
+    purged++;
+  }
+  logger.info({ purged, failed: guests.length - purged }, "Purged guest users");
 }
 
 export const maintenanceTasks = {

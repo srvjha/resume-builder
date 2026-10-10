@@ -11,8 +11,10 @@ export async function pdfHints(pdf: Uint8Array, maxPages = 4) {
   const task = getDocument({ data: pdf.slice(), useSystemFonts: false, verbosity: 0 });
   const links: { text: string; url: string }[] = [];
   const bold = new Set<string>();
+  let pages = 0;
   try {
     const doc = await task.promise;
+    pages = doc.numPages;
     for (let number = 1; number <= Math.min(doc.numPages, maxPages); number++) {
       const page = await doc.getPage(number);
       await page.getOperatorList();
@@ -82,14 +84,18 @@ export async function pdfHints(pdf: Uint8Array, maxPages = 4) {
   } finally {
     await task.destroy();
   }
-  return { links, bold: [...bold].slice(0, 80) };
+  return { links, bold: [...bold].slice(0, 80), pages };
 }
 
 // A header that names its links ("LinkedIn", "Github") instead of printing their addresses was made in the icon
 // and name style; the imported resume keeps it. Only the header's profile links count: projects name their links
 // ("Live", "GitHub") in every style.
 export function linkStyleOf(links: { text: string; url: string }[], profileUrls: string[]) {
-  const bare = (url: string) => url.toLowerCase().replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
+  const bare = (url: string) =>
+    url
+      .toLowerCase()
+      .replace(/^https?:\/\/(www\.)?/, "")
+      .replace(/\/$/, "");
   const profile = new Set(profileUrls.map(bare));
   const header = links.filter((link) => profile.has(bare(link.url)));
   if (header.length === 0) return undefined;

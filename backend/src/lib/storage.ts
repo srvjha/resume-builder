@@ -14,6 +14,8 @@ export interface Storage {
   put(key: string, body: Buffer, contentType: string): Promise<void>;
   get(key: string): Promise<Buffer | null>;
   deletePrefix(prefix: string): Promise<void>;
+  // Deletes objects under a prefix last modified before the cutoff. Returns how many were deleted.
+  deleteOlder(prefix: string, cutoff: Date): Promise<number>;
   // The newest object under a prefix whose keys sort by time, e.g. timestamped backups.
   latest(prefix: string): Promise<{ key: string; sizeBytes: number; modifiedAt: Date } | null>;
 }
@@ -24,6 +26,10 @@ export function assertDeletablePrefix(prefix: string): void {
   if (trimmed === "" || /^\/+$/.test(trimmed)) {
     throw new Error("Refusing to delete with an empty storage prefix");
   }
+}
+
+export function staleKeys(objects: { key: string; modifiedAt: Date }[], cutoff: Date): string[] {
+  return objects.filter((object) => object.modifiedAt < cutoff).map((object) => object.key);
 }
 
 function localStorage(root: string): Storage {
@@ -49,6 +55,17 @@ function localStorage(root: string): Storage {
     async deletePrefix(prefix) {
       assertDeletablePrefix(prefix);
       await rm(pathFor(prefix), { recursive: true, force: true });
+    },
+    async deleteOlder(prefix, cutoff) {
+      assertDeletablePrefix(prefix);
+      const dir = pathFor(prefix);
+      const names = await readdir(dir).catch(() => [] as string[]);
+      const files = await Promise.all(
+        names.map(async (name) => ({ key: name, modifiedAt: (await stat(resolve(dir, name))).mtime })),
+      );
+      const stale = staleKeys(files, cutoff);
+      await Promise.all(stale.map((name) => rm(resolve(dir, name), { force: true })));
+      return stale.length;
     },
     async latest(prefix) {
       const dir = pathFor(prefix);
@@ -94,6 +111,27 @@ function r2Storage(): Storage {
         }
         token = page.IsTruncated ? page.NextContinuationToken : undefined;
       } while (token);
+    },
+    async deleteOlder(prefix, cutoff) {
+      assertDeletablePrefix(prefix);
+      let deleted = 0;
+      let token: string | undefined;
+      do {
+        const page = await client.send(
+          new ListObjectsV2Command({ Bucket: bucket, Prefix: prefix, ContinuationToken: token }),
+        );
+        const objects = (page.Contents ?? []).map((object) => ({
+          key: object.Key!,
+          modifiedAt: object.LastModified ?? new Date(0),
+        }));
+        const stale = staleKeys(objects, cutoff).map((key) => ({ Key: key }));
+        if (stale.length > 0) {
+          await client.send(new DeleteObjectsCommand({ Bucket: bucket, Delete: { Objects: stale } }));
+          deleted += stale.length;
+        }
+        token = page.IsTruncated ? page.NextContinuationToken : undefined;
+      } while (token);
+      return deleted;
     },
     async latest(prefix) {
       let newest: { key: string; sizeBytes: number; modifiedAt: Date } | null = null;

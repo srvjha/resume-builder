@@ -12,6 +12,7 @@ const schedules: Record<MaintenanceTask, Schedule> = {
   "expire-subscriptions": { minute: 0 },
   "purge-deleted-resumes": { hour: 2, minute: 30 },
   "purge-old-uploads": { hour: 2, minute: 45 },
+  "purge-compiled-pdfs": { hour: 3, minute: 0 },
   "purge-guest-users": { hour: 3, minute: 0 },
 };
 

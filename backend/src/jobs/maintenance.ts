@@ -45,6 +45,13 @@ export async function purgeOldUploads() {
   logger.info({ purged: old.length }, "Purged old uploads");
 }
 
+// Compiled PDFs are cached by a hash of their LaTeX, shared across users, so they can't be tied to an account.
+// Anything not reused within 30 days is dropped and recompiled if needed.
+export async function purgeCompiledPdfs() {
+  const removed = await storage.deleteOlder("compiled/", new Date(Date.now() - 30 * DAY));
+  logger.info({ removed }, "Purged cached PDFs");
+}
+
 // Guest accounts are for trying the app; they and their data go after 7 days.
 export async function purgeGuestUsers() {
   const guests = await db
@@ -59,6 +66,7 @@ export const maintenanceTasks = {
   "expire-subscriptions": expireSubscriptions,
   "purge-deleted-resumes": purgeDeletedResumes,
   "purge-old-uploads": purgeOldUploads,
+  "purge-compiled-pdfs": purgeCompiledPdfs,
   "purge-guest-users": purgeGuestUsers,
 } as const;
 

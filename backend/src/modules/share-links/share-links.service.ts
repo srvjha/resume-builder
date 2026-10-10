@@ -2,7 +2,7 @@ import { and, count, countDistinct, desc, eq, gte, isNotNull, isNull, ne, sql } 
 import { env } from "../../config/env.js";
 import { db } from "../../db/index.js";
 import { linkViews, resumeVersions, shareLinks, users } from "../../db/schema/index.js";
-import { ConflictError, NotFoundError } from "../../lib/errors.js";
+import { AppError, ConflictError, NotFoundError } from "../../lib/errors.js";
 import { hashPassword } from "../../lib/passwords.js";
 import { getOwnedResume } from "../resumes/resumes.service.js";
 import { assertPaidPlan } from "../usage/quotas.js";
@@ -10,6 +10,17 @@ import { slugify } from "../users/usernames.js";
 import { track } from "../../lib/analytics.js";
 
 type ShareLinkRow = typeof shareLinks.$inferSelect;
+
+// Code-mode resumes print their LaTeX source, contact lines included, so a lock would hide nothing.
+function assertContactLockAllowed(mode: string) {
+  if (mode === "code") {
+    throw new AppError(
+      400,
+      "CONTACT_LOCK_UNAVAILABLE",
+      "LaTeX resumes show their contact lines, so they can't lock them",
+    );
+  }
+}
 
 async function toResponse(link: ShareLinkRow) {
   const [owner] = await db.select({ username: users.username }).from(users).where(eq(users.id, link.userId));
@@ -84,6 +95,7 @@ export async function createShareLink(
   },
 ) {
   const resume = await getOwnedResume(userId, resumeId);
+  if (input.contactPassword) assertContactLockAllowed(resume.mode);
   if (input.contactPassword) await assertPaidPlan(userId, "Contact password");
   if (input.pinnedVersionId) await assertVersionOfResume(resume.id, input.pinnedVersionId);
   if (input.slug && (await slugTaken(userId, input.slug))) throw new ConflictError("You already use this slug");
@@ -139,6 +151,7 @@ export async function updateShareLink(
   },
 ) {
   const link = await getOwnedShareLink(userId, shareLinkId);
+  if (changes.contactPassword) assertContactLockAllowed((await getOwnedResume(userId, link.resumeId)).mode);
   if (changes.contactPassword) await assertPaidPlan(userId, "Contact password");
   if (changes.slug && (await slugTaken(userId, changes.slug, link.id)))
     throw new ConflictError("You already use this slug");

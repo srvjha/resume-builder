@@ -1,5 +1,6 @@
 import type { UseQueryResult } from '@tanstack/react-query'
 import { CheckIcon, CopyIcon } from 'lucide-react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { Change } from '@/components/analytics/change'
@@ -229,6 +230,14 @@ export function CopyEmail({
   className?: string
 }) {
   const [copied, setCopied] = useState(false)
+  // Under reduced motion the icons only fade; no scale or blur.
+  const reduce = useReducedMotion()
+  const hidden = reduce
+    ? { opacity: 0 }
+    : { opacity: 0, scale: 0.25, filter: 'blur(4px)' }
+  const shown = reduce
+    ? { opacity: 1 }
+    : { opacity: 1, scale: 1, filter: 'blur(0px)' }
   return (
     <span className={cn('flex min-w-0 items-center gap-1', className)}>
       <span className="truncate">{email}</span>
@@ -247,7 +256,18 @@ export function CopyEmail({
           }
         }}
       >
-        {copied ? <CheckIcon /> : <CopyIcon />}
+        <AnimatePresence initial={false} mode="popLayout">
+          <motion.span
+            key={copied ? 'copied' : 'copy'}
+            initial={hidden}
+            animate={shown}
+            exit={hidden}
+            transition={{ type: 'spring', duration: 0.3, bounce: 0 }}
+            className="flex"
+          >
+            {copied ? <CheckIcon /> : <CopyIcon />}
+          </motion.span>
+        </AnimatePresence>
       </Button>
     </span>
   )

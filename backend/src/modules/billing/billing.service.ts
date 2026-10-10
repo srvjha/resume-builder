@@ -2,7 +2,7 @@ import { and, desc, eq, gt, inArray, isNotNull } from "drizzle-orm";
 import { env } from "../../config/env.js";
 import { db } from "../../db/index.js";
 import { payments, subscriptions, users } from "../../db/schema/index.js";
-import { AppError, ConflictError, NotFoundError } from "../../lib/errors.js";
+import { AppError, ConflictError, ForbiddenError, NotFoundError } from "../../lib/errors.js";
 import { razorpay } from "../../lib/razorpay.js";
 import { track } from "../../lib/analytics.js";
 
@@ -44,9 +44,17 @@ export async function grantPlan(
   return subscription!;
 }
 
+// Guest accounts are deleted after 7 days, and a plan bought or redeemed on one would go with it.
+export async function assertNotGuest(userId: string, executor: Pick<typeof db, "select"> = db) {
+  const [user] = await executor.select({ isAnonymous: users.isAnonymous }).from(users).where(eq(users.id, userId));
+  if (user?.isAnonymous)
+    throw new ForbiddenError("Create an account first, so your plan isn't deleted with this guest account");
+}
+
 export async function createCheckout(userId: string, plan: "season_pass" | "pro") {
   const keyId = env.RAZORPAY_KEY_ID;
   if (!keyId) throw new AppError(503, "PAYMENTS_NOT_CONFIGURED", "Payments are not configured");
+  await assertNotGuest(userId);
   track(userId, "checkout_started", { plan });
 
   if (plan === "season_pass") {

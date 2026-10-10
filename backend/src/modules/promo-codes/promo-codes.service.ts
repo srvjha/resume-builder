@@ -4,7 +4,7 @@ import { db } from "../../db/index.js";
 import { promoCodes, promoRedemptions, users } from "../../db/schema/index.js";
 import { track } from "../../lib/analytics.js";
 import { AppError, ConflictError, NotFoundError } from "../../lib/errors.js";
-import { getSubscription, grantPlan, recomputePlan } from "../billing/billing.service.js";
+import { assertNotGuest, getSubscription, grantPlan, recomputePlan } from "../billing/billing.service.js";
 import type { createPromoCodeBody } from "./promo-codes.schemas.js";
 
 type PromoCode = typeof promoCodes.$inferSelect;
@@ -28,6 +28,7 @@ export async function redeemCode(userId: string, rawCode: string) {
     // Locking the user and the code serialises redemptions, so a limit is never exceeded by two at once.
     const [user] = await tx.select({ plan: users.plan }).from(users).where(eq(users.id, userId)).for("update");
     if (user!.plan !== "free") throw new ConflictError("You already have a paid plan");
+    await assertNotGuest(userId, tx);
     const [already] = await tx
       .select({ id: promoRedemptions.id })
       .from(promoRedemptions)

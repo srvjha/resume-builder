@@ -23,6 +23,7 @@ await db
       description: sql`excluded.description`,
       atsSafe: sql`excluded.ats_safe`,
       version: sql`excluded.version`,
+      isActive: sql`excluded.is_active`,
       updatedAt: new Date(),
     },
   });

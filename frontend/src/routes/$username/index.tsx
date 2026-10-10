@@ -14,14 +14,19 @@ export const Route = createFileRoute('/$username/')({
     return outcome
   },
   head: ({ loaderData }) => {
-    const name =
-      loaderData?.status === 'ok'
-        ? loaderData.data.name || loaderData.data.username
-        : 'Profile'
+    const ok = loaderData?.status === 'ok'
+    const name = ok
+      ? loaderData.data.name || loaderData.data.username
+      : 'Profile'
+    // Thin profiles, error pages and missing profiles stay out of search results.
+    const indexable = ok && loaderData.data.resumes.length > 0
     return {
       meta: [
         { title: `${name} | Resumes` },
         { name: 'description', content: `Resumes shared by ${name}.` },
+        ...(indexable
+          ? []
+          : [{ name: 'robots', content: 'noindex, nofollow' }]),
       ],
     }
   },

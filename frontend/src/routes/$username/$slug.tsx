@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
+import { createFileRoute, notFound, redirect } from '@tanstack/react-router'
 import { useServerFn } from '@tanstack/react-start'
 import { DownloadIcon, EyeOffIcon, LockIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -27,6 +27,7 @@ export const Route = createFileRoute('/$username/$slug')({
     const outcome = await fetchPublicResume({
       data: { username: params.username, slug: params.slug },
     })
+    if (outcome.status === 'not_found') throw notFound()
     // Old usernames still work; move the visitor to the current address.
     if (
       outcome.status === 'ok' &&

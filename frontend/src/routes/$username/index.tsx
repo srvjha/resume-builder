@@ -79,6 +79,8 @@ function ProfilePage() {
                 <Link
                   to="/$username/$slug"
                   params={{ username: profile.username, slug: resume.slug }}
+                  // Loading a share page counts a view, so a hover must not load it.
+                  preload={false}
                   className="flex items-center gap-4 px-5 py-4 hover:bg-accent/50"
                 >
                   <FileTextIcon className="size-5 shrink-0 text-muted-foreground" />

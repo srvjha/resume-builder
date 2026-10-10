@@ -1,4 +1,5 @@
 import { PlusIcon } from 'lucide-react'
+import { useEffect, useRef } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
@@ -21,6 +22,11 @@ export function ContentEditor({
   value: ResumeContent
   onChange: (content: ResumeContent) => void
 }) {
+  // Undo runs from a toast, so it reads the document as it is at click time.
+  const latest = useRef(value)
+  useEffect(() => {
+    latest.current = value
+  })
   const basics = value.basics
   const setBasics = (patch: Partial<ResumeContent['basics']>) =>
     onChange({ ...value, basics: { ...basics, ...patch } })
@@ -117,10 +123,22 @@ export function ContentEditor({
             setSections(value.sections.map((s, i) => (i === index ? next : s)))
           }
           onRemove={() => {
-            const previous = value.sections
             setSections(value.sections.filter((_, i) => i !== index))
             toast(`Removed ${section.title || 'section'}`, {
-              action: { label: 'Undo', onClick: () => setSections(previous) },
+              action: {
+                label: 'Undo',
+                onClick: () => {
+                  const { sections } = latest.current
+                  onChange({
+                    ...latest.current,
+                    sections: [
+                      ...sections.slice(0, index),
+                      section,
+                      ...sections.slice(index),
+                    ],
+                  })
+                },
+              },
             })
           }}
           onMove={(delta) => setSections(move(value.sections, index, delta))}

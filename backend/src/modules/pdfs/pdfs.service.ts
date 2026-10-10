@@ -27,11 +27,11 @@ export async function compileOrThrow(tex: string, signal?: AbortSignal) {
   return result;
 }
 
+// A part already inside another is dropped, so the name and a title like "Aarav_Sharma_Resume" give
+// aarav-sharma-resume.pdf, not aarav-sharma_aarav-sharma-resume.pdf.
 export function pdfFileName(...parts: (string | undefined)[]) {
-  const name = parts
-    .map((part) => slugify(part ?? "", 40))
-    .filter(Boolean)
-    .join("_");
+  const slugs = [...new Set(parts.map((part) => slugify(part ?? "", 40)).filter(Boolean))];
+  const name = slugs.filter((slug) => !slugs.some((other) => other !== slug && other.includes(slug))).join("_");
   return `${name || "resume"}.pdf`;
 }
 

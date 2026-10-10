@@ -58,7 +58,9 @@ export function visibleContent(content: ResumeContent): ResumeContent {
     basics: content.basics,
     sections: content.sections
       // A skills section added a moment ago has one empty group, and an itemize with nothing in it doesn't compile.
-      .filter((section) => !section.hidden && (section.type !== "skills" || section.groups.some((g) => g.items.length > 0)))
+      .filter(
+        (section) => !section.hidden && (section.type !== "skills" || section.groups.some((g) => g.items.length > 0)),
+      )
       .map((section) => {
         // Templates print "Group: items", so a name typed as "Frontend:" would show two colons.
         if (section.type === "skills")

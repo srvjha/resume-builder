@@ -21,8 +21,8 @@ describe("link style of an imported PDF", () => {
   });
 
   it("ignores project links, which are named in every style", () => {
-    expect(linkStyleOf([...header(["linkedin.com/in/saurav-jha", "github.com/srvjha", "srvjha.in"]), ...projects], profiles)).toBe(
-      undefined,
-    );
+    expect(
+      linkStyleOf([...header(["linkedin.com/in/saurav-jha", "github.com/srvjha", "srvjha.in"]), ...projects], profiles),
+    ).toBe(undefined);
   });
 });

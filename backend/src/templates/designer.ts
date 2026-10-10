@@ -128,9 +128,10 @@ function contact(basics: ResumeContent["basics"], layout?: ResumeLayout) {
 
 export function renderDesigner(input: ResumeContent, layout?: ResumeLayout) {
   const { basics, sections } = visibleContent(input);
-  const side = [contact(basics, layout), ...sections.filter(inSidebar).map((s) => withGap(sidebarSection(s), s))].filter(
-    Boolean,
-  );
+  const side = [
+    contact(basics, layout),
+    ...sections.filter(inSidebar).map((s) => withGap(sidebarSection(s), s)),
+  ].filter(Boolean);
   const main = renderSections(sections.filter((s) => !inSidebar(s)));
   return applyLayout(
     String.raw`${preamble}

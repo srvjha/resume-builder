@@ -142,7 +142,11 @@ function projectTech(x: Entry) {
 }
 
 // A comma list of short names with no sentence in it ("OpenAI Agents SDK, GPT-4.1, Next.js") is a project's stack.
-const stackParts = (text: string) => text.replace(/\*\*/g, "").split(/,(?![^(]*\))/).map((part) => part.trim());
+const stackParts = (text: string) =>
+  text
+    .replace(/\*\*/g, "")
+    .split(/,(?![^(]*\))/)
+    .map((part) => part.trim());
 const stackList = (text: string) => {
   const parts = stackParts(text);
   return (
@@ -172,7 +176,10 @@ const linkWord = /^(verify|verified|link|code|live|demo|pdf|github|website|certi
 // A line under a project's name that only repeats its stack and link labels ("React, Go | Live | Code").
 function stackOnly(text: string, technologies: string[]) {
   const known = new Set(technologies.map((t) => t.toLowerCase()));
-  const parts = text.replace(/\*\*/g, "").split(/\s*[|,·]\s*/).filter(Boolean);
+  const parts = text
+    .replace(/\*\*/g, "")
+    .split(/\s*[|,·]\s*/)
+    .filter(Boolean);
   return known.size > 0 && parts.every((part) => known.has(part.toLowerCase()) || linkWord.test(part));
 }
 
@@ -201,7 +208,9 @@ function normalizeSection(section: Extraction["sections"][number]): ResumeSectio
             role: bareRole(plain(x.role) ?? "", plain(x.organization) ?? ""),
             location: plain(x.location),
             ...range(x),
-            bullets: hideHeadings(withLeftovers(x, ["title", "subtitle", "name"], [x.organization, x.role, x.location])),
+            bullets: hideHeadings(
+              withLeftovers(x, ["title", "subtitle", "name"], [x.organization, x.role, x.location]),
+            ),
           })),
       };
     case "education":

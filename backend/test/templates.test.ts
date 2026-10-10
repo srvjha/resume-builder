@@ -55,7 +55,9 @@ describe.skipIf(!hasTectonic)("templates compile", () => {
     it(`${template.id} with a skills section added but not filled in`, async () => {
       const empty = resumeContentSchema.parse({
         basics: { name: "Only Name" },
-        sections: [{ id: "s", title: "Technical Skills", type: "skills", groups: [{ id: "g", name: "Languages", items: [] }] }],
+        sections: [
+          { id: "s", title: "Technical Skills", type: "skills", groups: [{ id: "g", name: "Languages", items: [] }] },
+        ],
       });
       const result = await compile(template.render(empty));
       expect(result.ok, JSON.stringify(result)).toBe(true);

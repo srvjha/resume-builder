@@ -18,8 +18,8 @@ describe("provider model lists", () => {
   });
 
   it("uses Anthropic display names", () => {
-    expect(parseProviderModels("anthropic", { data: [{ id: "claude-sonnet-5", display_name: "Claude Sonnet 5" }] })).toEqual(
-      [{ id: "claude-sonnet-5", name: "Claude Sonnet 5" }],
-    );
+    expect(
+      parseProviderModels("anthropic", { data: [{ id: "claude-sonnet-5", display_name: "Claude Sonnet 5" }] }),
+    ).toEqual([{ id: "claude-sonnet-5", name: "Claude Sonnet 5" }]);
   });
 });

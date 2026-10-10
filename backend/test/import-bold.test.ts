@@ -21,7 +21,10 @@ const bullet = (result: ReturnType<typeof applyBold>) =>
 
 describe("bold from the PDF", () => {
   it("wraps the PDF's bold words in bullets and summaries", () => {
-    const result = applyBold(content("Cut p99 latency by 40% with Redis", "Backend engineer who loves Go"), ["40%", "Go"]);
+    const result = applyBold(content("Cut p99 latency by 40% with Redis", "Backend engineer who loves Go"), [
+      "40%",
+      "Go",
+    ]);
     expect(bullet(result)).toBe("Cut p99 latency by **40%** with Redis");
     expect(result.sections[0]).toMatchObject({ text: "Backend engineer who loves **Go**" });
   });

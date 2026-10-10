@@ -58,7 +58,11 @@ jobs:
             # The commit this run checked, not main's tip, which may be a newer push still in its own check.
             git reset --hard ${{ github.sha }}
             cd backend
-            docker compose -f docker-compose.prod.yml --env-file .env.production up -d --build --remove-orphans
+            compose="docker compose -f docker-compose.prod.yml --env-file .env.production"
+            # Build and migrate while the old API still serves; a failed migration stops here and leaves it running.
+            $compose build
+            $compose run --rm shortlist-api node dist/scripts/migrate.js
+            $compose up -d --wait --remove-orphans
             docker image prune -f
       - name: Check the API answers
         run: curl -fsS --retry 20 --retry-delay 6 --retry-all-errors https://api.shortlist.co.in/health

@@ -65,6 +65,7 @@ const searchSchema = z.object({
 export const Route = createFileRoute('/_app/resumes/new')({
   validateSearch: searchSchema,
   head: () => ({ meta: [{ title: `New resume | ${site.name}` }] }),
+  loader: ({ context }) => context.queryClient.prefetchQuery(profileQuery),
   component: NewResumePage,
 })
 
@@ -107,8 +108,10 @@ function NewResumePage() {
   const search = Route.useSearch()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { data: profile } = useQuery(profileQuery)
+  const { data: profile, isSuccess: profileLoaded } = useQuery(profileQuery)
   const hasProfile = Boolean(profile?.updatedAt)
+  // Only offer to save over the profile once it is known to be empty, not while loading or failed.
+  const canSaveProfile = profileLoaded && !hasProfile
 
   const { data: customTemplates } = useQuery(customTemplatesQuery)
   const initialTemplate = templateCatalog.some((t) => t.id === search.template)
@@ -248,7 +251,7 @@ function NewResumePage() {
         }
       } else if (source === 'upload' || source === 'ai') {
         const content = imported ?? (await importContent()).content
-        if (saveToProfile && !hasProfile) {
+        if (saveToProfile && canSaveProfile) {
           await unwrap(api.PUT('/v1/profile', { body: { content } }))
           queryClient.invalidateQueries({ queryKey: ['profile'] })
         }
@@ -396,7 +399,7 @@ function NewResumePage() {
                 onChange={(event) => setTitle(event.target.value)}
               />
             </Field>
-            {!hasProfile && (
+            {canSaveProfile && (
               <Field orientation="horizontal">
                 <Checkbox
                   id="review-save-profile"
@@ -661,7 +664,7 @@ function NewResumePage() {
                     )
                   )}
 
-                  {!makesCodeResume && !hasProfile && (
+                  {!makesCodeResume && canSaveProfile && (
                     <Field orientation="horizontal">
                       <Checkbox
                         id="save-profile"

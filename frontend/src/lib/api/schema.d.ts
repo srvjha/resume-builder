@@ -5447,10 +5447,11 @@ export interface paths {
                                 operations: {
                                     id: string;
                                     /** @enum {string} */
-                                    type: "update_bullet" | "update_headline" | "set_hidden" | "reorder" | "update_skills" | "replace_source";
+                                    type: "update_bullet" | "add_bullet" | "update_headline" | "set_hidden" | "reorder" | "update_skills" | "replace_source";
                                     reason: string;
                                     flags: string[];
                                     bulletId?: string;
+                                    afterBulletId?: string;
                                     targetId?: string;
                                     parentId?: string;
                                     groupId?: string;
@@ -5526,10 +5527,11 @@ export interface paths {
                                 operations: {
                                     id: string;
                                     /** @enum {string} */
-                                    type: "update_bullet" | "update_headline" | "set_hidden" | "reorder" | "update_skills" | "replace_source";
+                                    type: "update_bullet" | "add_bullet" | "update_headline" | "set_hidden" | "reorder" | "update_skills" | "replace_source";
                                     reason: string;
                                     flags: string[];
                                     bulletId?: string;
+                                    afterBulletId?: string;
                                     targetId?: string;
                                     parentId?: string;
                                     groupId?: string;

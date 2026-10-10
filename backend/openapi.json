@@ -18196,6 +18196,7 @@
                                 "type": "string",
                                 "enum": [
                                   "update_bullet",
+                                  "add_bullet",
                                   "update_headline",
                                   "set_hidden",
                                   "reorder",
@@ -18213,6 +18214,9 @@
                                 }
                               },
                               "bulletId": {
+                                "type": "string"
+                              },
+                              "afterBulletId": {
                                 "type": "string"
                               },
                               "targetId": {
@@ -18410,6 +18414,7 @@
                                 "type": "string",
                                 "enum": [
                                   "update_bullet",
+                                  "add_bullet",
                                   "update_headline",
                                   "set_hidden",
                                   "reorder",
@@ -18427,6 +18432,9 @@
                                 }
                               },
                               "bulletId": {
+                                "type": "string"
+                              },
+                              "afterBulletId": {
                                 "type": "string"
                               },
                               "targetId": {

@@ -53,4 +53,11 @@ describe("generateStructured", () => {
     await expect(generateStructured(input)).rejects.toMatchObject({ code: "AI_FAILED" });
     expect(state.written[0]).toMatchObject({ status: "failed", inputTokens: 1200, outputTokens: 300 });
   });
+
+  it("gives the model call a timeout so a hung request fails and records as failed", async () => {
+    generateObject.mockRejectedValue(new Error("aborted"));
+    await expect(generateStructured(input)).rejects.toMatchObject({ code: "AI_FAILED" });
+    expect(generateObject.mock.calls[0]![0].abortSignal).toBeInstanceOf(AbortSignal);
+    expect(state.written[0]).toMatchObject({ status: "failed" });
+  });
 });

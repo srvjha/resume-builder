@@ -83,6 +83,8 @@ export async function generateStructured<S extends z.ZodType>(
       schema: input.schema,
       system: input.system,
       messages: [{ role: "user", content }],
+      // A hung model call fails here, which records the run as failed and frees its reservation.
+      abortSignal: AbortSignal.timeout(90_000),
       // Strict mode makes OpenAI return every field, so output always matches the schema.
       // AI output schemas must therefore use nullable fields, never optional ones.
       providerOptions: { openai: { strictJsonSchema: true } },

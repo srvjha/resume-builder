@@ -37,6 +37,7 @@ export function usePdfPreview(input: PreviewInput, delay = 700) {
   })
   const key = input ? JSON.stringify(input) : null
   const controller = useRef<AbortController | null>(null)
+  const shownUrl = useRef<string | null>(null)
 
   useEffect(() => {
     if (!key) return
@@ -62,21 +63,22 @@ export function usePdfPreview(input: PreviewInput, delay = 700) {
             duration_ms: Math.round(performance.now() - editedAt),
             debounce_ms: delay,
           })
-          setState((s) => {
-            if (s.url) URL.revokeObjectURL(s.url)
-            return {
-              url,
-              pageCount,
-              errors: null,
-              loading: false,
-              failed: null,
-            }
+          if (shownUrl.current) URL.revokeObjectURL(shownUrl.current)
+          shownUrl.current = url
+          setState({
+            url,
+            pageCount,
+            errors: null,
+            loading: false,
+            failed: null,
           })
           return
         }
         const body = (await response.json().catch(() => ({}))) as {
           error?: { code?: string; message?: string; details?: CompileError[] }
         }
+        // An older request aborted mid-body must not overwrite the newer one's state.
+        if (abort.signal.aborted) return
         if (body.error?.code === 'COMPILE_FAILED') {
           setState((s) => ({
             ...s,
@@ -103,6 +105,12 @@ export function usePdfPreview(input: PreviewInput, delay = 700) {
     return () => clearTimeout(timer)
   }, [key, delay])
 
-  useEffect(() => () => controller.current?.abort(), [])
+  useEffect(
+    () => () => {
+      controller.current?.abort()
+      if (shownUrl.current) URL.revokeObjectURL(shownUrl.current)
+    },
+    [],
+  )
   return state
 }

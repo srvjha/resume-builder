@@ -74,6 +74,8 @@ function VersionPreview({
   const [failed, setFailed] = useState(false)
   useEffect(() => {
     let objectUrl: string | null = null
+    // Set when the version changes or the panel closes, so a late reply never lands in the UI or leaks.
+    let cancelled = false
     setUrl(null)
     setFailed(false)
     fetch(`${apiUrl}/v1/resumes/${resumeId}/pdf?versionId=${versionId}`, {
@@ -82,10 +84,14 @@ function VersionPreview({
       .then(async (response) => {
         if (!response.ok) throw new Error('failed')
         objectUrl = URL.createObjectURL(await response.blob())
-        setUrl(objectUrl)
+        if (cancelled) URL.revokeObjectURL(objectUrl)
+        else setUrl(objectUrl)
       })
-      .catch(() => setFailed(true))
+      .catch(() => {
+        if (!cancelled) setFailed(true)
+      })
     return () => {
+      cancelled = true
       if (objectUrl) URL.revokeObjectURL(objectUrl)
     }
   }, [resumeId, versionId])

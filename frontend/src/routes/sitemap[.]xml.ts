@@ -4,6 +4,10 @@ import { guides } from '@/lib/guides'
 import { site } from '@/lib/site'
 import { templateCatalog } from '@/lib/templates'
 
+const lastmod = new Map(
+  guides.map((guide) => [`/guides/${guide.slug}`, guide.updated]),
+)
+
 // Public pages only. Share links stay out: their owners decide whether they're found.
 const paths = [
   '/',
@@ -25,7 +29,10 @@ export const Route = createFileRoute('/sitemap.xml')({
       GET: () =>
         new Response(
           `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${paths
-            .map((path) => `  <url><loc>${site.url}${path}</loc></url>`)
+            .map((path) => {
+              const date = lastmod.get(path)
+              return `  <url><loc>${site.url}${path}</loc>${date ? `<lastmod>${date}</lastmod>` : ''}</url>`
+            })
             .join('\n')}\n</urlset>\n`,
           {
             headers: {

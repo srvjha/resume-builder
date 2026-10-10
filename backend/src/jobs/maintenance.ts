@@ -1,6 +1,6 @@
-import { and, eq, inArray, isNotNull, lt } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, lt, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { resumes, subscriptions, uploads, users } from "../db/schema/index.js";
+import { aiRuns, resumes, subscriptions, uploads, users } from "../db/schema/index.js";
 import { logger } from "../lib/logger.js";
 import { storage } from "../lib/storage.js";
 import { recomputePlan } from "../modules/billing/billing.service.js";
@@ -27,12 +27,28 @@ export async function expireSubscriptions() {
 }
 
 // Deleted resumes can be recovered for 30 days; after that they're removed for good.
+// AI runs keep their usage numbers for quotas and billing, but their prompts and patches go.
 export async function purgeDeletedResumes() {
-  const purged = await db
-    .delete(resumes)
-    .where(and(isNotNull(resumes.deletedAt), lt(resumes.deletedAt, new Date(Date.now() - 30 * DAY))))
-    .returning({ id: resumes.id });
-  logger.info({ purged: purged.length }, "Purged deleted resumes");
+  const purged = await db.transaction(async (tx) => {
+    const due = await tx
+      .select({ id: resumes.id })
+      .from(resumes)
+      .where(and(isNotNull(resumes.deletedAt), lt(resumes.deletedAt, new Date(Date.now() - 30 * DAY))));
+    const ids = due.map((row) => row.id);
+    if (ids.length === 0) return 0;
+    // Each operation becomes an empty object, so the count quotas read from patchOps stays the same.
+    await tx
+      .update(aiRuns)
+      .set({
+        patchOps: sql`case when jsonb_typeof(${aiRuns.patchOps}->'operations') = 'array' then jsonb_build_object('operations', coalesce((select jsonb_agg('{}'::jsonb) from jsonb_array_elements(${aiRuns.patchOps}->'operations')), '[]'::jsonb)) end`,
+        acceptedOpIds: null,
+        error: null,
+      })
+      .where(inArray(aiRuns.resumeId, ids));
+    await tx.delete(resumes).where(inArray(resumes.id, ids));
+    return ids.length;
+  });
+  logger.info({ purged }, "Purged deleted resumes");
 }
 
 // Uploads only matter during import; the extracted content lives in resumes.

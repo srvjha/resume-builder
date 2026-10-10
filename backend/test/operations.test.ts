@@ -83,3 +83,31 @@ describe("unverifiedTerms", () => {
     expect(unverifiedTerms("Reduced p99 latency by 40%", facts)).toEqual(["p99"]);
   });
 });
+
+describe("add_bullet", () => {
+  const bullets = (c: typeof content) => {
+    const section = c.sections[0];
+    return section?.type === "experience" ? section.entries[0]!.bullets.map((b) => b.text) : [];
+  };
+
+  it("splits a bullet into two, keeping the order the AI gave", () => {
+    const next = applyOperations(content, [
+      op({ type: "update_bullet", bulletId: "b1", text: "Built payouts API in Go with Redis" }),
+      op({ id: "n1", type: "add_bullet", afterBulletId: "b1", text: "Cut payouts latency by 40%" }),
+      op({ id: "n2", type: "add_bullet", afterBulletId: "b1", text: "Cached hot reads in Redis" }),
+    ]);
+    expect(bullets(next)).toEqual([
+      "Built payouts API in Go with Redis",
+      "Cut payouts latency by 40%",
+      "Cached hot reads in Redis",
+      "Wrote tests",
+    ]);
+    expect(resumeContentSchema.safeParse(next).success).toBe(true);
+  });
+
+  it("only adds after a bullet that exists", () => {
+    expect(isApplicable(content, { type: "add_bullet", afterBulletId: "b1", text: "Led reviews" })).toBe(true);
+    expect(isApplicable(content, { type: "add_bullet", afterBulletId: "nope", text: "Led reviews" })).toBe(false);
+    expect(isApplicable(content, { type: "add_bullet", afterBulletId: "b1", text: " " })).toBe(false);
+  });
+});

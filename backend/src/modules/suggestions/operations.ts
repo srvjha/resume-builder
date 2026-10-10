@@ -1,10 +1,12 @@
 import { z } from "zod";
 import type { ResumeContent } from "../../schemas/resume-content.js";
 
-// Edits the AI may propose on structured content. None of them can add new facts:
-// bullets are rephrased in place, and skills can only be reordered or trimmed.
+// Edits the AI may propose on structured content. None of them may add new facts: bullets are rephrased in place or
+// split into a new bullet after an existing one (checked for unknown facts like a rewrite), and skills can only be
+// reordered or trimmed.
 export const operationSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("update_bullet"), bulletId: z.string(), text: z.string() }),
+  z.object({ type: z.literal("add_bullet"), afterBulletId: z.string(), text: z.string() }),
   z.object({ type: z.literal("update_headline"), text: z.string() }),
   z.object({ type: z.literal("set_hidden"), targetId: z.string(), hidden: z.boolean() }),
   // parentId is a section id (orders entries), an entry id (orders bullets) or "sections".
@@ -23,10 +25,13 @@ function entriesOf(section: ResumeContent["sections"][number]): Entry[] {
 }
 
 function findBullet(content: ResumeContent, bulletId: string) {
+  return entryOfBullet(content, bulletId)?.bullets.find((b) => b.id === bulletId);
+}
+
+function entryOfBullet(content: ResumeContent, bulletId: string) {
   for (const section of content.sections) {
     for (const entry of entriesOf(section)) {
-      const bullet = entry.bullets.find((b) => b.id === bulletId);
-      if (bullet) return bullet;
+      if (entry.bullets.some((b) => b.id === bulletId)) return entry;
     }
   }
   return undefined;
@@ -68,6 +73,10 @@ export function isApplicable(content: ResumeContent, op: z.infer<typeof operatio
   switch (op.type) {
     case "update_bullet":
       return Boolean(findBullet(content, op.bulletId)) && op.text.trim().length > 0 && op.text.length <= 600;
+    case "add_bullet": {
+      const entry = entryOfBullet(content, op.afterBulletId);
+      return Boolean(entry) && entry!.bullets.length < 20 && op.text.trim().length > 0 && op.text.length <= 600;
+    }
     case "update_headline":
       return op.text.trim().length > 0 && op.text.length <= 200;
     case "set_hidden":
@@ -95,8 +104,22 @@ function reorderBy<T extends { id: string }>(items: T[], orderedIds: string[]) {
 
 export function applyOperations(content: ResumeContent, operations: Operation[]): ResumeContent {
   const next: ResumeContent = structuredClone(content);
+  // Several bullets added after the same one keep the order the AI gave them.
+  const lastAdded = new Map<string, string>();
   for (const op of operations) {
     switch (op.type) {
+      case "add_bullet": {
+        const after = lastAdded.get(op.afterBulletId) ?? op.afterBulletId;
+        const entry = entryOfBullet(next, after);
+        if (!entry || entry.bullets.length >= 20) break;
+        entry.bullets.splice(entry.bullets.findIndex((b) => b.id === after) + 1, 0, {
+          id: op.id,
+          text: op.text,
+          hidden: false,
+        });
+        lastAdded.set(op.afterBulletId, op.id);
+        break;
+      }
       case "update_bullet": {
         const bullet = findBullet(next, op.bulletId);
         if (bullet) bullet.text = op.text;

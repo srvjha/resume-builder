@@ -36,6 +36,8 @@ const rules = `Rules you must follow:
 - Never invent facts. Don't add employers, titles, dates, numbers, metrics, tools or skills that don't appear in
   the resume or the master profile. You may rephrase, reorder, emphasise with **bold**, or hide content.
 - Keep bullets to one or two lines (under 200 characters), starting with a strong action verb, no first person.
+- To split a long bullet or give an item more bullets, rewrite the existing bullet with update_bullet and put the
+  rest in add_bullet after it. New bullets follow the same rule: only facts already in the resume or profile.
   A rewritten bullet is never longer than the one it replaces, unless that one was under 120 characters.
 - Refer to items only by the ids given in the JSON. Propose only changes that clearly help.
 - Follow the conventions (spelling, date format, terminology) of the job's location when a job is given,
@@ -46,20 +48,22 @@ function toOperation(raw: z.infer<typeof aiStructuredOutput>["operations"][numbe
   const candidate =
     raw.type === "update_bullet"
       ? { type: raw.type, bulletId: raw.targetId, text: raw.text }
-      : raw.type === "update_headline"
-        ? { type: raw.type, text: raw.text }
-        : raw.type === "set_hidden"
-          ? { type: raw.type, targetId: raw.targetId, hidden: raw.hidden }
-          : raw.type === "reorder"
-            ? { type: raw.type, parentId: raw.targetId, orderedIds: raw.orderedIds }
-            : { type: raw.type, groupId: raw.targetId, items: raw.items };
+      : raw.type === "add_bullet"
+        ? { type: raw.type, afterBulletId: raw.targetId, text: raw.text }
+        : raw.type === "update_headline"
+          ? { type: raw.type, text: raw.text }
+          : raw.type === "set_hidden"
+            ? { type: raw.type, targetId: raw.targetId, hidden: raw.hidden }
+            : raw.type === "reorder"
+              ? { type: raw.type, parentId: raw.targetId, orderedIds: raw.orderedIds }
+              : { type: raw.type, groupId: raw.targetId, items: raw.items };
   const parsed = operationSchema.safeParse(candidate);
   return parsed.success ? parsed.data : null;
 }
 
 function flagsFor(op: z.infer<typeof operationSchema>, facts: string[]) {
   const check = (text: string) => unverifiedTerms(text, facts).map((term) => `Not found in your profile: ${term}`);
-  if (op.type === "update_bullet" || op.type === "update_headline") return check(op.text);
+  if (op.type === "update_bullet" || op.type === "add_bullet" || op.type === "update_headline") return check(op.text);
   if (op.type === "update_skills") return check(op.items.join(", "));
   return [];
 }

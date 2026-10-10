@@ -61,6 +61,12 @@ export const storedSuggestion = z.object({
   operations: z.array(z.record(z.string(), z.unknown())),
 });
 
+// Clamped, not rejected, so an over-long answer still applies. Same limits as skillGroup in resume-content.ts.
+const skillItems = z
+  .array(z.string())
+  .nullable()
+  .transform((items) => items?.slice(0, 40).map((item) => item.trim().slice(0, 60)) ?? null);
+
 // What the model returns for structured resumes.
 export const aiStructuredOutput = z.object({
   summary: z.string().describe("One or two sentences on what changed and why"),
@@ -76,7 +82,7 @@ export const aiStructuredOutput = z.object({
       text: z.string().nullable().describe("New text for update_bullet or update_headline"),
       hidden: z.boolean().nullable(),
       orderedIds: z.array(z.string()).nullable().describe("reorder: every child id of the parent, in the new order"),
-      items: z.array(z.string()).nullable().describe("update_skills: the group's items, reordered or trimmed"),
+      items: skillItems.describe("update_skills: the group's items, reordered or trimmed"),
       reason: z.string().describe("Short reason shown to the user"),
     }),
   ),

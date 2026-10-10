@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { CheckIcon, CopyIcon, DownloadIcon, XIcon } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { PageHeader } from '@/components/app/page-header'
@@ -81,22 +81,30 @@ function AccountTab({ me }: { me: Me }) {
   const validFormat = USERNAME_PATTERN.test(normalized)
   const changedUsername = normalized !== me.username
 
-  useEffect(
-    () => setAvailability(changedUsername && validFormat ? 'checking' : 'idle'),
-    [changedUsername, validFormat, normalized],
-  )
+  // Every change to the name cancels the lookup for the previous one, so a slow reply never shows for the new name.
+  const lookup = useRef<AbortController | null>(null)
+  useEffect(() => {
+    lookup.current?.abort()
+    setAvailability(changedUsername && validFormat ? 'checking' : 'idle')
+  }, [changedUsername, validFormat, normalized])
   useDebouncedEffect(
     () => {
       if (!changedUsername || !validFormat) return
+      const abort = new AbortController()
+      lookup.current = abort
       unwrap(
         api.GET('/v1/usernames/{username}', {
           params: { path: { username: normalized } },
+          signal: abort.signal,
         }),
       )
-        .then((result) =>
-          setAvailability(result.available ? 'available' : 'taken'),
-        )
-        .catch(() => setAvailability('idle'))
+        .then((result) => {
+          if (!abort.signal.aborted)
+            setAvailability(result.available ? 'available' : 'taken')
+        })
+        .catch(() => {
+          if (!abort.signal.aborted) setAvailability('idle')
+        })
     },
     [normalized],
     400,

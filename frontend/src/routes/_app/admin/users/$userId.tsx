@@ -505,9 +505,6 @@ function UserReport({ data }: { data: AdminUser }) {
                   <span className="font-medium">
                     {deviceOf(session.userAgent)}
                   </span>
-                  <span className="font-mono text-xs text-muted-foreground">
-                    {session.ipAddress ?? 'unknown IP'}
-                  </span>
                   <span className="text-muted-foreground">
                     Active {timeAgo(session.updatedAt)}
                   </span>

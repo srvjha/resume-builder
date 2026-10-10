@@ -7261,7 +7261,6 @@ export interface paths {
                                     updatedAt: string;
                                     expiresAt: string;
                                     userAgent: string | null;
-                                    ipAddress: string | null;
                                 }[];
                                 shareLinks: number;
                                 shareViews: number;
@@ -7413,7 +7412,6 @@ export interface paths {
                                     updatedAt: string;
                                     expiresAt: string;
                                     userAgent: string | null;
-                                    ipAddress: string | null;
                                 }[];
                                 shareLinks: number;
                                 shareViews: number;
@@ -7663,7 +7661,6 @@ export interface paths {
                                     updatedAt: string;
                                     expiresAt: string;
                                     userAgent: string | null;
-                                    ipAddress: string | null;
                                 }[];
                                 shareLinks: number;
                                 shareViews: number;

@@ -23154,12 +23154,6 @@
                                   "string",
                                   "null"
                                 ]
-                              },
-                              "ipAddress": {
-                                "type": [
-                                  "string",
-                                  "null"
-                                ]
                               }
                             },
                             "required": [
@@ -23167,8 +23161,7 @@
                               "createdAt",
                               "updatedAt",
                               "expiresAt",
-                              "userAgent",
-                              "ipAddress"
+                              "userAgent"
                             ],
                             "additionalProperties": false
                           }
@@ -23764,12 +23757,6 @@
                                   "string",
                                   "null"
                                 ]
-                              },
-                              "ipAddress": {
-                                "type": [
-                                  "string",
-                                  "null"
-                                ]
                               }
                             },
                             "required": [
@@ -23777,8 +23764,7 @@
                               "createdAt",
                               "updatedAt",
                               "expiresAt",
-                              "userAgent",
-                              "ipAddress"
+                              "userAgent"
                             ],
                             "additionalProperties": false
                           }
@@ -24466,12 +24452,6 @@
                                   "string",
                                   "null"
                                 ]
-                              },
-                              "ipAddress": {
-                                "type": [
-                                  "string",
-                                  "null"
-                                ]
                               }
                             },
                             "required": [
@@ -24479,8 +24459,7 @@
                               "createdAt",
                               "updatedAt",
                               "expiresAt",
-                              "userAgent",
-                              "ipAddress"
+                              "userAgent"
                             ],
                             "additionalProperties": false
                           }

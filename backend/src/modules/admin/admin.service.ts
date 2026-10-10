@@ -420,7 +420,6 @@ export async function getUser(userId: string) {
         updatedAt: sessions.updatedAt,
         expiresAt: sessions.expiresAt,
         userAgent: sessions.userAgent,
-        ipAddress: sessions.ipAddress,
       })
       .from(sessions)
       .where(eq(sessions.userId, userId))

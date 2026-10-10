@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq, ne } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { payments, subscriptions, webhookEvents } from "../../db/schema/index.js";
 import { logger } from "../../lib/logger.js";
@@ -10,12 +10,18 @@ type RazorpayEvent = {
   event: string;
   payload: {
     payment?: {
-      entity: Entity & { order_id?: string; method?: string; amount?: number; notes?: Record<string, string> };
+      entity: Entity & {
+        order_id?: string;
+        method?: string;
+        amount?: number;
+        amount_refunded?: number;
+        notes?: Record<string, string>;
+      };
     };
     subscription?: {
       entity: Entity & { current_start?: number; current_end?: number; notes?: Record<string, string> };
     };
-    refund?: { entity: Entity & { payment_id?: string } };
+    refund?: { entity: Entity & { payment_id?: string; amount?: number } };
   };
 };
 
@@ -51,7 +57,7 @@ async function onPaymentCaptured(
     .where(eq(payments.id, row.id));
 
   if (row.subscriptionId) {
-    // A new Season Pass extends any time left on a current one.
+    // A new Season Pass extends the latest-ending current one.
     const [current] = await tx
       .select({ end: subscriptions.currentPeriodEnd })
       .from(subscriptions)
@@ -62,7 +68,8 @@ async function onPaymentCaptured(
           eq(subscriptions.status, "active"),
         ),
       )
-      .orderBy(subscriptions.currentPeriodEnd);
+      .orderBy(desc(subscriptions.currentPeriodEnd))
+      .limit(1);
     const start = current?.end && current.end > new Date() ? current.end : new Date();
     const end = new Date(start);
     end.setMonth(end.getMonth() + SEASON_PASS_MONTHS);
@@ -126,6 +133,27 @@ async function onSubscriptionEvent(tx: Tx, event: RazorpayEvent, raw: unknown) {
   await recomputePlan(row.userId, tx);
 }
 
+// A full refund ends the Season Pass it paid for straight away; a partial one (a goodwill credit) changes nothing.
+// Pro is left alone: it renews through Razorpay, so a refunded Pro month is cancelled there and that event ends it.
+async function onRefund(tx: Tx, event: RazorpayEvent) {
+  const refund = event.payload.refund?.entity;
+  if (!refund?.payment_id) return;
+  const [row] = await tx.select().from(payments).where(eq(payments.razorpayPaymentId, refund.payment_id)).limit(1);
+  // Several partial refunds can add up to the full amount, which the payment's running total shows.
+  const refunded = event.payload.payment?.entity.amount_refunded ?? refund.amount ?? 0;
+  if (!row || refunded < row.amountPaise) return;
+
+  await tx.update(payments).set({ status: "refunded" }).where(eq(payments.id, row.id));
+  if (!row.subscriptionId) return;
+  // ponytail: a pass stacked after this one keeps its later end date, so refunding the earlier of two stacked
+  // passes leaves its remaining time on the user. Shift later passes back by the refunded time if that matters.
+  await tx
+    .update(subscriptions)
+    .set({ status: "expired", currentPeriodEnd: new Date() })
+    .where(and(eq(subscriptions.id, row.subscriptionId), eq(subscriptions.plan, "season_pass")));
+  await recomputePlan(row.userId, tx);
+}
+
 export async function handleRazorpayEvent(event: RazorpayEvent, eventId: string | undefined) {
   // Analytics run only after the transaction commits, so a rolled-back event is never counted.
   const afterCommit = await db.transaction(async (tx) => {
@@ -144,15 +172,15 @@ async function applyEvent(tx: Tx, event: RazorpayEvent) {
         await tx
           .update(payments)
           .set({ status: "failed", raw: event })
-          .where(eq(payments.razorpayOrderId, event.payload.payment.entity.order_id));
+          // Retries share an order, and Razorpay may deliver an earlier failure after the capture.
+          .where(
+            and(eq(payments.razorpayOrderId, event.payload.payment.entity.order_id), ne(payments.status, "captured")),
+          );
       }
       return null;
-    case "refund.processed": {
-      const paymentId = event.payload.refund?.entity.payment_id;
-      if (paymentId)
-        await tx.update(payments).set({ status: "refunded" }).where(eq(payments.razorpayPaymentId, paymentId));
+    case "refund.processed":
+      await onRefund(tx, event);
       return null;
-    }
     case "subscription.activated":
     case "subscription.charged":
     case "subscription.cancelled":

@@ -130,3 +130,13 @@ CFA Level 1 a plus.`;
     expect(findKnockouts(job, { text: resumeText })).toEqual([]);
   });
 });
+
+describe("findKnockouts on hostile input", () => {
+  it("stays fast on one huge run-on sentence", () => {
+    vi.useRealTimers();
+    const job = "3 years experience " + "we have ".repeat(2400) + "you";
+    const started = performance.now();
+    findKnockouts(job, { text: resumeText });
+    expect(performance.now() - started).toBeLessThan(1000);
+  });
+});

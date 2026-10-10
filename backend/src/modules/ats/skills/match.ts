@@ -73,12 +73,9 @@ function scan(text: string, inSkillsSection: boolean): Occurrence[] {
     if (between.length > 1 || (between[0] && !["and", "or"].includes(between[0].key))) return false;
     return between.length === 1 || LIST_GAP.test(text.slice(tokens[left.last]!.end, tokens[right.first]!.start));
   };
-  for (let changed = true; changed;) {
-    changed = false;
-    found.forEach((_, k) => {
-      if (!accepted[k] && (listed(k, k - 1) || listed(k, k + 1))) accepted[k] = changed = true;
-    });
-  }
+  // One sweep each way reaches every list member; a fixed-point loop was O(n^2) on long lists.
+  for (let k = 1; k < found.length; k++) if (!accepted[k] && listed(k, k - 1)) accepted[k] = true;
+  for (let k = found.length - 2; k >= 0; k--) if (!accepted[k] && listed(k, k + 1)) accepted[k] = true;
   return found.filter((_, k) => accepted[k]);
 }
 

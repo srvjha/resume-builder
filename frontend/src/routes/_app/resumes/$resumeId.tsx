@@ -57,7 +57,7 @@ import { useCollapsedSidebar } from '@/hooks/use-collapsed-sidebar'
 import { useDebouncedEffect } from '@/hooks/use-debounced-effect'
 import { useMediaQuery } from '@/hooks/use-media-query'
 import { usePdfPreview } from '@/hooks/use-pdf-preview'
-import { api, errorMessage, unwrap } from '@/lib/api/client'
+import { ApiError, api, errorMessage, unwrap } from '@/lib/api/client'
 import { queryKeys, resumeQuery } from '@/lib/api/queries'
 import type { ResumeContent, ResumeDetail } from '@/lib/api/types'
 import { panelStorage } from '@/lib/panel-storage'
@@ -224,16 +224,34 @@ function ResumeEditor({
       : { texSource },
   )
 
+  // A save made on a head that another tab or a restore has since moved comes back as a conflict.
+  const [conflict, setConflict] = useState(false)
+  const overwrite = useRef(false)
+  const loadLatest = useRef(false)
+
   const save = useMutation({
-    mutationFn: (payload: string) =>
-      unwrap(
+    mutationFn: (payload: string) => {
+      const baseVersionId = overwrite.current
+        ? undefined
+        : (headVersionId ?? undefined)
+      overwrite.current = false
+      return unwrap(
         api.POST('/v1/resumes/{resumeId}/versions', {
           params: { path: { resumeId: resume.id } },
           body: structured
-            ? { kind: 'manual', content: JSON.parse(payload) as ResumeContent }
-            : { kind: 'manual', texSource: JSON.parse(payload) as string },
+            ? {
+                kind: 'manual',
+                baseVersionId,
+                content: JSON.parse(payload) as ResumeContent,
+              }
+            : {
+                kind: 'manual',
+                baseVersionId,
+                texSource: JSON.parse(payload) as string,
+              },
         }),
-      ),
+      )
+    },
     onMutate: () => setSaveState('saving'),
     onSuccess: (version, payload) => {
       lastSaved.current = payload
@@ -249,20 +267,46 @@ function ResumeEditor({
       )
       queryClient.invalidateQueries({ queryKey: queryKeys.versions(resume.id) })
     },
-    onError: () => setSaveState('error'),
+    onError: (error) => {
+      setSaveState('error')
+      if (error instanceof ApiError && error.code === 'VERSION_CONFLICT')
+        setConflict(true)
+    },
   })
 
   const draft = JSON.stringify(structured ? content : texSource)
   useEffect(() => {
     if (draft !== lastSaved.current) setSaveState('unsaved')
   }, [draft])
+  // Re-armed when a save settles, so edits made while it was in flight still save; a draft that just failed waits for the next edit.
   useDebouncedEffect(
     () => {
-      if (draft !== lastSaved.current && !save.isPending) save.mutate(draft)
+      const failed = save.isError && save.variables === draft
+      if (
+        draft !== lastSaved.current &&
+        !save.isPending &&
+        !failed &&
+        !conflict
+      )
+        save.mutate(draft)
     },
-    [draft],
+    [draft, save.isPending],
     1500,
   )
+
+  // Closing the dialog any other way keeps this tab's version; the replaced one stays in History.
+  function resolveConflict(open: boolean) {
+    if (open) return
+    setConflict(false)
+    if (loadLatest.current) {
+      loadLatest.current = false
+      // The other head isn't one this editor saved, so the refetch remounts the editor on it.
+      queryClient.invalidateQueries({ queryKey: queryKeys.resume(resume.id) })
+    } else {
+      overwrite.current = true
+      save.mutate(draft)
+    }
+  }
 
   const update = useMutation({
     mutationFn: (body: {
@@ -277,7 +321,14 @@ function ResumeEditor({
           body,
         }),
       ),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['resumes'] }),
+    onSuccess: (_resume, body) => {
+      // The editor compares against this cached resume, e.g. renaming back to the old title.
+      queryClient.setQueryData(
+        queryKeys.resume(resume.id),
+        (old: ResumeDetail | undefined) => (old ? { ...old, ...body } : old),
+      )
+      return queryClient.invalidateQueries({ queryKey: ['resumes'] })
+    },
     onError: (error) => toast.error(errorMessage(error)),
   })
 
@@ -615,9 +666,7 @@ function ResumeEditor({
         </div>
       )}
       {!showAi && aiPanel}
-      <UnsavedChangesGuard
-        when={saveState === 'unsaved' || saveState === 'saving'}
-      />
+      <UnsavedChangesGuard when={saveState !== 'saved'} />
       <SaveTemplateDialog
         open={offerTemplate}
         onOpenChange={setOfferTemplate}
@@ -633,6 +682,16 @@ function ResumeEditor({
         onOpenChange={setHistoryOpen}
         resumeId={resume.id}
         headVersionId={headVersionId}
+      />
+      <ConfirmDialog
+        open={conflict}
+        onOpenChange={resolveConflict}
+        title="This resume changed in another tab"
+        description="It was saved or restored somewhere else after you opened it here. Load the latest version and lose the unsaved edits in this tab, or keep this tab's version. Whichever you replace stays in History."
+        confirmLabel="Load latest"
+        cancelLabel="Keep this tab's version"
+        destructive
+        onConfirm={() => (loadLatest.current = true)}
       />
       <ConfirmDialog
         open={confirmToForm}

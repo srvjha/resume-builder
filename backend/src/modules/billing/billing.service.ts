@@ -1,4 +1,4 @@
-import { and, desc, eq, gt, inArray } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, isNotNull } from "drizzle-orm";
 import { env } from "../../config/env.js";
 import { db } from "../../db/index.js";
 import { payments, subscriptions, users } from "../../db/schema/index.js";
@@ -122,7 +122,15 @@ export async function cancelSubscription(userId: string) {
   const [subscription] = await db
     .select()
     .from(subscriptions)
-    .where(and(eq(subscriptions.userId, userId), eq(subscriptions.plan, "pro"), eq(subscriptions.status, "active")))
+    // An admin-granted Pro row has no Razorpay subscription, so skip it to find the one that bills.
+    .where(
+      and(
+        eq(subscriptions.userId, userId),
+        eq(subscriptions.plan, "pro"),
+        eq(subscriptions.status, "active"),
+        isNotNull(subscriptions.razorpaySubscriptionId),
+      ),
+    )
     .limit(1);
   if (!subscription?.razorpaySubscriptionId) throw new NotFoundError("Active Pro subscription");
   await razorpay("POST", `/subscriptions/${subscription.razorpaySubscriptionId}/cancel`, { cancel_at_cycle_end: 1 });

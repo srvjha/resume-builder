@@ -2,7 +2,7 @@ import { Router } from "express";
 import { track, trackServer } from "../../lib/analytics.js";
 import { NotFoundError } from "../../lib/errors.js";
 import { sendData } from "../../lib/http.js";
-import { atsLimiter } from "../../middleware/rate-limit.js";
+import { atsLimiter, compileLimiter } from "../../middleware/rate-limit.js";
 import { currentUser, requireAuth } from "../../middleware/require-auth.js";
 import { validated } from "../../middleware/validate.js";
 import type { ResumeContent } from "../../schemas/resume-content.js";
@@ -54,6 +54,7 @@ function expectedFromText(text: string): Expected | undefined {
 atsRouter.post(
   "/resumes/:resumeId/ats-reports",
   requireAuth,
+  compileLimiter,
   ...validated({ params: resumeParams, body: createResumeAtsReportBody }, async (req, res) => {
     const userId = currentUser(req).id;
     const resume = await getResume(userId, req.params.resumeId);

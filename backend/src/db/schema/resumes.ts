@@ -88,7 +88,7 @@ export const resumes = pgTable(
     deletedAt: timestamp({ withTimezone: true }),
     ...timestamps,
   },
-  (t) => [index().on(t.userId)],
+  (t) => [index().on(t.userId), index().on(t.jobId), index().on(t.sourceResumeId), index().on(t.headVersionId)],
 );
 
 export const versionKind = pgEnum("version_kind", [
@@ -120,6 +120,7 @@ export const resumeVersions = pgTable(
   },
   (t) => [
     index().on(t.resumeId, t.createdAt),
+    index().on(t.parentId),
     check("resume_versions_one_content", sql`(${t.content} is not null) <> (${t.texSource} is not null)`),
   ],
 );

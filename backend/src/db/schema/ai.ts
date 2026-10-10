@@ -60,7 +60,7 @@ export const aiRuns = pgTable(
     byok: boolean().notNull().default(false),
     createdAt: createdAt(),
   },
-  (t) => [index().on(t.userId, t.createdAt), index().on(t.resumeId)],
+  (t) => [index().on(t.userId, t.createdAt), index().on(t.resumeId), index().on(t.versionId), index().on(t.jobId)],
 );
 
 export const aiProvider = pgEnum("ai_provider", ["openai", "anthropic", "openrouter"]);

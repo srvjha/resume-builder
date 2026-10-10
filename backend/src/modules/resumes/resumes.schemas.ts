@@ -52,6 +52,8 @@ export const createVersionBody = z.discriminatedUnion("kind", [
   // Autosave or explicit save. A label turns it into a named checkpoint.
   z.object({
     kind: z.literal("manual"),
+    // The head this save was made on. If another tab or a restore moved the head since, the save is a 409.
+    baseVersionId: idParam.optional(),
     content: resumeContentSchema.optional(),
     texSource: texSourceSchema.optional(),
     label: z.string().trim().min(1).max(80).optional(),

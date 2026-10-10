@@ -314,6 +314,15 @@ export async function createVersion(userId: string, resumeId: string, input: z.i
       );
     }
 
+    if (input.baseVersionId) {
+      // Row-locks the resume, so a concurrent save on the same base waits here and then finds the head moved.
+      const [current] = await tx
+        .update(resumes)
+        .set({ updatedAt: new Date() })
+        .where(and(eq(resumes.id, resume.id), eq(resumes.headVersionId, input.baseVersionId)))
+        .returning({ id: resumes.id });
+      if (!current) throw new AppError(409, "VERSION_CONFLICT", "This resume was changed somewhere else");
+    }
     const payload = (input.content ? { content: input.content } : { texSource: input.texSource }) as VersionPayload;
     const kind: VersionKind = input.label ? "named" : "manual";
     return toVersionDetail(

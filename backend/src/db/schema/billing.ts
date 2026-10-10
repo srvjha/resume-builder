@@ -55,7 +55,7 @@ export const payments = pgTable(
     raw: jsonb(),
     ...timestamps,
   },
-  (t) => [index().on(t.userId), index().on(t.razorpayOrderId)],
+  (t) => [index().on(t.userId), index().on(t.razorpayOrderId), index().on(t.subscriptionId)],
 );
 
 // Webhook deliveries already handled; providers retry, so each event id is processed once.
@@ -100,5 +100,5 @@ export const promoRedemptions = pgTable(
     subscriptionId: uuid().references(() => subscriptions.id, { onDelete: "set null" }),
     createdAt: createdAt(),
   },
-  (t) => [index().on(t.promoCodeId)],
+  (t) => [index().on(t.promoCodeId), index().on(t.subscriptionId)],
 );

@@ -47,9 +47,9 @@ export async function redeemCode(userId: string, rawCode: string) {
 
     const subscription = await grantPlan(userId, code!.plan, code!.months, tx);
     await tx.insert(promoRedemptions).values({ promoCodeId: code!.id, userId, subscriptionId: subscription.id });
+    await recomputePlan(userId, tx);
     return code!;
   });
-  await recomputePlan(userId);
   track(userId, "promo_code_redeemed", { code: promo.code, kind: promo.kind, plan: promo.plan, months: promo.months });
   return getSubscription(userId);
 }

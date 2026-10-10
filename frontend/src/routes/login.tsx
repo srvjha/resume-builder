@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
@@ -48,6 +49,7 @@ const comingSoon = (provider: Provider) =>
 function LoginPage() {
   const { mode, redirect } = Route.useSearch()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { data: session } = useSession()
   const [pending, setPending] = useState<Provider | 'guest' | null>(null)
   const isSignup = mode === 'signup'
@@ -85,6 +87,8 @@ function LoginPage() {
       )
       return
     }
+    // Guest sign-in stays in the app without a reload, so drop anything cached for whoever used this tab before.
+    queryClient.clear()
     navigate({ to: target })
   }
 

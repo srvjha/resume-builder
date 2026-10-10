@@ -28,13 +28,18 @@ const place = (value: string | undefined) =>
 
 async function resolveUser(username: string) {
   const columns = { id: users.id, username: users.username, name: users.name, image: users.image, plan: users.plan };
-  const [user] = await db.select(columns).from(users).where(eq(users.username, username)).limit(1);
+  // A suspended account's pages go dark with its sessions.
+  const [user] = await db
+    .select(columns)
+    .from(users)
+    .where(and(eq(users.username, username), isNull(users.suspendedAt)))
+    .limit(1);
   if (user) return user;
   const [redirected] = await db
     .select(columns)
     .from(usernameRedirects)
     .innerJoin(users, eq(users.id, usernameRedirects.userId))
-    .where(eq(usernameRedirects.oldUsername, username))
+    .where(and(eq(usernameRedirects.oldUsername, username), isNull(users.suspendedAt)))
     .limit(1);
   if (!redirected) throw new NotFoundError("User");
   return redirected;

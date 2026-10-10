@@ -29,6 +29,10 @@ describe("texUrl", () => {
   it("escapes characters that break \\href", () => {
     expect(texUrl("https://x.com/a%20b#top")).toBe("https://x.com/a\\%20b\\#top");
   });
+
+  it("neutralises ^^ hex escapes", () => {
+    expect(texUrl("https://a.com/^^7d^^5cinput")).toBe("https://a.com/\\%5E\\%5E7d\\%5E\\%5E5cinput");
+  });
 });
 
 describe("dateRange", () => {

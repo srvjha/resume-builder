@@ -43,6 +43,13 @@ jobs:
           curl -fsSL "https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%400.17.0/tectonic-0.17.0-x86_64-unknown-linux-musl.tar.gz" \
             | sudo tar -xz -C /usr/local/bin tectonic
           tectonic --version
+      # Downloads the TeX packages the templates use before the tests, so a cold cache can't time out a compile test.
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.cache/Tectonic
+          key: tectonic-0.17.0-${{ hashFiles('backend/src/templates/**', 'backend/src/scripts/warm-tectonic.ts') }}
+          restore-keys: tectonic-0.17.0-
+      - run: pnpm exec tsx src/scripts/warm-tectonic.ts
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm format:check

@@ -280,7 +280,14 @@ function ResumeEditor({
           body,
         }),
       ),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['resumes'] }),
+    onSuccess: (_resume, body) => {
+      // The editor compares against this cached resume, e.g. renaming back to the old title.
+      queryClient.setQueryData(
+        queryKeys.resume(resume.id),
+        (old: ResumeDetail | undefined) => (old ? { ...old, ...body } : old),
+      )
+      return queryClient.invalidateQueries({ queryKey: ['resumes'] })
+    },
     onError: (error) => toast.error(errorMessage(error)),
   })
 

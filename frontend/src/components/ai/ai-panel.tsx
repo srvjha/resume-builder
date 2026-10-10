@@ -241,6 +241,8 @@ export function AiPanel({
   content,
   texSource,
   hasUnsavedChanges,
+  suggestion,
+  setSuggestion,
   checkAtsOnOpen = false,
 }: {
   open: boolean
@@ -252,6 +254,9 @@ export function AiPanel({
   content: ResumeContent | null
   texSource: string | null
   hasUnsavedChanges: boolean
+  // Owned by the editor so an open suggestion survives the panel remounting between docked and sheet.
+  suggestion: Suggestion | null
+  setSuggestion: (suggestion: Suggestion | null) => void
   checkAtsOnOpen?: boolean
 }) {
   const [jobId, setJobId] = useState<string | null>(initialJobId)
@@ -259,7 +264,6 @@ export function AiPanel({
   const [atsOpen, setAtsOpen] = useState(false)
   const [instructions, setInstructions] = useState('')
   const [request, setRequest] = useState('')
-  const [suggestion, setSuggestion] = useState<Suggestion | null>(null)
   const composer = useRef<HTMLTextAreaElement>(null)
 
   // A run keeps going on the server if the page reloads, so offer a finished suggestion the user never saw.

@@ -59,7 +59,7 @@ import { useMediaQuery } from '@/hooks/use-media-query'
 import { usePdfPreview } from '@/hooks/use-pdf-preview'
 import { ApiError, api, errorMessage, unwrap } from '@/lib/api/client'
 import { queryKeys, resumeQuery } from '@/lib/api/queries'
-import type { ResumeContent, ResumeDetail } from '@/lib/api/types'
+import type { ResumeContent, ResumeDetail, Suggestion } from '@/lib/api/types'
 import { panelStorage } from '@/lib/panel-storage'
 import { site } from '@/lib/site'
 import { templateCatalog } from '@/lib/templates'
@@ -206,6 +206,7 @@ function ResumeEditor({
   const [headVersionId, setHeadVersionId] = useState(resume.headVersionId)
   const [shareOpen, setShareOpen] = useState(false)
   const [aiMode, setAiMode] = useState<AiPanelMode>('tailor')
+  const [suggestion, setSuggestion] = useState<Suggestion | null>(null)
   const openAi = (mode: AiPanelMode) => {
     setAiMode(mode)
     if (docked) setFocus(false)
@@ -426,6 +427,8 @@ function ResumeEditor({
       content={content}
       texSource={structured ? null : texSource}
       hasUnsavedChanges={saveState !== 'saved'}
+      suggestion={suggestion}
+      setSuggestion={setSuggestion}
       checkAtsOnOpen={Boolean(ats)}
     />
   )

@@ -2,6 +2,7 @@ import { Router } from "express";
 import { track, trackServer } from "../../lib/analytics.js";
 import { NotFoundError } from "../../lib/errors.js";
 import { sendData } from "../../lib/http.js";
+import { oneAtATime } from "../../lib/latex/compile.js";
 import { atsLimiter, compileLimiter } from "../../middleware/rate-limit.js";
 import { currentUser, requireAuth } from "../../middleware/require-auth.js";
 import { validated } from "../../middleware/validate.js";
@@ -66,9 +67,11 @@ atsRouter.post(
       content: head.content,
       text,
       jobText: job?.rawText,
-      parse: await parseTex(
-        texForVersion(resume, head),
-        head.content ? expectedFields(head.content) : expectedFromText(text ?? ""),
+      parse: await oneAtATime(userId, () =>
+        parseTex(
+          texForVersion(resume, head),
+          head.content ? expectedFields(head.content) : expectedFromText(text ?? ""),
+        ),
       ),
     });
     track(userId, "ats_report_created", { source: "resume", score: report.score, withJob: Boolean(job) });

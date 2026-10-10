@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { ConflictError, NotFoundError } from "../../lib/errors.js";
+import { oneAtATime } from "../../lib/latex/compile.js";
 import { currentUser, requireAuth } from "../../middleware/require-auth.js";
 import { compileLimiter } from "../../middleware/rate-limit.js";
 import { validated } from "../../middleware/validate.js";
@@ -21,7 +22,7 @@ pdfsRouter.get(
     const version = req.query.versionId ? await getVersion(userId, resume.id, req.query.versionId) : resume.head;
     if (!version) throw new NotFoundError("Version");
 
-    const { pdf, pageCount } = await compileOrThrow(texForVersion(resume, version));
+    const { pdf, pageCount } = await oneAtATime(userId, () => compileOrThrow(texForVersion(resume, version)));
     sendPdf(res, pdf, pdfFileName(version.content?.basics.name, resume.title), pageCount, req.query.download);
   }),
 );
@@ -63,6 +64,7 @@ pdfsRouter.post(
   requireAuth,
   compileLimiter,
   ...validated({ body: createPreviewBody }, async (req, res) => {
+    const userId = currentUser(req).id;
     const tex =
       "content" in req.body
         ? renderStructured(req.body.templateId, req.body.content, req.body.layout)
@@ -73,7 +75,7 @@ pdfsRouter.post(
       if (!res.writableEnded) abandoned.abort();
     });
     try {
-      const { pdf, pageCount } = await compileOrThrow(tex, abandoned.signal);
+      const { pdf, pageCount } = await oneAtATime(userId, () => compileOrThrow(tex, abandoned.signal));
       sendPdf(res, pdf, "preview.pdf", pageCount);
     } catch (err) {
       // Nobody is listening any more; not a server error.

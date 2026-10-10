@@ -75,3 +75,15 @@ export async function compileTex(source: string, signal?: AbortSignal): Promise<
   });
   return { ok: true, pdf: result.pdf, pageCount: await pageCount(result.pdf), cached: false };
 }
+
+// ponytail: one chain per user in this process. Several API processes would let each user compile once per process.
+const userQueues = new Map<string, Promise<unknown>>();
+export function oneAtATime<T>(userId: string, task: () => Promise<T>): Promise<T> {
+  const run = (userQueues.get(userId) ?? Promise.resolve()).then(task);
+  const tail = run.catch(() => {});
+  userQueues.set(userId, tail);
+  void tail.then(() => {
+    if (userQueues.get(userId) === tail) userQueues.delete(userId);
+  });
+  return run;
+}

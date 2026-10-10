@@ -35,7 +35,7 @@ vi.mock("../src/config/env.js", async (importOriginal) => ({
 }));
 vi.mock("../src/lib/storage.js", () => ({ storage: { get: async () => undefined, put: async () => {} } }));
 
-const { compileTex } = await import("../src/lib/latex/compile.js");
+const { compileTex, oneAtATime } = await import("../src/lib/latex/compile.js");
 const runs = () =>
   readFile(fake.count, "utf8").then(
     (s) => s.split("\n").length - 1,
@@ -51,5 +51,23 @@ describe("compile failures", () => {
     expect(first.ok).toBe(false);
     expect(second).toEqual(first);
     expect((await runs()) - before).toBe(1);
+  });
+});
+
+describe("one compile at a time per user", () => {
+  it("makes a user's second compile wait for the first, without holding up other users", async () => {
+    const order: string[] = [];
+    let release!: () => void;
+    const held = new Promise<void>((resolve) => (release = resolve));
+    const first = oneAtATime("user-1", async () => {
+      order.push("first start");
+      await held;
+      order.push("first end");
+    });
+    const second = oneAtATime("user-1", async () => void order.push("second"));
+    await oneAtATime("user-2", async () => void order.push("other user"));
+    release();
+    await Promise.all([first, second]);
+    expect(order).toEqual(["first start", "other user", "first end", "second"]);
   });
 });

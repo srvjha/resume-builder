@@ -82,10 +82,10 @@ export function slugify(value: string, maxLength = 24) {
     .replace(/-+$/g, "");
 }
 
-export async function isUsernameTaken(username: string) {
-  const [user] = await db.select({ id: users.id }).from(users).where(eq(users.username, username)).limit(1);
+export async function isUsernameTaken(username: string, executor: Pick<typeof db, "select"> = db) {
+  const [user] = await executor.select({ id: users.id }).from(users).where(eq(users.username, username)).limit(1);
   if (user) return true;
-  const [redirect] = await db
+  const [redirect] = await executor
     .select({ oldUsername: usernameRedirects.oldUsername })
     .from(usernameRedirects)
     .where(eq(usernameRedirects.oldUsername, username))

@@ -64,7 +64,7 @@ export async function updateMe(userId: string, changes: { name?: string | undefi
         .where(and(eq(usernameRedirects.oldUsername, next), eq(usernameRedirects.userId, userId)));
       if (ownRedirect) {
         await tx.delete(usernameRedirects).where(eq(usernameRedirects.oldUsername, next));
-      } else if (await isUsernameTaken(next)) {
+      } else if (await isUsernameTaken(next, tx)) {
         throw new ConflictError("This username is taken");
       }
 

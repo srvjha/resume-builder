@@ -262,11 +262,13 @@ export function HistoryPanel({
   onOpenChange,
   resumeId,
   headVersionId,
+  hasUnsavedChanges,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   resumeId: string
   headVersionId: string | null
+  hasUnsavedChanges: boolean
 }) {
   const queryClient = useQueryClient()
   const { data: versions, isPending } = useQuery({
@@ -385,7 +387,7 @@ export function HistoryPanel({
                             <Button
                               size="sm"
                               onClick={() => restore.mutate(version.id)}
-                              disabled={restore.isPending}
+                              disabled={restore.isPending || hasUnsavedChanges}
                             >
                               {restore.isPending ? (
                                 <Spinner data-icon="inline-start" />
@@ -394,6 +396,12 @@ export function HistoryPanel({
                               )}
                               Restore this version
                             </Button>
+                          )}
+                          {!isCurrent && hasUnsavedChanges && (
+                            <p className="w-full text-xs text-muted-foreground">
+                              Saving your edits... Restore is available once
+                              they're saved.
+                            </p>
                           )}
                           <Button
                             size="sm"

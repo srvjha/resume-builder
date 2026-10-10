@@ -408,6 +408,7 @@ export function AiPanel({
               if (!docked) onOpenChange(false)
             }}
             onDiscard={() => setSuggestion(null)}
+            hasUnsavedChanges={hasUnsavedChanges}
           />
         ) : mode === 'fix' && suggest.isError ? (
           <div className="flex flex-col gap-3">

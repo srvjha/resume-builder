@@ -682,6 +682,7 @@ function ResumeEditor({
         onOpenChange={setHistoryOpen}
         resumeId={resume.id}
         headVersionId={headVersionId}
+        hasUnsavedChanges={saveState !== 'saved'}
       />
       <ConfirmDialog
         open={conflict}

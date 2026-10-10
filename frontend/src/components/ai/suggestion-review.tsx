@@ -20,6 +20,7 @@ export function SuggestionReview({
   texSource,
   onApplied,
   onDiscard,
+  hasUnsavedChanges,
 }: {
   resumeId: string
   suggestion: Suggestion
@@ -27,6 +28,7 @@ export function SuggestionReview({
   texSource: string | null
   onApplied: () => void
   onDiscard: () => void
+  hasUnsavedChanges: boolean
 }) {
   const queryClient = useQueryClient()
   const { data: usage } = useQuery(usageQuery)
@@ -184,11 +186,16 @@ export function SuggestionReview({
               : 'These changes may add facts you never gave. Review them before applying.'}
           </p>
         )}
+        {hasUnsavedChanges && (
+          <p className="mt-3 text-xs text-muted-foreground">
+            Saving your edits... Apply is available once they're saved.
+          </p>
+        )}
         <div className="mt-4 flex flex-wrap items-center gap-2 border-t pt-4">
           {safeIds.length > 0 && (
             <Button
               onClick={() => apply.mutate(safeIds)}
-              disabled={apply.isPending}
+              disabled={apply.isPending || hasUnsavedChanges}
             >
               {apply.isPending && <Spinner data-icon="inline-start" />}
               Apply all
@@ -257,10 +264,15 @@ export function SuggestionReview({
         })}
       </ul>
 
+      {hasUnsavedChanges && (
+        <p className="mb-3 text-xs text-muted-foreground">
+          Saving your edits... Apply is available once they're saved.
+        </p>
+      )}
       <div className="flex items-center gap-2 border-t pt-4">
         <Button
           onClick={() => apply.mutate([...accepted])}
-          disabled={accepted.size === 0 || apply.isPending}
+          disabled={accepted.size === 0 || apply.isPending || hasUnsavedChanges}
         >
           {apply.isPending && <Spinner data-icon="inline-start" />}
           Apply {accepted.size} {accepted.size === 1 ? 'change' : 'changes'}

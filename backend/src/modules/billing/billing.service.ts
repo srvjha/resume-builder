@@ -56,12 +56,14 @@ export async function createCheckout(userId: string, plan: "season_pass" | "pro"
       receipt: `sp_${Date.now()}`,
       notes: { userId, plan },
     });
-    const [subscription] = await db.insert(subscriptions).values({ userId, plan, status: "created" }).returning();
-    await db.insert(payments).values({
-      userId,
-      subscriptionId: subscription!.id,
-      razorpayOrderId: order.id,
-      amountPaise: prices.season_pass,
+    await db.transaction(async (tx) => {
+      const [subscription] = await tx.insert(subscriptions).values({ userId, plan, status: "created" }).returning();
+      await tx.insert(payments).values({
+        userId,
+        subscriptionId: subscription!.id,
+        razorpayOrderId: order.id,
+        amountPaise: prices.season_pass,
+      });
     });
     return {
       provider: "razorpay" as const,

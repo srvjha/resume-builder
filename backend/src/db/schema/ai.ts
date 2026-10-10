@@ -28,7 +28,8 @@ export const aiStep = pgEnum("ai_step", [
   "draft",
 ]);
 
-export const aiRunStatus = pgEnum("ai_run_status", ["succeeded", "failed"]);
+// pending: reserved against the quota while the model is still working.
+export const aiRunStatus = pgEnum("ai_run_status", ["pending", "succeeded", "failed"]);
 
 // Log of every AI call: for cost tracking, quotas and acceptance rate.
 export const aiRuns = pgTable(

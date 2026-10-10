@@ -13,6 +13,11 @@ import type { ResumeContent } from "../../schemas/resume-content.js";
 import { extractTextItems } from "../ats/parser/extract.js";
 import { parseItems } from "../ats/parser/parse.js";
 import { restoreMissedLines } from "./coverage.js";
+import { MAX_IMPORT_TEXT } from "./imports.schemas.js";
+import { AppError } from "../../lib/errors.js";
+
+// Resumes run 1 to 3 pages; anything longer is not a resume.
+const MAX_IMPORT_PAGES = 4;
 
 const system = `You extract resumes into structured JSON.
 Rules:
@@ -66,7 +71,14 @@ export async function createImport(
     if (upload.kind === "pdf") {
       files.push({ data: body, mediaType: "application/pdf", filename: upload.fileName });
       pdf = new Uint8Array(body);
-      const { links, bold } = await pdfHints(new Uint8Array(body));
+      const { links, bold, pages } = await pdfHints(new Uint8Array(body));
+      // The whole PDF goes to the model, so a long document would cost far more than a resume.
+      if (pages > MAX_IMPORT_PAGES)
+        throw new AppError(
+          400,
+          "PDF_TOO_LONG",
+          `Import works on resumes up to ${MAX_IMPORT_PAGES} pages. This PDF has ${pages}.`,
+        );
       hidden = links;
       boldPhrases = bold;
       if (links.length) {
@@ -77,7 +89,14 @@ export async function createImport(
       }
     } else {
       const label = upload.kind === "tex" ? texLabel : "text";
-      prompt = `Extract this resume from its ${label}:\n\n<resume>\n${body.toString("utf8")}\n</resume>`;
+      const text = body.toString("utf8");
+      if (text.length > MAX_IMPORT_TEXT)
+        throw new AppError(
+          400,
+          "FILE_TOO_LONG",
+          `Import works on files up to ${MAX_IMPORT_TEXT.toLocaleString("en-IN")} characters. This one is longer.`,
+        );
+      prompt = `Extract this resume from its ${label}:\n\n<resume>\n${text}\n</resume>`;
     }
   } else if ("texSource" in input) {
     prompt = `Extract this resume from its ${texLabel}:\n\n<resume>\n${input.texSource}\n</resume>`;
@@ -88,6 +107,7 @@ export async function createImport(
   const { data, runId } = await generateStructured({
     userId,
     step: "import",
+    quota: "import",
     tier: "fast",
     schema: extractionSchema,
     system,
@@ -138,6 +158,7 @@ export async function createDraft(userId: string, input: { role: string; notes: 
   const { data, runId } = await generateStructured({
     userId,
     step: "draft",
+    quota: "draft",
     tier: "smart",
     schema: extractionSchema,
     system: draftSystem,

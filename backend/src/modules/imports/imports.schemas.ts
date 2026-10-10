@@ -2,9 +2,12 @@ import { z } from "zod";
 import { resumeContentSchema } from "../../schemas/resume-content.js";
 import { resumeLayoutSchema } from "../../templates/layout.js";
 
+// Pasted text and uploaded text or LaTeX files share this limit; a resume is far shorter.
+export const MAX_IMPORT_TEXT = 50_000;
+
 export const createImportBody = z.union([
   z.object({ uploadId: z.uuid() }),
-  z.object({ text: z.string().trim().min(20).max(50_000) }),
+  z.object({ text: z.string().trim().min(20).max(MAX_IMPORT_TEXT) }),
 ]);
 
 export const createDraftBody = z.object({

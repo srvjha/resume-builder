@@ -1,5 +1,6 @@
 import { recordStep } from "../../middleware/request-metrics.js";
 import { APICallError, generateObject } from "ai";
+import { eq } from "drizzle-orm";
 import type { z } from "zod";
 import { db } from "../../db/index.js";
 import { aiRuns } from "../../db/schema/index.js";
@@ -9,6 +10,7 @@ import { userKeyError } from "./key-errors.js";
 import { logger } from "../logger.js";
 import { type AiProvider, type ModelTier, resolveModel } from "./models.js";
 import { costUsdMicros } from "./pricing.js";
+import { type QuotaKind, reserveAiRun } from "../../modules/usage/quotas.js";
 
 type AiStep = (typeof aiRuns.$inferInsert)["step"];
 
@@ -24,6 +26,8 @@ export type GenerateStructuredInput<S extends z.ZodType> = {
   resumeId?: string;
   jobId?: string;
   userKey?: { provider: AiProvider; apiKey: string; modelId?: string };
+  // The plan limit this call counts against. Unset for calls the quota doesn't cover.
+  quota?: QuotaKind;
 };
 
 // Every AI call goes through here so it is logged in ai_runs with tokens, cost and latency.
@@ -42,6 +46,19 @@ export async function generateStructured<S extends z.ZodType>(
     resumeId: input.resumeId ?? null,
     jobId: input.jobId ?? null,
   };
+  // On our key, the run is reserved before the model is called, so it already counts while the model works.
+  const reserved = input.quota && !userKey ? await reserveAiRun(input.userId, input.quota, input.step) : undefined;
+  const record = (values: Omit<typeof aiRuns.$inferInsert, keyof typeof base>) =>
+    reserved
+      ? db
+          .update(aiRuns)
+          .set({ ...base, ...values })
+          .where(eq(aiRuns.id, reserved))
+          .returning({ id: aiRuns.id })
+      : db
+          .insert(aiRuns)
+          .values({ ...base, ...values })
+          .returning({ id: aiRuns.id });
 
   try {
     const content = [
@@ -70,16 +87,12 @@ export async function generateStructured<S extends z.ZodType>(
       outputTokens: result.usage.outputTokens ?? 0,
     };
 
-    const [run] = await db
-      .insert(aiRuns)
-      .values({
-        ...base,
-        status: "succeeded",
-        ...usage,
-        costUsdMicros: costUsdMicros(modelId, usage),
-        latencyMs: Date.now() - started,
-      })
-      .returning({ id: aiRuns.id });
+    const [run] = await record({
+      status: "succeeded",
+      ...usage,
+      costUsdMicros: costUsdMicros(modelId, usage),
+      latencyMs: Date.now() - started,
+    });
 
     return { data: result.object as z.infer<S>, runId: run!.id };
   } catch (err) {
@@ -98,8 +111,7 @@ export async function generateStructured<S extends z.ZodType>(
         "AI generation failed",
       );
     }
-    await db.insert(aiRuns).values({
-      ...base,
+    await record({
       status: "failed",
       latencyMs: Date.now() - started,
       error: userKey ? "user key request failed" : err instanceof Error ? err.message : String(err),

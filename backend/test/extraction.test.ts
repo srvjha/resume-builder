@@ -304,6 +304,35 @@ describe("normalizeExtraction project links", () => {
     const projects = content.sections[0];
     expect(projects?.type === "projects" && projects.entries[0]!.links.map((l) => l.label)).toEqual(["GitHub", "Live"]);
   });
+
+  it("links the title when the link sat on the project's name, instead of repeating the name", () => {
+    const content = normalizeExtraction({
+      basics: { name: "A", headline: null, email: null, phone: null, location: null, links: [] },
+      sections: [
+        {
+          type: "projects",
+          title: "Projects",
+          text: null,
+          groups: [],
+          links: [],
+          entries: [
+            entry({
+              name: "MyWearToday",
+              url: "https://mywear.today",
+              links: [{ label: "mywearToday", url: "https://mywear.today" }],
+            }),
+            entry({ name: "CodeKata", links: [{ label: "CodeKata", url: "https://codekata.dev" }] }),
+          ],
+        },
+      ],
+    });
+    const projects = content.sections[0];
+    if (projects?.type !== "projects") throw new Error("expected projects");
+    expect(projects.entries.map((e) => [e.url, e.links])).toEqual([
+      ["https://mywear.today", []],
+      ["https://codekata.dev", []],
+    ]);
+  });
 });
 
 describe("normalizeExtraction repeats", () => {

@@ -120,11 +120,17 @@ function range(x: Entry) {
 
 // Templates link a project's url from its name without a label, so a repo the model put there would look lost
 // next to a visible "Live" link. It's shown as a labelled link too, first, as resumes usually list code first.
+// A link labelled with the project's own name was the name itself in the source, so it links the title and isn't
+// repeated as "Name | Name".
 function projectLinks(x: Entry) {
-  const listed = links(x.links);
-  const u = url(x.url);
-  if (!u || listed.some((l) => l.url === u)) return listed;
-  return [{ label: siteNames.find(([pattern]) => pattern.test(u))?.[1] ?? "Live", url: u }, ...listed].slice(0, 5);
+  const name = plain(x.name)?.toLowerCase();
+  const all = links(x.links);
+  const onName = all.find((l) => l.label.toLowerCase() === name);
+  const listed = all.filter((l) => l !== onName);
+  const u = url(x.url) ?? onName?.url;
+  if (!u || u === onName?.url || listed.some((l) => l.url === u)) return { url: u, links: listed };
+  const label = siteNames.find(([pattern]) => pattern.test(u))?.[1] ?? "Live";
+  return { url: u, links: [{ label, url: u }, ...listed].slice(0, 5) };
 }
 
 // A "Tech Stack: React, Node" line belongs in the project's technologies, not in its bullets.
@@ -249,8 +255,7 @@ function normalizeSection(section: Extraction["sections"][number]): ResumeSectio
               id: shortId(),
               hidden: false,
               name: plain(x.name)!,
-              url: url(x.url),
-              links: projectLinks(x),
+              ...projectLinks(x),
               technologies,
               ...range(x),
               bullets: hideHeadings(

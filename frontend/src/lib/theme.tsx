@@ -56,7 +56,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     theme === 'system' ? (systemDark ? 'dark' : 'light') : theme
 
   useEffect(() => {
+    // Every color transition would fire at once and smear the switch, so they are off for one frame.
+    const pause = document.createElement('style')
+    pause.append('*,*::before,*::after{transition:none !important}')
+    document.head.append(pause)
     document.documentElement.classList.toggle('dark', resolvedTheme === 'dark')
+    void document.body.offsetHeight
+    requestAnimationFrame(() => requestAnimationFrame(() => pause.remove()))
     // Keep the browser chrome color in step with a theme chosen by hand.
     const color = getComputedStyle(document.body).backgroundColor
     document

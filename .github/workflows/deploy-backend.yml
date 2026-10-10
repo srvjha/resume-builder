@@ -55,7 +55,8 @@ jobs:
             set -e
             cd ~/shortlist
             git fetch --quiet origin main
-            git reset --hard origin/main
+            # The commit this run checked, not main's tip, which may be a newer push still in its own check.
+            git reset --hard ${{ github.sha }}
             cd backend
             docker compose -f docker-compose.prod.yml --env-file .env.production up -d --build --remove-orphans
             docker image prune -f

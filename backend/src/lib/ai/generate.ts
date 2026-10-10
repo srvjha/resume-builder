@@ -1,5 +1,5 @@
 import { recordStep } from "../../middleware/request-metrics.js";
-import { APICallError, generateObject } from "ai";
+import { APICallError, type LanguageModelUsage, NoObjectGeneratedError, generateObject } from "ai";
 import { eq } from "drizzle-orm";
 import type { z } from "zod";
 import { db } from "../../db/index.js";
@@ -13,6 +13,14 @@ import { costUsdMicros } from "./pricing.js";
 import { type QuotaKind, reserveAiRun } from "../../modules/usage/quotas.js";
 
 type AiStep = (typeof aiRuns.$inferInsert)["step"];
+
+function tokenUsage(usage: LanguageModelUsage) {
+  return {
+    inputTokens: usage.inputTokens ?? 0,
+    cachedInputTokens: usage.inputTokenDetails?.cacheReadTokens ?? 0,
+    outputTokens: usage.outputTokens ?? 0,
+  };
+}
 
 export type GenerateStructuredInput<S extends z.ZodType> = {
   userId: string;
@@ -81,11 +89,7 @@ export async function generateStructured<S extends z.ZodType>(
     });
 
     recordStep("ai_ms", Date.now() - started);
-    const usage = {
-      inputTokens: result.usage.inputTokens ?? 0,
-      cachedInputTokens: result.usage.inputTokenDetails?.cacheReadTokens ?? 0,
-      outputTokens: result.usage.outputTokens ?? 0,
-    };
+    const usage = tokenUsage(result.usage);
 
     const [run] = await record({
       status: "succeeded",
@@ -111,8 +115,11 @@ export async function generateStructured<S extends z.ZodType>(
         "AI generation failed",
       );
     }
+    // The model ran and answered, but not in the schema's shape; its tokens are still spent.
+    const spent = NoObjectGeneratedError.isInstance(err) && err.usage ? tokenUsage(err.usage) : undefined;
     await record({
       status: "failed",
+      ...(spent && { ...spent, costUsdMicros: costUsdMicros(modelId, spent) }),
       latencyMs: Date.now() - started,
       error: userKey ? "user key request failed" : err instanceof Error ? err.message : String(err),
     });

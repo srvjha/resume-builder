@@ -41,12 +41,13 @@ function toVersionDetail(version: typeof resumeVersions.$inferSelect) {
   };
 }
 
-export async function getOwnedResume(userId: string, resumeId: string, executor: Tx | typeof db = db) {
-  const [resume] = await executor
+export async function getOwnedResume(userId: string, resumeId: string, executor: Tx | typeof db = db, lock = false) {
+  const query = executor
     .select()
     .from(resumes)
     .where(and(eq(resumes.id, resumeId), eq(resumes.userId, userId), isNull(resumes.deletedAt)))
     .limit(1);
+  const [resume] = lock ? await query.for("update") : await query;
   if (!resume) throw new NotFoundError("Resume");
   return resume;
 }
@@ -217,9 +218,11 @@ export async function listResumes(userId: string, archived: boolean) {
     .orderBy(desc(resumes.updatedAt));
 }
 
-export async function getResume(userId: string, resumeId: string) {
-  const resume = await getOwnedResume(userId, resumeId);
-  const head = resume.headVersionId ? toVersionDetail(await getVersionRow(resume.id, resume.headVersionId)) : null;
+export async function getResume(userId: string, resumeId: string, executor: Tx | typeof db = db) {
+  const resume = await getOwnedResume(userId, resumeId, executor);
+  const head = resume.headVersionId
+    ? toVersionDetail(await getVersionRow(resume.id, resume.headVersionId, executor))
+    : null;
   return { ...resume, head };
 }
 

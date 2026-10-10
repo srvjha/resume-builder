@@ -54,6 +54,20 @@ describe("compile failures", () => {
   });
 });
 
+describe("compile output size", () => {
+  it("drops log output past the cap, so the error line printed after it is not reported", async () => {
+    const result = await compileTex(doc("BIGLOG"));
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.errors[0]?.message).toBe("LaTeX compilation failed");
+  });
+
+  it("rejects a PDF over 10 MB with a clear error", async () => {
+    const result = await compileTex(doc("BIGPDF"));
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.errors[0]?.message).toBe("The PDF is larger than 10 MB");
+  });
+});
+
 describe("one compile at a time per user", () => {
   it("makes a user's second compile wait for the first, without holding up other users", async () => {
     const order: string[] = [];

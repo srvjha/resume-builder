@@ -1,9 +1,12 @@
 import { spawn } from "node:child_process";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 // No imports from config/env here: the standalone compiler process must run without app secrets.
+
+const maxLogChars = 1_000_000;
+const maxPdfBytes = 10_000_000;
 
 export type CompileError = { line: number | null; message: string; hint?: string };
 export type TectonicOptions = { bin: string; onlyCached: boolean; timeoutMs: number; concurrency: number };
@@ -70,8 +73,12 @@ export function createTectonic(options: TectonicOptions) {
         stdio: ["ignore", "pipe", "pipe"],
       });
       let output = "";
-      child.stdout.on("data", (chunk) => (output += chunk));
-      child.stderr.on("data", (chunk) => (output += chunk));
+      // Stops collecting once the log is full, so a document that prints forever can't fill memory.
+      const collect = (chunk: Buffer) => {
+        if (output.length < maxLogChars) output += chunk;
+      };
+      child.stdout.on("data", collect);
+      child.stderr.on("data", collect);
       let timedOut = false;
       const timer = setTimeout(() => {
         timedOut = true;
@@ -84,7 +91,7 @@ export function createTectonic(options: TectonicOptions) {
       });
       child.on("close", (code) => {
         clearTimeout(timer);
-        resolve({ code, output, timedOut });
+        resolve({ code, output: output.slice(0, maxLogChars), timedOut });
       });
     });
   }
@@ -112,7 +119,16 @@ export function createTectonic(options: TectonicOptions) {
           };
         }
         if (code !== 0) return { ok: false, errors: parseErrors(output) };
-        return { ok: true, pdf: await readFile(join(dir, "main.pdf")) };
+        const pdfPath = join(dir, "main.pdf");
+        if ((await stat(pdfPath)).size > maxPdfBytes) {
+          return {
+            ok: false,
+            errors: [
+              { line: null, message: "The PDF is larger than 10 MB", hint: "Shorten the content or shrink images." },
+            ],
+          };
+        }
+        return { ok: true, pdf: await readFile(pdfPath) };
       } finally {
         await rm(dir, { recursive: true, force: true });
       }

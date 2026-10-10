@@ -73,7 +73,7 @@ export async function purgeOldUploads() {
 }
 
 // Compiled PDFs are cached by a hash of their LaTeX, shared across users, so they can't be tied to an account.
-// Anything not reused within 30 days is dropped and recompiled if needed.
+// Anything cached over 30 days ago is dropped (a read does not refresh its age) and recompiled if needed.
 export async function purgeCompiledPdfs() {
   const removed = await storage.deleteOlder("compiled/", new Date(Date.now() - 30 * DAY));
   logger.info({ removed }, "Purged cached PDFs");

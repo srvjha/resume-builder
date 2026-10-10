@@ -38,7 +38,13 @@ import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { ApiError, api, errorMessage, unwrap } from '@/lib/api/client'
+import {
+  ApiError,
+  api,
+  errorMessage,
+  toApiError,
+  unwrap,
+} from '@/lib/api/client'
 import {
   customTemplatesQuery,
   profileQuery,
@@ -196,14 +202,14 @@ function NewResumePage() {
         body: form,
         credentials: 'include',
       })
-      const body = await response.json()
+      // A proxy in front of the API can answer 413 with an HTML page, so the body may not be JSON.
       if (!response.ok)
-        throw new ApiError(
-          response.status,
-          body.error?.code,
-          body.error?.message,
-          body.error?.details,
+        throw toApiError(
+          response,
+          await response.json().catch(() => undefined),
+          'Upload failed. Try again.',
         )
+      const body = await response.json()
       return unwrap(
         api.POST('/v1/imports', { body: { uploadId: body.data.id } }),
       )

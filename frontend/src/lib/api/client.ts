@@ -37,7 +37,11 @@ async function send<T>(request: Promise<T>) {
   }
 }
 
-function toApiError(response: Response, error: unknown, fallback: string) {
+export function toApiError(
+  response: Response,
+  error: unknown,
+  fallback: string,
+) {
   const body = (error ?? {}) as ErrorBody
   // A gateway answers for the API while it's down, without our error body.
   const gateway = [502, 503, 504].includes(response.status)

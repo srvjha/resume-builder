@@ -11,6 +11,9 @@ on:
       - ".github/workflows/deploy-backend.yml"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 # One deploy at a time; a newer push waits instead of racing the current one.
 concurrency:
   group: deploy-backend
